@@ -1,7 +1,7 @@
 import React from 'react';
 import './SongDetails.css';
 
-function ExpandableBoxList({ title, items, labelKey, dateKey, type, onPlayAudio }) {
+function ExpandableBoxList({ title, items, labelKey, dateKey, type, onPlayAudio, onShowPdf }) {
   const [selectedIndex, setSelectedIndex] = React.useState(null);
 
   const handleClick = (index) => {
@@ -47,7 +47,7 @@ function ExpandableBoxList({ title, items, labelKey, dateKey, type, onPlayAudio 
                     className="action-button pdf"
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('Show PDF:', item.file);
+                      onShowPdf?.(item.file);
                     }}
                   >
                     <i className="fas fa-file-pdf"></i> Show PDF
@@ -69,6 +69,8 @@ function ExpandableBoxList({ title, items, labelKey, dateKey, type, onPlayAudio 
 }
 
 function SongDetails({ song, onPlayAudio }) {
+  const [pdfUrl, setPdfUrl] = React.useState(null);
+
   if (!song) {
     return <div className="song-details empty">Select a song to see details.</div>;
   }
@@ -95,7 +97,19 @@ function SongDetails({ song, onPlayAudio }) {
         labelKey="instrument"
         dateKey="date"
         type="sheet"
+        onShowPdf={setPdfUrl}
       />
+
+      {pdfUrl && (
+        <div className="pdf-modal" onClick={() => setPdfUrl(null)}>
+          <div className="pdf-close-wrapper" onClick={(e) => e.stopPropagation()}>
+            <button className="close-button" onClick={() => setPdfUrl(null)}>×</button>
+          </div>
+          <div className="pdf-content" onClick={(e) => e.stopPropagation()}>
+            <iframe src={pdfUrl} width="100%" height="100%" title="PDF Viewer" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

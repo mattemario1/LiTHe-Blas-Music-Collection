@@ -43,7 +43,7 @@ const songsData = [
     "sheetMusic": [
       {
         "instrument": "Flute",
-        "file": "moonlight_sonata_sheet1.pdf",
+        "file": "/LiTHe_Blås_stadgar.pdf",
         "date": "1982-03-04",
         "tags": [
           "original"
