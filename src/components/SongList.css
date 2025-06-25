@@ -1,0 +1,24 @@
+.song-boxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.song-box {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.song-box:hover {
+  background-color: #e6f7ff;
+  border-color: #1890ff;
+}
+
+.song-box.selected {
+  background-color: #bae7ff;
+  border-color: #40a9ff;
+}

@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.App {
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-filter-container {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  z-index: 1;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.song-list {
+  width: 30%;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid #ccc;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.song-details {
+  width: 70%;
+  height: 100%;
+  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
+}

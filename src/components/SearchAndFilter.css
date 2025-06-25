@@ -1,0 +1,49 @@
+.search-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  padding: 10px 15px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.search-box:focus {
+  border-color: #40a9ff;
+}
+
+.filter-toggle {
+  cursor: pointer;
+  background-color: #f0f0f0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  width: fit-content;
+  transition: background-color 0.2s;
+}
+
+.filter-toggle:hover {
+  background-color: #e6f7ff;
+}
+
+.filter-panel {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
