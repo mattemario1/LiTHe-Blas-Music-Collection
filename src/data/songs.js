@@ -10,7 +10,7 @@ const songsData = [
         "name": "Moonlight Sonata Recording 1",
         "album": "Romantic Moods",
         "date": "2010-05-30",
-        "file": "moonlight_sonata_rec1.mp3",
+        "file": "/swing_that_music.mp3",
         "tags": [
           "live",
           "remastered"

@@ -1,8 +1,9 @@
 import React from 'react';
 import './SongDetails.css';
 
-function ExpandableBoxList({ title, items, labelKey, dateKey, type }) {
+function ExpandableBoxList({ title, items, labelKey, dateKey, type, onPlayAudio }) {
   const [selectedIndex, setSelectedIndex] = React.useState(null);
+
   const handleClick = (index) => {
     setSelectedIndex(index === selectedIndex ? null : index);
   };
@@ -36,7 +37,7 @@ function ExpandableBoxList({ title, items, labelKey, dateKey, type }) {
                     className="action-button play"
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('Play music:', item.file);
+                      onPlayAudio?.(item.file);
                     }}
                   >
                     <i className="fas fa-play"></i> Play Music
@@ -67,7 +68,7 @@ function ExpandableBoxList({ title, items, labelKey, dateKey, type }) {
   );
 }
 
-function SongDetails({ song }) {
+function SongDetails({ song, onPlayAudio }) {
   if (!song) {
     return <div className="song-details empty">Select a song to see details.</div>;
   }
@@ -86,6 +87,7 @@ function SongDetails({ song }) {
         labelKey="album"
         dateKey="date"
         type="recording"
+        onPlayAudio={onPlayAudio}
       />
       <ExpandableBoxList
         title="🎼 Sheet Music"

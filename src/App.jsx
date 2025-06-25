@@ -3,9 +3,9 @@ import './App.css';
 import SearchAndFilter from './components/SearchAndFilter';
 import SongList from './components/SongList';
 import SongDetails from './components/SongDetails';
+import AudioPlayer from './components/AudioPlayer';
 import songsData from './data/songs';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,6 +15,12 @@ function App() {
     album: ''
   });
   const [selectedSong, setSelectedSong] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+
+  const handlePlayAudio = (fileUrl) => {
+    setAudioUrl(fileUrl);
+  };
+
 
   const filteredSongs = songsData
     .filter(song => {
@@ -24,8 +30,7 @@ function App() {
       const matchesAlbum = !selectedFilters.album || song.recordings.some(r => r.album === selectedFilters.album);
       return matchesSearch && matchesType && matchesStatus && matchesAlbum;
     })
-    .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
-
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="App">
@@ -35,10 +40,12 @@ function App() {
         selectedFilters={selectedFilters}
         setSelectedFilters={setSelectedFilters}
       />
-      <div className="main-content">
+      <div className={`main-content ${audioUrl ? 'with-player' : ''}`}>
         <SongList songs={filteredSongs} setSelectedSong={setSelectedSong} />
-        <SongDetails song={selectedSong} />
+        <SongDetails song={selectedSong} onPlayAudio={handlePlayAudio} />
       </div>
+
+      <AudioPlayer audioUrl={audioUrl} onClose={() => setAudioUrl(null)} />
     </div>
   );
 }

@@ -20,7 +20,14 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  padding-bottom: 0px;
+  transition: padding-bottom 0.3s ease;
 }
+
+.main-content.with-player {
+  padding-bottom: 60px; 
+}
+
 
 .song-list {
   width: 30%;

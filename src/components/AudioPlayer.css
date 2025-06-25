@@ -1,0 +1,42 @@
+.audio-player-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #222;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.audio-element {
+  width: 80%;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.skip-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  margin: 0 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.2s ease;
+}
+
+.skip-button:hover {
+  color: #1db954; /* Spotify green or any accent color */
+}
