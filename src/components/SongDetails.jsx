@@ -11,11 +11,11 @@ function ExpandableBoxList({
   onPlayAudio,
   onShowPdf
 }) {
-  const [expandedGroups, setExpandedGroups] = React.useState({});
+  const [expandedCollections, setExpandedCollections] = React.useState({});
   const [expandedItems, setExpandedItems] = React.useState({});
 
-  const toggleGroup = (index) => {
-    setExpandedGroups(prev => ({ ...prev, [index]: !prev[index] }));
+  const toggleCollection = (index) => {
+    setExpandedCollections(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
   const toggleItem = (key) => {
@@ -52,32 +52,30 @@ function ExpandableBoxList({
     </div>
   );
 
-  const groupedItems = items.filter(item => Array.isArray(item.parts));
+  const collectionItems = items.filter(item => Array.isArray(item.parts));
   const ungroupedItems = items.filter(item => !Array.isArray(item.parts));
 
   return (
     <div className="section">
       <h3>{title}</h3>
-
-      {groupedItems.map((group, groupIndex) => (
-        <div key={`group-${groupIndex}`} className="arrangement-block">
-          <div className="arrangement-header" onClick={() => toggleGroup(groupIndex)}>
-            <strong>{group.arrangement || group.group || 'Group'}</strong>
-            <p>{group.description}</p>
+      {collectionItems.map((collection, collectionIndex) => (
+        <div key={`collection-${collectionIndex}`} className="collection-block">
+          <div className="collection-header" onClick={() => toggleCollection(collectionIndex)}>
+            <strong>{collection.collection ?? 'Collection'}</strong>
+            <p>{collection.description}</p>
           </div>
-          {expandedGroups[groupIndex] && (
+          {expandedCollections[collectionIndex] && (
             <div className="box-list">
-              {group.parts.map((item, itemIndex) => {
-                const key = `g-${groupIndex}-${itemIndex}`;
+              {collection.parts.map((item, itemIndex) => {
+                const key = `c-${collectionIndex}-${itemIndex}`;
                 return renderItem(item, key, expandedItems[key]);
               })}
             </div>
           )}
         </div>
       ))}
-
       {ungroupedItems.length > 0 && (
-        <div className="arrangement-block">
+        <div className="collection-block">
           <div className="box-list">
             {ungroupedItems.map((item, itemIndex) => {
               const key = `u-${itemIndex}`;
@@ -105,7 +103,6 @@ function SongDetails({ song, onPlayAudio }) {
         <span><strong>Type:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
       </div>
-
       <ExpandableBoxList
         title="🎧 Recordings"
         items={song.recordings}
@@ -114,7 +111,6 @@ function SongDetails({ song, onPlayAudio }) {
         type="recording"
         onPlayAudio={onPlayAudio}
       />
-
       <ExpandableBoxList
         title="🎼 Sheet Music"
         items={song.sheetMusic}
@@ -123,7 +119,6 @@ function SongDetails({ song, onPlayAudio }) {
         type="sheet"
         onShowPdf={setPdfUrl}
       />
-
       <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />
     </div>
   );
