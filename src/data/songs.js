@@ -1,7 +1,7 @@
 const songsData = [
   {
     "id": 1,
-    "name": "Moonlight Sonata",
+    "name": "Moonlight Sonata hej",
     "description": "A vibrant and energetic composition.",
     "type": "Balettlåt",
     "status": "Aktiv",
@@ -42,29 +42,35 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Flute",
-        "file": "/LiTHe_Blås_stadgar.pdf",
-        "date": "1982-03-04",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "moonlight_sonata_sheet2.pdf",
-        "date": "1984-11-25",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Piano",
-        "file": "moonlight_sonata_sheet3.pdf",
-        "date": "1986-12-14",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Moonlight Sonata hej Arrangement",
+        "description": "Arrangement for multiple instruments in Moonlight Sonata hej",
+        "parts": [
+          {
+            "instrument": "Flute",
+            "file": "/LiTHe_Blås_stadgar.pdf",
+            "date": "1982-03-04",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "/AnotherOpninAnotherShowTenorsax2.pdf",
+            "date": "1984-11-25",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Piano",
+            "file": "moonlight_sonata_sheet3.pdf",
+            "date": "1986-12-14",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -108,24 +114,30 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Piano",
-        "file": "imagine_sheet1.pdf",
-        "date": "1976-01-06",
-        "tags": [
-          "original",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Violin",
-        "file": "imagine_sheet2.pdf",
-        "date": "2017-01-04",
-        "tags": [
-          "original",
-          "annotated"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Imagine Arrangement",
+        "description": "Arrangement for multiple instruments in Imagine",
+        "parts": [
+          {
+            "instrument": "Piano",
+            "file": "imagine_sheet1.pdf",
+            "date": "1976-01-06",
+            "tags": [
+              "original",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Violin",
+            "file": "imagine_sheet2.pdf",
+            "date": "2017-01-04",
+            "tags": [
+              "original",
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -170,20 +182,26 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Violin",
-        "file": "clair_de_lune_sheet1.pdf",
-        "date": "2012-02-04",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Violin",
-        "file": "clair_de_lune_sheet2.pdf",
-        "date": "2008-07-23",
-        "tags": [],
-        "description": "Sheet music description here."
+        "arrangement": "Clair de Lune Arrangement",
+        "description": "Arrangement for multiple instruments in Clair de Lune",
+        "parts": [
+          {
+            "instrument": "Violin",
+            "file": "clair_de_lune_sheet1.pdf",
+            "date": "2012-02-04",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Violin",
+            "file": "clair_de_lune_sheet2.pdf",
+            "date": "2008-07-23",
+            "tags": [],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -209,33 +227,39 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Guitar",
-        "file": "bohemian_rhapsody_sheet1.pdf",
-        "date": "1987-10-10",
-        "tags": [
-          "annotated",
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Guitar",
-        "file": "bohemian_rhapsody_sheet2.pdf",
-        "date": "2010-09-08",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Violin",
-        "file": "bohemian_rhapsody_sheet3.pdf",
-        "date": "1997-07-11",
-        "tags": [
-          "original",
-          "annotated"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Bohemian Rhapsody Arrangement",
+        "description": "Arrangement for multiple instruments in Bohemian Rhapsody",
+        "parts": [
+          {
+            "instrument": "Guitar",
+            "file": "bohemian_rhapsody_sheet1.pdf",
+            "date": "1987-10-10",
+            "tags": [
+              "annotated",
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Guitar",
+            "file": "bohemian_rhapsody_sheet2.pdf",
+            "date": "2010-09-08",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Violin",
+            "file": "bohemian_rhapsody_sheet3.pdf",
+            "date": "1997-07-11",
+            "tags": [
+              "original",
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -261,21 +285,27 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Piano",
-        "file": "swan_lake_sheet1.pdf",
-        "date": "2004-02-19",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Guitar",
-        "file": "swan_lake_sheet2.pdf",
-        "date": "1972-01-16",
-        "tags": [
-          "simplified",
-          "original"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Swan Lake Arrangement",
+        "description": "Arrangement for multiple instruments in Swan Lake",
+        "parts": [
+          {
+            "instrument": "Piano",
+            "file": "swan_lake_sheet1.pdf",
+            "date": "2004-02-19",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Guitar",
+            "file": "swan_lake_sheet2.pdf",
+            "date": "1972-01-16",
+            "tags": [
+              "simplified",
+              "original"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -315,21 +345,27 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Guitar",
-        "file": "f\u00fcr_elise_sheet1.pdf",
-        "date": "1998-10-09",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Piano",
-        "file": "f\u00fcr_elise_sheet2.pdf",
-        "date": "1997-03-01",
-        "tags": [
-          "simplified",
-          "original"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "F\u00fcr Elise Arrangement",
+        "description": "Arrangement for multiple instruments in F\u00fcr Elise",
+        "parts": [
+          {
+            "instrument": "Guitar",
+            "file": "f\u00fcr_elise_sheet1.pdf",
+            "date": "1998-10-09",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Piano",
+            "file": "f\u00fcr_elise_sheet2.pdf",
+            "date": "1997-03-01",
+            "tags": [
+              "simplified",
+              "original"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -361,30 +397,36 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Guitar",
-        "file": "nocturne_op.9_no.2_sheet1.pdf",
-        "date": "1999-04-18",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Piano",
-        "file": "nocturne_op.9_no.2_sheet2.pdf",
-        "date": "1999-10-12",
-        "tags": [
-          "annotated",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "nocturne_op.9_no.2_sheet3.pdf",
-        "date": "1982-06-05",
-        "tags": [
-          "simplified"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Nocturne Op.9 No.2 Arrangement",
+        "description": "Arrangement for multiple instruments in Nocturne Op.9 No.2",
+        "parts": [
+          {
+            "instrument": "Guitar",
+            "file": "nocturne_op.9_no.2_sheet1.pdf",
+            "date": "1999-04-18",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Piano",
+            "file": "nocturne_op.9_no.2_sheet2.pdf",
+            "date": "1999-10-12",
+            "tags": [
+              "annotated",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "nocturne_op.9_no.2_sheet3.pdf",
+            "date": "1982-06-05",
+            "tags": [
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -417,32 +459,38 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Piano",
-        "file": "the_planets_sheet1.pdf",
-        "date": "1996-02-09",
-        "tags": [
-          "annotated"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "the_planets_sheet2.pdf",
-        "date": "2012-01-16",
-        "tags": [
-          "original",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "the_planets_sheet3.pdf",
-        "date": "1978-06-29",
-        "tags": [
-          "annotated"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "The Planets Arrangement",
+        "description": "Arrangement for multiple instruments in The Planets",
+        "parts": [
+          {
+            "instrument": "Piano",
+            "file": "the_planets_sheet1.pdf",
+            "date": "1996-02-09",
+            "tags": [
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "the_planets_sheet2.pdf",
+            "date": "2012-01-16",
+            "tags": [
+              "original",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "the_planets_sheet3.pdf",
+            "date": "1978-06-29",
+            "tags": [
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -485,13 +533,19 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Piano",
-        "file": "bol\u00e9ro_sheet1.pdf",
-        "date": "2016-02-14",
-        "tags": [
-          "simplified"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Bol\u00e9ro Arrangement",
+        "description": "Arrangement for multiple instruments in Bol\u00e9ro",
+        "parts": [
+          {
+            "instrument": "Piano",
+            "file": "bol\u00e9ro_sheet1.pdf",
+            "date": "2016-02-14",
+            "tags": [
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -535,23 +589,29 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Guitar",
-        "file": "the_nutcracker_sheet1.pdf",
-        "date": "1999-07-28",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Flute",
-        "file": "the_nutcracker_sheet2.pdf",
-        "date": "2017-12-11",
-        "tags": [
-          "annotated",
-          "original"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "The Nutcracker Arrangement",
+        "description": "Arrangement for multiple instruments in The Nutcracker",
+        "parts": [
+          {
+            "instrument": "Guitar",
+            "file": "the_nutcracker_sheet1.pdf",
+            "date": "1999-07-28",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Flute",
+            "file": "the_nutcracker_sheet2.pdf",
+            "date": "2017-12-11",
+            "tags": [
+              "annotated",
+              "original"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -577,27 +637,33 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Flute",
-        "file": "canon_in_d_sheet1.pdf",
-        "date": "1983-08-16",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "canon_in_d_sheet2.pdf",
-        "date": "1974-01-13",
-        "tags": [
-          "simplified"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Flute",
-        "file": "canon_in_d_sheet3.pdf",
-        "date": "1976-10-03",
-        "tags": [],
-        "description": "Sheet music description here."
+        "arrangement": "Canon in D Arrangement",
+        "description": "Arrangement for multiple instruments in Canon in D",
+        "parts": [
+          {
+            "instrument": "Flute",
+            "file": "canon_in_d_sheet1.pdf",
+            "date": "1983-08-16",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "canon_in_d_sheet2.pdf",
+            "date": "1974-01-13",
+            "tags": [
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Flute",
+            "file": "canon_in_d_sheet3.pdf",
+            "date": "1976-10-03",
+            "tags": [],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -622,30 +688,36 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Cello",
-        "file": "symphony_no.5_sheet1.pdf",
-        "date": "1987-11-21",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Flute",
-        "file": "symphony_no.5_sheet2.pdf",
-        "date": "2017-08-17",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Flute",
-        "file": "symphony_no.5_sheet3.pdf",
-        "date": "1981-12-26",
-        "tags": [
-          "original",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Symphony No.5 Arrangement",
+        "description": "Arrangement for multiple instruments in Symphony No.5",
+        "parts": [
+          {
+            "instrument": "Cello",
+            "file": "symphony_no.5_sheet1.pdf",
+            "date": "1987-11-21",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Flute",
+            "file": "symphony_no.5_sheet2.pdf",
+            "date": "2017-08-17",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Flute",
+            "file": "symphony_no.5_sheet3.pdf",
+            "date": "1981-12-26",
+            "tags": [
+              "original",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -679,30 +751,36 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Flute",
-        "file": "rhapsody_in_blue_sheet1.pdf",
-        "date": "1991-06-19",
-        "tags": [
-          "annotated",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "rhapsody_in_blue_sheet2.pdf",
-        "date": "2005-02-18",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "rhapsody_in_blue_sheet3.pdf",
-        "date": "2014-10-30",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Rhapsody in Blue Arrangement",
+        "description": "Arrangement for multiple instruments in Rhapsody in Blue",
+        "parts": [
+          {
+            "instrument": "Flute",
+            "file": "rhapsody_in_blue_sheet1.pdf",
+            "date": "1991-06-19",
+            "tags": [
+              "annotated",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "rhapsody_in_blue_sheet2.pdf",
+            "date": "2005-02-18",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "rhapsody_in_blue_sheet3.pdf",
+            "date": "2014-10-30",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -750,20 +828,26 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Cello",
-        "file": "peer_gynt_sheet1.pdf",
-        "date": "2017-11-03",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "peer_gynt_sheet2.pdf",
-        "date": "2005-05-25",
-        "tags": [
-          "simplified"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Peer Gynt Arrangement",
+        "description": "Arrangement for multiple instruments in Peer Gynt",
+        "parts": [
+          {
+            "instrument": "Cello",
+            "file": "peer_gynt_sheet1.pdf",
+            "date": "2017-11-03",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "peer_gynt_sheet2.pdf",
+            "date": "2005-05-25",
+            "tags": [
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -799,33 +883,39 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Piano",
-        "file": "the_four_seasons_sheet1.pdf",
-        "date": "2013-05-19",
-        "tags": [
-          "annotated",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Violin",
-        "file": "the_four_seasons_sheet2.pdf",
-        "date": "1975-03-15",
-        "tags": [
-          "original"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Piano",
-        "file": "the_four_seasons_sheet3.pdf",
-        "date": "2008-11-20",
-        "tags": [
-          "original",
-          "simplified"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "The Four Seasons Arrangement",
+        "description": "Arrangement for multiple instruments in The Four Seasons",
+        "parts": [
+          {
+            "instrument": "Piano",
+            "file": "the_four_seasons_sheet1.pdf",
+            "date": "2013-05-19",
+            "tags": [
+              "annotated",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Violin",
+            "file": "the_four_seasons_sheet2.pdf",
+            "date": "1975-03-15",
+            "tags": [
+              "original"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Piano",
+            "file": "the_four_seasons_sheet3.pdf",
+            "date": "2008-11-20",
+            "tags": [
+              "original",
+              "simplified"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -865,14 +955,20 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Violin",
-        "file": "gymnop\u00e9die_no.1_sheet1.pdf",
-        "date": "2019-02-01",
-        "tags": [
-          "simplified",
-          "annotated"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Gymnop\u00e9die No.1 Arrangement",
+        "description": "Arrangement for multiple instruments in Gymnop\u00e9die No.1",
+        "parts": [
+          {
+            "instrument": "Violin",
+            "file": "gymnop\u00e9die_no.1_sheet1.pdf",
+            "date": "2019-02-01",
+            "tags": [
+              "simplified",
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -905,11 +1001,17 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Violin",
-        "file": "blue_danube_sheet1.pdf",
-        "date": "2020-07-12",
-        "tags": [],
-        "description": "Sheet music description here."
+        "arrangement": "Blue Danube Arrangement",
+        "description": "Arrangement for multiple instruments in Blue Danube",
+        "parts": [
+          {
+            "instrument": "Violin",
+            "file": "blue_danube_sheet1.pdf",
+            "date": "2020-07-12",
+            "tags": [],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -941,25 +1043,31 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Cello",
-        "file": "carmen_suite_sheet1.pdf",
-        "date": "1986-08-14",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Flute",
-        "file": "carmen_suite_sheet2.pdf",
-        "date": "1986-07-10",
-        "tags": [],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Piano",
-        "file": "carmen_suite_sheet3.pdf",
-        "date": "1987-06-16",
-        "tags": [],
-        "description": "Sheet music description here."
+        "arrangement": "Carmen Suite Arrangement",
+        "description": "Arrangement for multiple instruments in Carmen Suite",
+        "parts": [
+          {
+            "instrument": "Cello",
+            "file": "carmen_suite_sheet1.pdf",
+            "date": "1986-08-14",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Flute",
+            "file": "carmen_suite_sheet2.pdf",
+            "date": "1986-07-10",
+            "tags": [],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Piano",
+            "file": "carmen_suite_sheet3.pdf",
+            "date": "1987-06-16",
+            "tags": [],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
@@ -985,70 +1093,135 @@ const songsData = [
     ],
     "sheetMusic": [
       {
-        "instrument": "Flute",
-        "file": "pictures_at_an_exhibition_sheet1.pdf",
-        "date": "2002-09-11",
-        "tags": [
-          "annotated"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Flute",
-        "file": "pictures_at_an_exhibition_sheet2.pdf",
-        "date": "1997-05-12",
-        "tags": [
-          "annotated"
-        ],
-        "description": "Sheet music description here."
-      },
-      {
-        "instrument": "Cello",
-        "file": "pictures_at_an_exhibition_sheet3.pdf",
-        "date": "2017-09-03",
-        "tags": [
-          "annotated"
-        ],
-        "description": "Sheet music description here."
+        "arrangement": "Pictures at an Exhibition Arrangement",
+        "description": "Arrangement for multiple instruments in Pictures at an Exhibition",
+        "parts": [
+          {
+            "instrument": "Flute",
+            "file": "pictures_at_an_exhibition_sheet1.pdf",
+            "date": "2002-09-11",
+            "tags": [
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Flute",
+            "file": "pictures_at_an_exhibition_sheet2.pdf",
+            "date": "1997-05-12",
+            "tags": [
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          },
+          {
+            "instrument": "Cello",
+            "file": "pictures_at_an_exhibition_sheet3.pdf",
+            "date": "2017-09-03",
+            "tags": [
+              "annotated"
+            ],
+            "description": "Sheet music description here."
+          }
+        ]
       }
     ]
   },
   {
     "id": 20,
-    "name": "Adagio for Strings",
-    "description": "A ballet masterpiece.",
-    "type": "Balettlåt",
-    "status": "Gammal",
+    "name": "Another Opn'in Another Show",
+    "description": "En banger",
+    "type": "Orkesterlåt",
+    "status": "Aktiv",
     "recordings": [
       {
-        "name": "Adagio for Strings Recording 1",
-        "album": "Romantic Moods",
-        "date": "2016-03-04",
-        "file": "adagio_for_strings_rec1.mp3",
-        "tags": [
-          "studio",
-          "classic"
-        ],
-        "description": "Recording description here."
+        "arrangement": "Another Opn'in Another Show Arrangement",
+        "description": "Arrangement for multiple instruments in Another Opn'in Another Show",
+        "parts": [
+          {
+
+            "name": "Another Opn'in Another Show",
+            "album": "25 års Jubeleum",
+            "date": "1998",
+            "file": "/Another_Opnin_Another_Show/Inspelningar/Another_Opnin_Another_Show-25år-1998.mp3",
+            "tags": [
+              "live"
+            ],
+            "description": "Inspelning av 25 års jubbet."
+          }
+        ]
       },
       {
-        "name": "Adagio for Strings Recording 2",
-        "album": "Romantic Moods",
-        "date": "1986-09-20",
-        "file": "adagio_for_strings_rec2.mp3",
-        "tags": [],
-        "description": "Recording description here."
+        "name": "Another Opn'in Another Show hej",
+        "album": "Blåset(s) rockar",
+        "date": "2000-04-01",
+        "file": "/Another_Opnin_Another_Show/Inspelningar/Another_Opnin_Another_Show-Blåsets_rockar-2000.mp3",
+        "tags": [
+          "Studio Inspelning"
+        ],
+        "description": "Från albumet Blåset(s) rockar, finns nog mer att säga."
       }
     ],
     "sheetMusic": [
       {
-        "instrument": "Piano",
-        "file": "adagio_for_strings_sheet1.pdf",
-        "date": "1986-05-06",
+        "arrangement": "Another Opn'in Another Show Arrangement",
+        "description": "Arrangement for multiple instruments in Another Opn'in Another Show",
+        "parts": [
+          {
+            "instrument": "Flöjt 1 och 2",
+            "file": "/Another_Opnin_Another_Show/Noter/AnotherOpnin Flöjt1-2.pdf",
+            "date": "1997",
+            "tags": [
+              "Handskriven"
+            ],
+            "description": "Hej detta är en beskrivning"
+          },
+          {
+            "instrument": "Klarinett 1",
+            "file": "/Another_Opnin_Another_Show/Noter/Another Opnin Another Show - Klarinett 1.pdf",
+            "date": "1997",
+            "tags": [
+              "Dataskriven"
+            ],
+            "description": ""
+          },
+          {
+            "instrument": "Klarinett 2",
+            "file": "/Another_Opnin_Another_Show/Noter/Another Opnin Another Show - Klarinett 2.pdf",
+            "date": "1997",
+            "tags": [
+              "Dataskriven"
+            ],
+            "description": ""
+          },
+          {
+            "instrument": "Klarinett 3",
+            "file": "/Another_Opnin_Another_Show/Noter/Another Opnin Another Show - Klarinett 3.pdf",
+            "date": "1997",
+            "tags": [
+              "Dataskriven"
+            ],
+            "description": ""
+          }
+        ]
+      },
+      {
+        "instrument": "Flöjt k och r",
+        "file": "/Another_Opnin_Another_Show/Noter/AnotherOpnin Flöjt1-2.pdf",
+        "date": "1997",
         "tags": [
-          "original"
+          "Handskriven"
         ],
-        "description": "Sheet music description here."
+        "description": "Hej detta är en beskrivning"
+      },
+      {
+        "instrument": "Klarinett E",
+        "file": "/Another_Opnin_Another_Show/Noter/Another Opnin Another Show - Klarinett 1.pdf",
+        "date": "1997",
+        "tags": [
+          "Dataskriven"
+        ],
+        "description": "Det här också"
       }
     ]
   }
