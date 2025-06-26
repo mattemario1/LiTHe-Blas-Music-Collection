@@ -1,5 +1,6 @@
 import React from 'react';
 import './SongDetails.css';
+import PdfModal from './PdfModal';
 
 function ExpandableBoxList({
   title,
@@ -21,6 +22,36 @@ function ExpandableBoxList({
     setExpandedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const renderItem = (item, key, isExpanded) => (
+    <div key={key} className="info-box" onClick={() => toggleItem(key)}>
+      <div className="info-main">
+        <strong>{item.name || item[labelKey]}</strong>
+        <div>{item[dateKey]}</div>
+      </div>
+      <div className="file-actions horizontal">
+        <a className="action-button download" href={item.file} download onClick={(e) => e.stopPropagation()}>
+          <i className="fas fa-download"></i> Download
+        </a>
+        {type === 'recording' && (
+          <button className="action-button play" onClick={(e) => { e.stopPropagation(); onPlayAudio?.(item.file); }}>
+            <i className="fas fa-play"></i> Play Music
+          </button>
+        )}
+        {type === 'sheet' && (
+          <button className="action-button pdf" onClick={(e) => { e.stopPropagation(); onShowPdf?.(item.file); }}>
+            <i className="fas fa-file-pdf"></i> Show PDF
+          </button>
+        )}
+      </div>
+      {isExpanded && (
+        <div className="details-inline">
+          <p>{item.description}</p>
+          <p><strong>Tags:</strong> {item.tags?.join(', ') || 'None'}</p>
+        </div>
+      )}
+    </div>
+  );
+
   const groupedItems = items.filter(item => Array.isArray(item.parts));
   const ungroupedItems = items.filter(item => !Array.isArray(item.parts));
 
@@ -28,7 +59,6 @@ function ExpandableBoxList({
     <div className="section">
       <h3>{title}</h3>
 
-      {/* Grouped Items */}
       {groupedItems.map((group, groupIndex) => (
         <div key={`group-${groupIndex}`} className="arrangement-block">
           <div className="arrangement-header" onClick={() => toggleGroup(groupIndex)}>
@@ -39,76 +69,19 @@ function ExpandableBoxList({
             <div className="box-list">
               {group.parts.map((item, itemIndex) => {
                 const key = `g-${groupIndex}-${itemIndex}`;
-                const isExpanded = expandedItems[key];
-                return (
-                  <div key={key} className="info-box" onClick={() => toggleItem(key)}>
-                    <div className="info-main">
-                      <strong>{item.name || item[labelKey]}</strong>
-                      <div>{item[dateKey]}</div>
-                    </div>
-                    <div className="file-actions horizontal">
-                      <a className="action-button download" href={item.file} download onClick={(e) => e.stopPropagation()}>
-                        <i className="fas fa-download"></i> Download
-                      </a>
-                      {type === 'recording' ? (
-                        <button className="action-button play" onClick={(e) => { e.stopPropagation(); onPlayAudio?.(item.file); }}>
-                          <i className="fas fa-play"></i> Play Music
-                        </button>
-                      ) : type === 'sheet' ? (
-                        <button className="action-button pdf" onClick={(e) => { e.stopPropagation(); onShowPdf?.(item.file); }}>
-                          <i className="fas fa-file-pdf"></i> Show PDF
-                        </button>
-                      ) : null}
-                    </div>
-                    {isExpanded && (
-                      <div className="details-inline">
-                        <p>{item.description}</p>
-                        <p><strong>Tags:</strong> {item.tags?.join(', ') || 'None'}</p>
-                      </div>
-                    )}
-                  </div>
-                );
+                return renderItem(item, key, expandedItems[key]);
               })}
             </div>
           )}
         </div>
       ))}
 
-      {/* Ungrouped Items */}
       {ungroupedItems.length > 0 && (
         <div className="arrangement-block">
           <div className="box-list">
             {ungroupedItems.map((item, itemIndex) => {
               const key = `u-${itemIndex}`;
-              const isExpanded = expandedItems[key];
-              return (
-                <div key={key} className="info-box" onClick={() => toggleItem(key)}>
-                  <div className="info-main">
-                    <strong>{item.name || item[labelKey]}</strong>
-                    <div>{item[dateKey]}</div>
-                  </div>
-                  <div className="file-actions horizontal">
-                    <a className="action-button download" href={item.file} download onClick={(e) => e.stopPropagation()}>
-                      <i className="fas fa-download"></i> Download
-                    </a>
-                    {type === 'recording' ? (
-                      <button className="action-button play" onClick={(e) => { e.stopPropagation(); onPlayAudio?.(item.file); }}>
-                        <i className="fas fa-play"></i> Play Music
-                      </button>
-                    ) : type === 'sheet' ? (
-                      <button className="action-button pdf" onClick={(e) => { e.stopPropagation(); onShowPdf?.(item.file); }}>
-                        <i className="fas fa-file-pdf"></i> Show PDF
-                      </button>
-                    ) : null}
-                  </div>
-                  {isExpanded && (
-                    <div className="details-inline">
-                      <p>{item.description}</p>
-                      <p><strong>Tags:</strong> {item.tags?.join(', ') || 'None'}</p>
-                    </div>
-                  )}
-                </div>
-              );
+              return renderItem(item, key, expandedItems[key]);
             })}
           </div>
         </div>
@@ -132,6 +105,7 @@ function SongDetails({ song, onPlayAudio }) {
         <span><strong>Type:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
       </div>
+
       <ExpandableBoxList
         title="🎧 Recordings"
         items={song.recordings}
@@ -140,6 +114,7 @@ function SongDetails({ song, onPlayAudio }) {
         type="recording"
         onPlayAudio={onPlayAudio}
       />
+
       <ExpandableBoxList
         title="🎼 Sheet Music"
         items={song.sheetMusic}
@@ -148,16 +123,8 @@ function SongDetails({ song, onPlayAudio }) {
         type="sheet"
         onShowPdf={setPdfUrl}
       />
-      {pdfUrl && (
-        <div className="pdf-modal" onClick={() => setPdfUrl(null)}>
-          <div className="pdf-close-wrapper" onClick={(e) => e.stopPropagation()}>
-            <button className="close-button" onClick={() => setPdfUrl(null)}>×</button>
-          </div>
-          <div className="pdf-content" onClick={(e) => e.stopPropagation()}>
-            <iframe src={pdfUrl} width="100%" height="100%" title="PDF Viewer" />
-          </div>
-        </div>
-      )}
+
+      <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />
     </div>
   );
 }
