@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  overflow: hidden;
+  overflow: auto; /* Allow scrolling if needed */
 }
 
 .App {
@@ -19,15 +19,14 @@ body {
 .main-content {
   display: flex;
   flex: 1;
+  flex-direction: row;
+  height: calc(100vh - 60px); /* Adjust if you have a header */
   overflow: hidden;
-  padding-bottom: 0px;
-  transition: padding-bottom 0.3s ease;
 }
 
 .main-content.with-player {
-  padding-bottom: 60px; 
+  padding-bottom: 60px;
 }
-
 
 .song-list {
   width: 30%;
@@ -40,8 +39,10 @@ body {
 
 .song-details {
   width: 70%;
-  height: 100%;
-  overflow: hidden;
+  flex: 1;
+  overflow-y: auto;
   padding: 20px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }

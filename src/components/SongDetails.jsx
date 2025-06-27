@@ -1,7 +1,9 @@
-import React from 'react';
+// SongDetails.jsx
+import React, { useState } from 'react';
 import './SongDetails.css';
 import PdfModal from './PdfModal';
 import LyricsModal from './LyricsModal';
+import SongEditor from './SongEditor';
 
 function ExpandableBoxList({
   title,
@@ -13,8 +15,8 @@ function ExpandableBoxList({
   onShowPdf,
   onShowLyrics
 }) {
-  const [expandedCollections, setExpandedCollections] = React.useState({});
-  const [expandedItems, setExpandedItems] = React.useState({});
+  const [expandedCollections, setExpandedCollections] = useState({});
+  const [expandedItems, setExpandedItems] = useState({});
 
   const toggleCollection = (index) => {
     setExpandedCollections(prev => ({ ...prev, [index]: !prev[index] }));
@@ -95,12 +97,26 @@ function ExpandableBoxList({
   );
 }
 
-function SongDetails({ song, onPlayAudio }) {
-  const [pdfUrl, setPdfUrl] = React.useState(null);
-  const [lyricsUrl, setLyricsUrl] = React.useState(null);
+function SongDetails({ song, onPlayAudio, onUpdateSong }) {
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [lyricsUrl, setLyricsUrl] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   if (!song) {
     return <div className="song-details empty">Select a song to see details.</div>;
+  }
+
+  if (isEditing) {
+    return (
+      <SongEditor
+        song={song}
+        onSave={(updatedSong) => {
+          onUpdateSong(updatedSong);
+          setIsEditing(false);
+        }}
+        onCancel={() => setIsEditing(false)}
+      />
+    );
   }
 
   return (
@@ -111,6 +127,8 @@ function SongDetails({ song, onPlayAudio }) {
         <span><strong>Type:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
       </div>
+      <button onClick={() => setIsEditing(true)}>Edit</button>
+
       <ExpandableBoxList
         title="🎧 Recordings"
         items={song.recordings}
@@ -135,6 +153,7 @@ function SongDetails({ song, onPlayAudio }) {
         type="lyrics"
         onShowLyrics={setLyricsUrl}
       />
+
       <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />
       <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />
     </div>

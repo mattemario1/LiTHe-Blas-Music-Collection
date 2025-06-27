@@ -1,8 +1,10 @@
-/* SongDetails.css */
 .song-details {
   padding: 20px;
-  max-height: 100vh;
+  max-height: 100%;
   overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .song-details.empty {
@@ -122,6 +124,7 @@
 .action-button.lyrics {
   background-color: #3f51b5;
 }
+
 .action-button.lyrics:hover {
   background-color: #303f9f;
 }
@@ -157,4 +160,3 @@
   font-size: 0.95em;
   color: #555;
 }
-
