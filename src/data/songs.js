@@ -76,6 +76,15 @@ const songsData = [
         "tags": ["Dataskriven"],
         "description": "Det här också"
       }
+    ],
+    "lyrics": [
+      {
+        "name": "Lyrics PDF",
+        "file": "/sample_lyrics.md",
+        "date": "1997",
+        "tags": ["Text"],
+        "description": "Full lyrics for the song."
+      }
     ]
   }
 ];

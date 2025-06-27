@@ -119,6 +119,13 @@
   background-color: #7b1fa2;
 }
 
+.action-button.lyrics {
+  background-color: #3f51b5;
+}
+.action-button.lyrics:hover {
+  background-color: #303f9f;
+}
+
 .collection-block {
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -150,3 +157,4 @@
   font-size: 0.95em;
   color: #555;
 }
+

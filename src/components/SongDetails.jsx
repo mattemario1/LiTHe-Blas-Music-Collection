@@ -1,6 +1,7 @@
 import React from 'react';
 import './SongDetails.css';
 import PdfModal from './PdfModal';
+import LyricsModal from './LyricsModal';
 
 function ExpandableBoxList({
   title,
@@ -9,7 +10,8 @@ function ExpandableBoxList({
   dateKey,
   type,
   onPlayAudio,
-  onShowPdf
+  onShowPdf,
+  onShowLyrics
 }) {
   const [expandedCollections, setExpandedCollections] = React.useState({});
   const [expandedItems, setExpandedItems] = React.useState({});
@@ -40,6 +42,11 @@ function ExpandableBoxList({
         {type === 'sheet' && (
           <button className="action-button pdf" onClick={(e) => { e.stopPropagation(); onShowPdf?.(item.file); }}>
             <i className="fas fa-file-pdf"></i> Show PDF
+          </button>
+        )}
+        {type === 'lyrics' && (
+          <button className="action-button lyrics" onClick={(e) => { e.stopPropagation(); onShowLyrics?.(item.file); }}>
+            <i className="fas fa-file-alt"></i> Show Lyrics
           </button>
         )}
       </div>
@@ -90,6 +97,7 @@ function ExpandableBoxList({
 
 function SongDetails({ song, onPlayAudio }) {
   const [pdfUrl, setPdfUrl] = React.useState(null);
+  const [lyricsUrl, setLyricsUrl] = React.useState(null);
 
   if (!song) {
     return <div className="song-details empty">Select a song to see details.</div>;
@@ -119,7 +127,16 @@ function SongDetails({ song, onPlayAudio }) {
         type="sheet"
         onShowPdf={setPdfUrl}
       />
+      <ExpandableBoxList
+        title="📝 Lyrics"
+        items={song.lyrics}
+        labelKey="name"
+        dateKey="date"
+        type="lyrics"
+        onShowLyrics={setLyricsUrl}
+      />
       <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />
+      <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />
     </div>
   );
 }
