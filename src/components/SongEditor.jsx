@@ -24,6 +24,14 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
           onChange={(e) => handleFieldChange('instrument', e.target.value)}
         />
       )}
+      {type === 'lyrics' && (
+        <input
+          type="text"
+          value={file.name || ''}
+          placeholder="Lyrics Name"
+          onChange={(e) => handleFieldChange('name', e.target.value)}
+        />
+      )}
       <input
         type="text"
         value={file.description || ''}
