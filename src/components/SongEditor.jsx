@@ -116,13 +116,15 @@ function FileSection({ title, files, onChange, type }) {
 
   const updateCollection = (index, updated) => {
     const updatedFiles = [...files];
-    updatedFiles[index] = updated;
-    onChange(updatedFiles);
+    const collectionIndex = files.findIndex(f => f.collection === updated.collection);
+    if (collectionIndex !== -1) {
+      updatedFiles[collectionIndex] = updated;
+      onChange(updatedFiles);
+    }
   };
 
-  const removeCollection = (index) => {
-    const updatedFiles = [...files];
-    updatedFiles.splice(index, 1);
+  const removeCollectionByName = (collectionToRemove) => {
+    const updatedFiles = files.filter(f => f.collection !== collectionToRemove.collection);
     onChange(updatedFiles);
   };
 
@@ -192,7 +194,7 @@ function FileSection({ title, files, onChange, type }) {
           key={index}
           collection={collection}
           onUpdate={(updated) => updateCollection(index, updated)}
-          onRemove={() => removeCollection(index)}
+          onRemove={() => removeCollectionByName(collection)}
           type={type}
           onRemoveFile={removeFileFromSong}
           onRemoveFromCollection={removeFromCollection}
