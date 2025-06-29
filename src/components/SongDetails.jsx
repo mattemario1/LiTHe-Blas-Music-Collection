@@ -26,32 +26,96 @@ function ExpandableBoxList({
     setExpandedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleActionClick = (e, file, validator, action, errorMsg) => {
+    e.stopPropagation();
+    if (!file || !validator(file)) {
+      alert(errorMsg);
+      return;
+    }
+    action(file);
+  };
+
+  const renderActions = (item) => {
+    const file = item.file;
+
+    return (
+      <div className="file-actions horizontal">
+        <a
+          className="action-button download"
+          href={file || "#"}
+          download
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!file) {
+              alert("No file available for download.");
+              e.preventDefault();
+            }
+          }}
+        >
+          <i className="fas fa-download"></i> Download
+        </a>
+
+        {type === 'recording' && (
+          <button
+            className="action-button play"
+            onClick={(e) =>
+              handleActionClick(
+                e,
+                file,
+                f => /\.(mp3|wav|ogg)$/i.test(f),
+                onPlayAudio,
+                "Invalid or missing audio file."
+              )
+            }
+          >
+            <i className="fas fa-play"></i> Play Music
+          </button>
+        )}
+
+        {type === 'sheet' && (
+          <button
+            className="action-button pdf"
+            onClick={(e) =>
+              handleActionClick(
+                e,
+                file,
+                f => f.toLowerCase().endsWith('.pdf'),
+                onShowPdf,
+                "Invalid or missing PDF file."
+              )
+            }
+          >
+            <i className="fas fa-file-pdf"></i> Show PDF
+          </button>
+        )}
+
+        {type === 'lyrics' && (
+          <button
+            className="action-button lyrics"
+            onClick={(e) =>
+              handleActionClick(
+                e,
+                file,
+                f => /\.(txt|md)$/i.test(f),
+                onShowLyrics,
+                "Invalid or missing lyrics file."
+              )
+            }
+          >
+            <i className="fas fa-file-alt"></i> Show Lyrics
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const renderItem = (item, key, isExpanded) => (
     <div key={key} className="info-box" onClick={() => toggleItem(key)}>
       <div className="info-main">
         <strong>{item.name || item[labelKey]}</strong>
         <div>{item[dateKey]}</div>
       </div>
-      <div className="file-actions horizontal">
-        <a className="action-button download" href={item.file} download onClick={(e) => e.stopPropagation()}>
-          <i className="fas fa-download"></i> Download
-        </a>
-        {type === 'recording' && (
-          <button className="action-button play" onClick={(e) => { e.stopPropagation(); onPlayAudio?.(item.file); }}>
-            <i className="fas fa-play"></i> Play Music
-          </button>
-        )}
-        {type === 'sheet' && (
-          <button className="action-button pdf" onClick={(e) => { e.stopPropagation(); onShowPdf?.(item.file); }}>
-            <i className="fas fa-file-pdf"></i> Show PDF
-          </button>
-        )}
-        {type === 'lyrics' && (
-          <button className="action-button lyrics" onClick={(e) => { e.stopPropagation(); onShowLyrics?.(item.file); }}>
-            <i className="fas fa-file-alt"></i> Show Lyrics
-          </button>
-        )}
-      </div>
+      {renderActions(item)}
       {isExpanded && (
         <div className="details-inline">
           <p>{item.description}</p>
@@ -137,6 +201,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong }) {
         type="recording"
         onPlayAudio={onPlayAudio}
       />
+
       <ExpandableBoxList
         title="🎼 Sheet Music"
         items={song.sheetMusic}
@@ -145,6 +210,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong }) {
         type="sheet"
         onShowPdf={setPdfUrl}
       />
+
       <ExpandableBoxList
         title="📝 Lyrics"
         items={song.lyrics}
@@ -154,8 +220,8 @@ function SongDetails({ song, onPlayAudio, onUpdateSong }) {
         onShowLyrics={setLyricsUrl}
       />
 
-      <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />
-      <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />
+      {pdfUrl && <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />}
+      {lyricsUrl && <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />}
     </div>
   );
 }
