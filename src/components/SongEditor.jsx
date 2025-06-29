@@ -50,7 +50,6 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
         placeholder="Tags (comma separated)"
         onChange={(e) => handleFieldChange('tags', e.target.value.split(',').map(t => t.trim()))}
       />
-      <a href={file.file} target="_blank" rel="noopener noreferrer">View File</a>
       {collections.length > 0 && (
         <select onChange={(e) => onAddToCollection(file, e.target.value)}>
           <option value="">Add to Collection</option>
@@ -59,10 +58,14 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
           ))}
         </select>
       )}
-      <button onClick={onRemove}>Remove from Song</button>
+      <div className="file-edit-actions">
+        <a href={file.file} target="_blank" rel="noopener noreferrer">View File</a>
+        <button className="remove-button" onClick={onRemove}>Remove from Song</button>
+      </div>
     </div>
   );
 }
+
 
 function CollectionEditor({ collection, onUpdate, onRemove, type, onRemoveFile, onRemoveFromCollection }) {
   const updateFile = (index, updatedFile) => {
@@ -86,7 +89,7 @@ function CollectionEditor({ collection, onUpdate, onRemove, type, onRemoveFile, 
           placeholder="Collection Description"
           onChange={(e) => onUpdate({ ...collection, description: e.target.value })}
         />
-        <button onClick={onRemove}>Remove Collection</button>
+        <button className="remove-collection-button" onClick={onRemove}>Remove Collection</button>
       </div>
       {collection.parts.map((file, index) => (
         <div key={index}>

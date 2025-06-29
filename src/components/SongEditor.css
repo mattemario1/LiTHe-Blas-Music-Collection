@@ -49,23 +49,31 @@
   background-color: #f1f1f1;
   border-radius: 6px;
   border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
 }
 
-.file-edit-box a {
-  display: inline-block;
-  margin-top: 6px;
+.file-edit-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.file-edit-actions a {
   color: #007bff;
   text-decoration: none;
 }
 
-.file-edit-box a:hover {
+.file-edit-actions a:hover {
   text-decoration: underline;
 }
 
 .file-edit-box button,
 .collection-header-edit button,
 .section-actions button {
-  margin-top: 8px;
   padding: 6px 12px;
   font-size: 14px;
   border: none;
@@ -90,7 +98,9 @@
 .collection-header-edit {
   margin-bottom: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
 }
 
@@ -99,6 +109,7 @@
   font-size: 14px;
   border: 1px solid #bbb;
   border-radius: 4px;
+  flex: 1;
 }
 
 .section-actions {
@@ -137,7 +148,8 @@
 }
 
 .remove-from-collection {
-  margin-top: 6px;
+  margin-top: 0px;
+  margin-bottom: 16px;
   padding: 6px 12px;
   font-size: 13px;
   background-color: #ffc107;
@@ -145,4 +157,25 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.remove-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-collection-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: auto;
 }
