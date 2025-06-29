@@ -242,18 +242,24 @@ function SongEditor({ song, onSave, onCancel }) {
         placeholder="Description"
         onChange={(e) => handleChange('description', e.target.value)}
       />
-      <input
-        type="text"
+      <select
         value={editedSong.type}
-        placeholder="Type"
         onChange={(e) => handleChange('type', e.target.value)}
-      />
-      <input
-        type="text"
+      >
+        <option value="">Select Type</option>
+        <option value="Orkesterlåt">Orkesterlåt</option>
+        <option value="Balettlåt">Balettlåt</option>
+        <option value="Övrigt">Övrigt</option>
+      </select>
+      <select
         value={editedSong.status}
-        placeholder="Status"
         onChange={(e) => handleChange('status', e.target.value)}
-      />
+      >
+        <option value="">Select Status</option>
+        <option value="Aktiv">Aktiv</option>
+        <option value="Gammal">Gammal</option>
+        <option value="Övrigt">Övrigt</option>
+      </select>
 
       <FileSection
         title="🎧 Recordings"

@@ -40,6 +40,32 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handleAddNewSong = () => {
+    const newSong = {
+      id: Date.now(), // unique ID
+      name: '',
+      description: '',
+      type: '',
+      status: '',
+      recordings: [],
+      sheetMusic: [],
+      lyrics: []
+    };
+    setSongs(prev => [...prev, newSong]);
+    setSelectedSong(newSong);
+  };
+
+  const handleDeleteSelectedSong = () => {
+    if (!selectedSong) return;
+
+    const confirmDelete = window.confirm(`Are you sure you want to delete the song "${selectedSong.name || 'Untitled'}"?`);
+    if (confirmDelete) {
+      const updatedSongs = songs.filter(song => song.id !== selectedSong.id);
+      setSongs(updatedSongs);
+      setSelectedSong(null);
+    }
+  };
+
   const filteredSongs = songs
     .filter(song => {
       const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -68,6 +94,8 @@ function App() {
       </div>
       <AudioPlayer audioUrl={audioUrl} onClose={() => setAudioUrl(null)} />
       <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+        <button onClick={handleAddNewSong}>➕ New Song</button>
+        <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>🗑️ Delete Selected Song</button>
         <button onClick={downloadUpdatedSongs}>Download Updated JSON</button>
       </div>
     </div>
