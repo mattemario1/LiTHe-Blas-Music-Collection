@@ -1,4 +1,10 @@
-// ... (imports remain unchanged)
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import SearchAndFilter from './components/SearchAndFilter';
+import SongList from './components/SongList';
+import SongDetails from './components/SongDetails';
+import AudioPlayer from './components/AudioPlayer';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -8,9 +14,17 @@ function App() {
   const [audioUrl, setAudioUrl] = useState(null);
 
   useEffect(() => {
-    fetch('/songs')
+    fetch('http://localhost:5000/songs')
       .then(res => res.json())
-      .then(data => setSongs(data))
+      .then(data => {
+        console.log("Fetched songs:", data);
+        if (Array.isArray(data)) {
+          setSongs(data);
+        } else {
+          console.error("Expected an array but got:", data);
+          alert("Failed to load songs: songs.json not found or invalid.");
+        }
+      })
       .catch(err => {
         console.error('Failed to load songs:', err);
         alert('Failed to load songs from server.');
@@ -28,7 +42,7 @@ function App() {
   };
 
   const uploadUpdatedSongs = () => {
-    fetch('/songs', {
+    fetch('http://localhost:5000/songs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(songs),
