@@ -6,6 +6,14 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
     onChange({ ...file, [field]: value });
   };
 
+  const handleFileChange = (e) => {
+    const uploadedFile = e.target.files[0];
+    if (uploadedFile) {
+      handleFieldChange('localFile', uploadedFile);
+      handleFieldChange('fileName', uploadedFile.name);
+    }
+  };
+
   return (
     <div className="file-edit-box">
       {type === 'recording' && (
@@ -50,6 +58,8 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
         placeholder="Tags (comma separated)"
         onChange={(e) => handleFieldChange('tags', e.target.value.split(',').map(t => t.trim()))}
       />
+      <input type="file" onChange={handleFileChange} />
+      {file.fileName && <p>Selected: {file.fileName}</p>}
       {collections.length > 0 && (
         <select onChange={(e) => onAddToCollection(file, e.target.value)}>
           <option value="">Add to Collection</option>

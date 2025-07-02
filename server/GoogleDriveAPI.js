@@ -9,6 +9,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const upload = multer({ dest: 'uploads/' });
+
 const SERVICE_ACCOUNT_FILE = path.join(__dirname, 'service-account.json');
 const FOLDER_ID = '1eDjqD-G4JyF53Bk1hiTbW_FLUzJsIx89';
 
@@ -87,29 +89,29 @@ app.get('/songs', async (req, res) => {
 });
 
 // Upload a file (e.g., audio, sheet music)
-// app.post('/upload-file', upload.single('file'), async (req, res) => {
-//   const drive = await getDriveClient();
-//   const fileMetadata = { name: req.file.originalname, parents: [FOLDER_ID] };
-//   const media = { mimeType: req.file.mimetype, body: fs.createReadStream(req.file.path) };
+app.post('/upload-file', upload.single('file'), async (req, res) => {
+  const drive = await getDriveClient();
+  const fileMetadata = { name: req.file.originalname, parents: [FOLDER_ID] };
+  const media = { mimeType: req.file.mimetype, body: fs.createReadStream(req.file.path) };
 
-//   const response = await drive.files.create({ resource: fileMetadata, media, fields: 'id' });
+  const response = await drive.files.create({ resource: fileMetadata, media, fields: 'id' });
 
-//   fs.unlinkSync(req.file.path);
-//   res.json({ message: 'File uploaded', fileId: response.data.id });
-// });
+  fs.unlinkSync(req.file.path);
+  res.json({ message: 'File uploaded', fileId: response.data.id });
+});
 
-// // Get a file by ID
-// app.get('/file/:id', async (req, res) => {
-//   const drive = await getDriveClient();
-//   const fileId = req.params.id;
+// Get a file by ID
+app.get('/file/:id', async (req, res) => {
+  const drive = await getDriveClient();
+  const fileId = req.params.id;
 
-//   const metadata = await drive.files.get({ fileId, fields: 'name, mimeType' });
-//   const response = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
+  const metadata = await drive.files.get({ fileId, fields: 'name, mimeType' });
+  const response = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
 
-//   res.setHeader('Content-Disposition', `attachment; filename="${metadata.data.name}"`);
-//   res.setHeader('Content-Type', metadata.data.mimeType);
-//   response.data.pipe(res);
-// });
+  res.setHeader('Content-Disposition', `attachment; filename="${metadata.data.name}"`);
+  res.setHeader('Content-Type', metadata.data.mimeType);
+  response.data.pipe(res);
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
