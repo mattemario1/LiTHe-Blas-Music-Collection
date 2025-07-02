@@ -9,8 +9,8 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
   const handleFileChange = (e) => {
     const uploadedFile = e.target.files[0];
     if (uploadedFile) {
+      console.log("File selected:", uploadedFile); // Debug log
       handleFieldChange('localFile', uploadedFile);
-      handleFieldChange('fileName', uploadedFile.name);
     }
   };
 
@@ -59,7 +59,6 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
         onChange={(e) => handleFieldChange('tags', e.target.value.split(',').map(t => t.trim()))}
       />
       <input type="file" onChange={handleFileChange} />
-      {file.fileName && <p>Selected: {file.fileName}</p>}
       {collections.length > 0 && (
         <select onChange={(e) => onAddToCollection(file, e.target.value)}>
           <option value="">Add to Collection</option>
@@ -239,10 +238,77 @@ function FileSection({ title, files, onChange, type }) {
 function SongEditor({ song, onSave, onCancel }) {
   const [editedSong, setEditedSong] = useState({ ...song });
 
-  const handleChange = (field, value) => {
-    setEditedSong(prev => ({ ...prev, [field]: value }));
+const handleChange = (field, value) => {
+  setEditedSong(prev => {
+    if (['recordings', 'sheetMusic', 'lyrics'].includes(field) && Array.isArray(value) === false) {
+      return { ...prev, [field]: updatedArray };
+    }
+    return { ...prev, [field]: value };
+  });
+};
+
+
+  const uploadFileIfNeeded = async (fileObj) => {
+    if (!fileObj.localFile || typeof fileObj.localFile !== 'object') {
+      return fileObj;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileObj.localFile);
+
+    try {
+      const response = await fetch('http://localhost:5000/upload-file', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      console.log("Upload successful:", data);
+
+      const driveUrl = `https://drive.google.com/uc?export=download&id=${data.fileId}`;
+      return {
+          ...fileObj,
+          file: driveUrl,
+          fileId: data.fileId,
+          localFile: undefined,
+      };
+    } catch (error) {
+      console.error("Upload failed:", error);
+      return fileObj;
+    }
   };
 
+  const uploadFilesInArray = async (arr) => {
+  console.log('Uploading files in array:', arr);
+    const result = [];
+    for (const item of arr) {
+      if (Array.isArray(item.parts)) {
+        const updatedParts = [];
+        for (const part of item.parts) {
+          updatedParts.push(await uploadFileIfNeeded(part));
+        }
+        result.push({ ...item, parts: updatedParts });
+      } else {
+        result.push(await uploadFileIfNeeded(item));
+      }
+    }
+  console.log('All files uploaded, result:', result);
+    return result;
+  };
+
+  const handleSave = async () => {
+  console.log('Save button clicked. Starting upload process...');
+    const updatedRecordings = await uploadFilesInArray(editedSong.recordings || []);
+    const updatedSheetMusic = await uploadFilesInArray(editedSong.sheetMusic || []);
+    const updatedLyrics = await uploadFilesInArray(editedSong.lyrics || []);
+    const updatedSong = {
+      ...editedSong,
+      recordings: updatedRecordings,
+      sheetMusic: updatedSheetMusic,
+      lyrics: updatedLyrics
+    };
+    onSave(updatedSong);
+  };
   return (
     <div className="song-editor">
       <h2>Edit Song</h2>
@@ -296,7 +362,7 @@ function SongEditor({ song, onSave, onCancel }) {
       />
 
       <div className="editor-actions">
-        <button onClick={() => onSave(editedSong)}>Save</button>
+        <button onClick={handleSave}>Save</button>
         <button onClick={onCancel}>Cancel</button>
       </div>
     </div>
