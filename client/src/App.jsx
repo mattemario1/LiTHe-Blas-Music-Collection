@@ -1,10 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
-import SearchAndFilter from './components/SearchAndFilter';
-import SongList from './components/SongList';
-import SongDetails from './components/SongDetails';
-import AudioPlayer from './components/AudioPlayer';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+// ... (imports remain unchanged)
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,10 +8,13 @@ function App() {
   const [audioUrl, setAudioUrl] = useState(null);
 
   useEffect(() => {
-    fetch('/songs.json')
+    fetch('/songs')
       .then(res => res.json())
       .then(data => setSongs(data))
-      .catch(err => console.error('Failed to load songs:', err));
+      .catch(err => {
+        console.error('Failed to load songs:', err);
+        alert('Failed to load songs from server.');
+      });
   }, []);
 
   const handlePlayAudio = (fileUrl) => {
@@ -30,19 +27,31 @@ function App() {
     setSelectedSong(updatedSong);
   };
 
-  const downloadUpdatedSongs = () => {
-    const blob = new Blob([JSON.stringify(songs, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'songs.json';
-    a.click();
-    URL.revokeObjectURL(url);
+  const uploadUpdatedSongs = () => {
+    fetch('/songs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(songs),
+    })
+      .then(async res => {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          alert('Songs uploaded to Google Drive!');
+        } catch (err) {
+          console.error('Upload failed: Invalid JSON response', text);
+          alert('Upload failed: Server returned invalid response.');
+        }
+      })
+      .catch(err => {
+        console.error('Upload failed:', err);
+        alert('Upload failed: Network or server error.');
+      });
   };
 
   const handleAddNewSong = () => {
     const newSong = {
-      id: Date.now(), // unique ID
+      id: Date.now(),
       name: '',
       description: '',
       type: '',
@@ -57,7 +66,6 @@ function App() {
 
   const handleDeleteSelectedSong = () => {
     if (!selectedSong) return;
-
     const confirmDelete = window.confirm(`Are you sure you want to delete the song "${selectedSong.name || 'Untitled'}"?`);
     if (confirmDelete) {
       const updatedSongs = songs.filter(song => song.id !== selectedSong.id);
@@ -96,7 +104,7 @@ function App() {
       <div style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button onClick={handleAddNewSong}>➕ New Song</button>
         <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>🗑️ Delete Selected Song</button>
-        <button onClick={downloadUpdatedSongs}>Download Updated JSON</button>
+        <button onClick={uploadUpdatedSongs}>Upload Updated JSON</button>
       </div>
     </div>
   );

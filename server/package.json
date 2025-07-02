@@ -1,0 +1,14 @@
+{
+  "name": "google-drive-backend",
+  "version": "1.0.0",
+  "main": "GoogleDriveAPI.js",
+  "scripts": {
+    "start": "node GoogleDriveAPI.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "googleapis": "^133.0.0",
+    "multer": "^2.0.1",
+    "fs": "^0.0.1-security"
+  }
+}

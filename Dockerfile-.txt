@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Install backend dependencies
 COPY server/package*.json ./server/
-COPY server/service-account.json ./server/
 RUN cd server && npm install
 
 # Copy full frontend source before building
