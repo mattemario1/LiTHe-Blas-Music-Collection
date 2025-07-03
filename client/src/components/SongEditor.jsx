@@ -1,257 +1,18 @@
+// SongEditor.jsx
 import React, { useState } from 'react';
 import './SongEditor.css';
-
-function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection }) {
-  const handleFieldChange = (field, value) => {
-    onChange({ ...file, [field]: value });
-  };
-
-  const handleFileChange = (e) => {
-    const uploadedFile = e.target.files[0];
-    if (uploadedFile) {
-      console.log("File selected:", uploadedFile); // Debug log
-      handleFieldChange('localFile', uploadedFile);
-    }
-  };
-
-  return (
-    <div className="file-edit-box">
-      {type === 'recording' && (
-        <input
-          type="text"
-          value={file.album || ''}
-          placeholder="Album"
-          onChange={(e) => handleFieldChange('album', e.target.value)}
-        />
-      )}
-      {type === 'sheet' && (
-        <input
-          type="text"
-          value={file.instrument || ''}
-          placeholder="Instrument"
-          onChange={(e) => handleFieldChange('instrument', e.target.value)}
-        />
-      )}
-      {type === 'lyrics' && (
-        <input
-          type="text"
-          value={file.name || ''}
-          placeholder="Lyrics Name"
-          onChange={(e) => handleFieldChange('name', e.target.value)}
-        />
-      )}
-      <input
-        type="text"
-        value={file.description || ''}
-        placeholder="Description"
-        onChange={(e) => handleFieldChange('description', e.target.value)}
-      />
-      <input
-        type="text"
-        value={file.date || ''}
-        placeholder="Date"
-        onChange={(e) => handleFieldChange('date', e.target.value)}
-      />
-      <input
-        type="text"
-        value={file.tags?.join(', ') || ''}
-        placeholder="Tags (comma separated)"
-        onChange={(e) => handleFieldChange('tags', e.target.value.split(',').map(t => t.trim()))}
-      />
-      <input type="file" onChange={handleFileChange} />
-      {collections.length > 0 && (
-        <select onChange={(e) => onAddToCollection(file, e.target.value)}>
-          <option value="">Add to Collection</option>
-          {collections.map((c, i) => (
-            <option key={i} value={c.collection}>{c.collection}</option>
-          ))}
-        </select>
-      )}
-      <div className="file-edit-actions">
-        <a href={file.file} target="_blank" rel="noopener noreferrer">View File</a>
-        <button className="remove-button" onClick={onRemove}>Remove from Song</button>
-      </div>
-    </div>
-  );
-}
-
-
-function CollectionEditor({ collection, onUpdate, onRemove, type, onRemoveFile, onRemoveFromCollection }) {
-  const updateFile = (index, updatedFile) => {
-    const updatedParts = [...collection.parts];
-    updatedParts[index] = updatedFile;
-    onUpdate({ ...collection, parts: updatedParts });
-  };
-
-  return (
-    <div className="collection-box">
-      <div className="collection-header-edit">
-        <input
-          type="text"
-          value={collection.collection}
-          placeholder="Collection Name"
-          onChange={(e) => onUpdate({ ...collection, collection: e.target.value })}
-        />
-        <input
-          type="text"
-          value={collection.description}
-          placeholder="Collection Description"
-          onChange={(e) => onUpdate({ ...collection, description: e.target.value })}
-        />
-        <button className="remove-collection-button" onClick={onRemove}>Remove Collection</button>
-      </div>
-      {collection.parts.map((file, index) => (
-        <div key={index}>
-          <FileEditor
-            file={file}
-            onChange={(updated) => updateFile(index, updated)}
-            onRemove={() => onRemoveFile(file, collection.collection)}
-            type={type}
-            collections={[]}
-            onAddToCollection={() => {}}
-          />
-          <button
-            className="remove-from-collection"
-            onClick={() => onRemoveFromCollection(file, collection.collection)}
-          >
-            Remove from Collection
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FileSection({ title, files, onChange, type }) {
-  const collections = files.filter(f => Array.isArray(f.parts));
-  const ungrouped = files.filter(f => !Array.isArray(f.parts));
-
-  const updateCollection = (index, updated) => {
-    const updatedFiles = [...files];
-    const collectionIndex = files.findIndex(f => f.collection === updated.collection);
-    if (collectionIndex !== -1) {
-      updatedFiles[collectionIndex] = updated;
-      onChange(updatedFiles);
-    }
-  };
-
-  const removeCollectionByName = (collectionToRemove) => {
-    const updatedFiles = files.filter(f => f.collection !== collectionToRemove.collection);
-    onChange(updatedFiles);
-  };
-
-  const removeFileFromSong = (fileToRemove, fromCollection = null) => {
-    if (fromCollection) {
-      const updatedCollections = collections.map(c => {
-        if (c.collection === fromCollection) {
-          return { ...c, parts: c.parts.filter(f => f.file !== fileToRemove.file) };
-        }
-        return c;
-      });
-      onChange([...updatedCollections, ...ungrouped]);
-    } else {
-      const updatedUngrouped = ungrouped.filter(f => f.file !== fileToRemove.file);
-      onChange([...collections, ...updatedUngrouped]);
-    }
-  };
-
-  const removeFromCollection = (file, collectionName) => {
-    const updatedCollections = collections.map(c => {
-      if (c.collection === collectionName) {
-        return { ...c, parts: c.parts.filter(f => f.file !== file.file) };
-      }
-      return c;
-    });
-    const updatedUngrouped = [...ungrouped, file];
-    onChange([...updatedCollections, ...updatedUngrouped]);
-  };
-
-  const addToCollection = (file, collectionName) => {
-    const updatedCollections = collections.map(c => {
-      if (c.collection === collectionName) {
-        return { ...c, parts: [...c.parts, file] };
-      }
-      return c;
-    });
-    const updatedUngrouped = ungrouped.filter(f => f.file !== file.file);
-    onChange([...updatedCollections, ...updatedUngrouped]);
-  };
-
-  const addCollection = () => {
-    const newCollection = {
-      collection: 'New Collection',
-      description: '',
-      parts: []
-    };
-    onChange([...files, newCollection]);
-  };
-
-  const addFile = () => {
-    const newFile = {
-      file: '',
-      description: '',
-      date: '',
-      tags: [],
-      ...(type === 'recording' ? { album: '' } : {}),
-      ...(type === 'sheet' ? { instrument: '' } : {})
-    };
-    onChange([...files, newFile]);
-  };
-
-  return (
-    <div className="file-section">
-      <h4>{title}</h4>
-      {collections.map((collection, index) => (
-        <CollectionEditor
-          key={index}
-          collection={collection}
-          onUpdate={(updated) => updateCollection(index, updated)}
-          onRemove={() => removeCollectionByName(collection)}
-          type={type}
-          onRemoveFile={removeFileFromSong}
-          onRemoveFromCollection={removeFromCollection}
-        />
-      ))}
-      {ungrouped.map((file, index) => (
-        <FileEditor
-          key={index}
-          file={file}
-          onChange={(updated) => {
-            const updatedUngrouped = [...ungrouped];
-            updatedUngrouped[index] = updated;
-            onChange([...collections, ...updatedUngrouped]);
-          }}
-          onRemove={() => removeFileFromSong(file)}
-          type={type}
-          collections={collections}
-          onAddToCollection={addToCollection}
-        />
-      ))}
-      <div className="section-actions">
-        <button onClick={addCollection}>Create New Collection</button>
-        <button onClick={addFile}>Add New File</button>
-      </div>
-    </div>
-  );
-}
+import SongFieldsEditor from './SongFieldsEditor';
+import SongAssetEditor from './SongAssetEditor';
 
 function SongEditor({ song, onSave, onCancel }) {
   const [editedSong, setEditedSong] = useState({ ...song });
 
-const handleChange = (field, value) => {
-  setEditedSong(prev => {
-    if (['recordings', 'sheetMusic', 'lyrics'].includes(field) && Array.isArray(value) === false) {
-      return { ...prev, [field]: updatedArray };
-    }
-    return { ...prev, [field]: value };
-  });
-};
-
+  const handleChange = (field, value) => {
+    setEditedSong(prev => ({ ...prev, [field]: value }));
+  };
 
   const uploadFileIfNeeded = async (fileObj) => {
-    if (!fileObj.localFile || typeof fileObj.localFile !== 'object') {
-      return fileObj;
-    }
+    if (!fileObj.localFile || typeof fileObj.localFile !== 'object') return fileObj;
 
     const formData = new FormData();
     formData.append('file', fileObj.localFile);
@@ -263,15 +24,8 @@ const handleChange = (field, value) => {
       });
 
       const data = await response.json();
-      console.log("Upload successful:", data);
-
       const driveUrl = `https://drive.google.com/uc?export=download&id=${data.fileId}`;
-      return {
-          ...fileObj,
-          file: driveUrl,
-          fileId: data.fileId,
-          localFile: undefined,
-      };
+      return { ...fileObj, file: driveUrl, fileId: data.fileId, localFile: undefined };
     } catch (error) {
       console.error("Upload failed:", error);
       return fileObj;
@@ -279,88 +33,32 @@ const handleChange = (field, value) => {
   };
 
   const uploadFilesInArray = async (arr) => {
-  console.log('Uploading files in array:', arr);
     const result = [];
     for (const item of arr) {
       if (Array.isArray(item.parts)) {
-        const updatedParts = [];
-        for (const part of item.parts) {
-          updatedParts.push(await uploadFileIfNeeded(part));
-        }
+        const updatedParts = await Promise.all(item.parts.map(uploadFileIfNeeded));
         result.push({ ...item, parts: updatedParts });
       } else {
         result.push(await uploadFileIfNeeded(item));
       }
     }
-  console.log('All files uploaded, result:', result);
     return result;
   };
 
   const handleSave = async () => {
-  console.log('Save button clicked. Starting upload process...');
     const updatedRecordings = await uploadFilesInArray(editedSong.recordings || []);
     const updatedSheetMusic = await uploadFilesInArray(editedSong.sheetMusic || []);
     const updatedLyrics = await uploadFilesInArray(editedSong.lyrics || []);
-    const updatedSong = {
-      ...editedSong,
-      recordings: updatedRecordings,
-      sheetMusic: updatedSheetMusic,
-      lyrics: updatedLyrics
-    };
-    onSave(updatedSong);
+    onSave({ ...editedSong, recordings: updatedRecordings, sheetMusic: updatedSheetMusic, lyrics: updatedLyrics });
   };
+
   return (
     <div className="song-editor">
       <h2>Edit Song</h2>
-      <input
-        type="text"
-        value={editedSong.name}
-        placeholder="Song Name"
-        onChange={(e) => handleChange('name', e.target.value)}
-      />
-      <textarea
-        value={editedSong.description}
-        placeholder="Description"
-        onChange={(e) => handleChange('description', e.target.value)}
-      />
-      <select
-        value={editedSong.type}
-        onChange={(e) => handleChange('type', e.target.value)}
-      >
-        <option value="">Select Type</option>
-        <option value="Orkesterlåt">Orkesterlåt</option>
-        <option value="Balettlåt">Balettlåt</option>
-        <option value="Övrigt">Övrigt</option>
-      </select>
-      <select
-        value={editedSong.status}
-        onChange={(e) => handleChange('status', e.target.value)}
-      >
-        <option value="">Select Status</option>
-        <option value="Aktiv">Aktiv</option>
-        <option value="Gammal">Gammal</option>
-        <option value="Övrigt">Övrigt</option>
-      </select>
-
-      <FileSection
-        title="🎧 Recordings"
-        files={editedSong.recordings || []}
-        onChange={(files) => handleChange('recordings', files)}
-        type="recording"
-      />
-      <FileSection
-        title="🎼 Sheet Music"
-        files={editedSong.sheetMusic || []}
-        onChange={(files) => handleChange('sheetMusic', files)}
-        type="sheet"
-      />
-      <FileSection
-        title="📝 Lyrics"
-        files={editedSong.lyrics || []}
-        onChange={(files) => handleChange('lyrics', files)}
-        type="lyrics"
-      />
-
+      <SongFieldsEditor song={editedSong} onChange={handleChange} />
+      <SongAssetEditor title="🎧 Recordings" files={editedSong.recordings || []} onChange={(files) => handleChange('recordings', files)} type="recording" />
+      <SongAssetEditor title="🎼 Sheet Music" files={editedSong.sheetMusic || []} onChange={(files) => handleChange('sheetMusic', files)} type="sheet" />
+      <SongAssetEditor title="📝 Lyrics" files={editedSong.lyrics || []} onChange={(files) => handleChange('lyrics', files)} type="lyrics" />
       <div className="editor-actions">
         <button onClick={handleSave}>Save</button>
         <button onClick={onCancel}>Cancel</button>
