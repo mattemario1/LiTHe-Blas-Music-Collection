@@ -4,6 +4,7 @@ import SearchAndFilter from './components/SearchAndFilter';
 import SongList from './components/SongList';
 import SongDetails from './components/SongDetails';
 import AudioPlayer from './components/AudioPlayer';
+import { uploadSongsJson } from './components/uploadUtils';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function App() {
@@ -35,32 +36,16 @@ function App() {
     setAudioUrl(fileUrl);
   };
 
-  const handleUpdateSong = (updatedSong) => {
+  const handleUpdateSong = async (updatedSong) => {
     const updatedSongs = songs.map(song => song.id === updatedSong.id ? updatedSong : song);
     setSongs(updatedSongs);
     setSelectedSong(updatedSong);
-  };
 
-  const uploadUpdatedSongs = () => {
-    fetch('http://localhost:5000/songs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(songs),
-    })
-      .then(async res => {
-        const text = await res.text();
-        try {
-          const data = JSON.parse(text);
-          alert('Songs uploaded to Google Drive!');
-        } catch (err) {
-          console.error('Upload failed: Invalid JSON response', text);
-          alert('Upload failed: Server returned invalid response.');
-        }
-      })
-      .catch(err => {
-        console.error('Upload failed:', err);
-        alert('Upload failed: Network or server error.');
-      });
+    try {
+      await uploadSongsJson(updatedSongs); // Simple call; no progress bar here
+    } catch (err) {
+      alert("Failed to upload updated song data.");
+    }
   };
 
   const handleAddNewSong = () => {
@@ -112,13 +97,14 @@ function App() {
           song={selectedSong}
           onPlayAudio={handlePlayAudio}
           onUpdateSong={handleUpdateSong}
+          songs={songs}
+          setSongs={setSongs}
         />
       </div>
       <AudioPlayer audioUrl={audioUrl} onClose={() => setAudioUrl(null)} />
       <div style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button onClick={handleAddNewSong}>➕ New Song</button>
         <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>🗑️ Delete Selected Song</button>
-        <button onClick={uploadUpdatedSongs}>Upload Updated JSON</button>
       </div>
     </div>
   );

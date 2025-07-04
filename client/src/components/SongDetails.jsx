@@ -161,7 +161,7 @@ function ExpandableBoxList({
   );
 }
 
-function SongDetails({ song, onPlayAudio, onUpdateSong }) {
+function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -179,6 +179,8 @@ function SongDetails({ song, onPlayAudio, onUpdateSong }) {
           setIsEditing(false);
         }}
         onCancel={() => setIsEditing(false)}
+        songs={songs}
+      setSongs={setSongs}
       />
     );
   }

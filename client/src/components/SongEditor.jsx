@@ -1,166 +1,79 @@
-// SongEditor.jsx
+// At the top
 import React, { useState, useEffect, useRef } from 'react';
 import './SongEditor.css';
 import SongFieldsEditor from './SongFieldsEditor';
 import SongAssetEditor from './SongAssetEditor';
+import {
+  uploadFilesInArray, getAllFiles, constructFileName,
+  deleteRemovedFiles, renameChangedFiles, uploadSongsJson
+} from './uploadUtils';
 
-// Helper to construct the standard filename
-const constructFileName = (fileObj, assetType, songName) => {
-  let fileNameDetail = '';
-  switch(assetType) {
-    case 'Recordings':
-      fileNameDetail = fileObj.album || fileObj.name || 'Recording';
-      break;
-    case 'Sheet Music':
-      fileNameDetail = fileObj.instrument || fileObj.name || 'Sheet';
-      break;
-    case 'Lyrics':
-      fileNameDetail = fileObj.name || 'Lyrics';
-      break;
-    default:
-      fileNameDetail = fileObj.name || 'File';
-  }
-  return `${songName || 'Untitled Song'} - ${fileNameDetail}`;
-};
-
-// Helper to get a flat list of all file objects from a song
-const getAllFiles = (songData) => {
-  const allFiles = [];
-  const assetTypes = { recordings: 'Recordings', sheetMusic: 'Sheet Music', lyrics: 'Lyrics' };
-  Object.keys(assetTypes).forEach(key => {
-    (songData[key] || []).forEach(item => {
-      if (Array.isArray(item.parts)) {
-        // CORRECTED: Use `item.collection` instead of `item.name`
-        item.parts.forEach(part => allFiles.push({ ...part, assetType: assetTypes[key], collectionName: item.collection }));
-      } else {
-        allFiles.push({ ...item, assetType: assetTypes[key] });
-      }
-    });
-  });
-  return allFiles;
-};
-
-function SongEditor({ song, onSave, onCancel }) {
+function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
   const [editedSong, setEditedSong] = useState({ ...song });
+  const [progressMessage, setProgressMessage] = useState('');
   const originalFileIds = useRef(new Set());
   const originalFileNames = useRef(new Map());
 
   useEffect(() => {
-    const allInitialFiles = getAllFiles(song);
-    const initialIdSet = new Set();
-    const initialNameMap = new Map();
-
-    allInitialFiles.forEach(file => {
-      if (file.fileId) {
-        initialIdSet.add(file.fileId);
-        const originalName = constructFileName(file, file.assetType, song.name);
-        initialNameMap.set(file.fileId, originalName);
+    const initialFiles = getAllFiles(song);
+    const idSet = new Set();
+    const nameMap = new Map();
+    initialFiles.forEach(f => {
+      if (f.fileId) {
+        idSet.add(f.fileId);
+        nameMap.set(f.fileId, constructFileName(f, f.assetType, song.name));
       }
     });
-    originalFileIds.current = initialIdSet;
-    originalFileNames.current = initialNameMap;
+    originalFileIds.current = idSet;
+    originalFileNames.current = nameMap;
   }, [song]);
 
   const handleChange = (field, value) => {
     setEditedSong(prev => ({ ...prev, [field]: value }));
   };
 
-  const uploadFileIfNeeded = async (fileObj, assetType, collectionName) => {
-    if (!fileObj.localFile || typeof fileObj.localFile !== 'object') return fileObj;
-
-    const formData = new FormData();
-    formData.append('file', fileObj.localFile);
-    formData.append('songName', editedSong.name || 'Untitled Song');
-    formData.append('assetType', assetType);
-    
-    if (typeof collectionName === 'string' && collectionName.trim() !== '') {
-      formData.append('collectionName', collectionName.trim());
-    }
-    
-    const finalFileName = constructFileName({ ...fileObj, name: fileObj.localFile.name }, assetType, editedSong.name);
-    formData.append('fileName', finalFileName);
-
-    try {
-      const response = await fetch('http://localhost:5000/upload-file', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      const driveUrl = `https://drive.google.com/uc?export=download&id=${data.fileId}`;
-      return { ...fileObj, file: driveUrl, fileId: data.fileId, localFile: undefined };
-    } catch (error) {
-      console.error("Upload failed:", error);
-      return fileObj;
-    }
-  };
-
-  const uploadFilesInArray = async (arr, assetType) => {
-    const result = [];
-    for (const item of arr) {
-      if (Array.isArray(item.parts)) {
-        // CORRECTED: The property for the collection's name is `collection`, not `name`.
-        const collectionName = item.collection;
-        
-        const updatedParts = await Promise.all(
-          item.parts.map(part => uploadFileIfNeeded(part, assetType, collectionName))
-        );
-        result.push({ ...item, parts: updatedParts });
-      } else {
-        result.push(await uploadFileIfNeeded(item, assetType, null));
-      }
-    }
-    return result;
-  };
-
   const handleSave = async () => {
-    const updatedRecordings = await uploadFilesInArray(editedSong.recordings || [], 'Recordings');
-    const updatedSheetMusic = await uploadFilesInArray(editedSong.sheetMusic || [], 'Sheet Music');
-    const updatedLyrics = await uploadFilesInArray(editedSong.lyrics || [], 'Lyrics');
-    
-    const finalSongState = { ...editedSong, recordings: updatedRecordings, sheetMusic: updatedSheetMusic, lyrics: updatedLyrics };
+    setProgressMessage('Starting upload...');
 
-    const newFileIds = new Set(getAllFiles(finalSongState).map(f => f.fileId).filter(Boolean));
-    const idsToDelete = [];
-    originalFileIds.current.forEach(id => {
-      if (!newFileIds.has(id)) {
-        idsToDelete.push(id);
-      }
-    });
+    const updatedRecordings = await uploadFilesInArray(editedSong.recordings || [], 'Recordings', editedSong.name, setProgressMessage);
+    const updatedSheetMusic = await uploadFilesInArray(editedSong.sheetMusic || [], 'Sheet Music', editedSong.name, setProgressMessage);
+    const updatedLyrics = await uploadFilesInArray(editedSong.lyrics || [], 'Lyrics', editedSong.name, setProgressMessage);
 
-    if (idsToDelete.length > 0) {
-      fetch('http://localhost:5000/batch-delete-files', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileIds: idsToDelete }),
-      }).catch(err => console.error('Failed to send delete request:', err));
-    }
+    const finalSong = {
+      ...editedSong,
+      recordings: updatedRecordings,
+      sheetMusic: updatedSheetMusic,
+      lyrics: updatedLyrics,
+    };
 
-    const filesToRename = [];
-    getAllFiles(finalSongState).forEach(file => {
-      if (file.fileId && originalFileNames.current.has(file.fileId)) {
-        const originalName = originalFileNames.current.get(file.fileId);
-        const newName = constructFileName(file, file.assetType, finalSongState.name);
-        if (originalName !== newName) {
-          filesToRename.push({ fileId: file.fileId, newFileName: newName });
-        }
-      }
-    });
+    const newFileIds = new Set(getAllFiles(finalSong).map(f => f.fileId).filter(Boolean));
+    const allNewFiles = getAllFiles(finalSong);
 
-    if (filesToRename.length > 0) {
-        fetch('http://localhost:5000/batch-rename-files', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: filesToRename }),
-        }).catch(err => console.error('Failed to send rename request:', err));
-    }
+    await deleteRemovedFiles(originalFileIds.current, newFileIds);
+    await renameChangedFiles(originalFileNames.current, finalSong, allNewFiles, setProgressMessage);
 
-    onSave(finalSongState);
+    const updatedSongs = songs.map(s => s.id === finalSong.id ? finalSong : s);
+    setSongs(updatedSongs);
+
+    await uploadSongsJson(updatedSongs, setProgressMessage);
+
+    setProgressMessage('Saving changes...');
+    onSave(finalSong);
+    setProgressMessage('');
   };
+
 
   return (
     <div className="song-editor">
       <h2>Edit Song</h2>
+      {progressMessage && (
+        <div className="loading-overlay">
+          <div className="loading-box">
+            <div className="loading-spinner"></div>
+            <div>{progressMessage}</div>
+          </div>
+        </div>
+      )}
       <SongFieldsEditor song={editedSong} onChange={handleChange} />
       <SongAssetEditor title="🎧 Recordings" files={editedSong.recordings || []} onChange={(files) => handleChange('recordings', files)} type="recording" />
       <SongAssetEditor title="🎼 Sheet Music" files={editedSong.sheetMusic || []} onChange={(files) => handleChange('sheetMusic', files)} type="sheet" />
