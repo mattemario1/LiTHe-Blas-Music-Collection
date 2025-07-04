@@ -3,7 +3,9 @@ import React from 'react';
 
 const getId = () => Date.now().toString();
 
-function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection }) {
+function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection, songs }) {
+
+  const [focusedField, setFocusedField] = React.useState(null);
   const handleChange = (field, value) => onChange({ ...file, [field]: value });
 
   const handleFileInput = (e) => {
@@ -11,13 +13,75 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
     if (uploaded) handleChange('localFile', uploaded);
   };
 
+  const albumOptions = Array.from(new Set(
+    (songs ?? []).flatMap(song => song.recordings.map(rec => rec.album))
+  ));
+  const instrumentOptions = Array.from(new Set(
+    (songs ?? []).flatMap(song => song.sheetMusic.map(sheet => sheet.instrument))
+  ));
   return (
     <div className="file-edit-box">
       {type === 'recording' && (
-        <input type="text" placeholder="Album" value={file.album || ''} onChange={e => handleChange('album', e.target.value)} />
+        <div className="autocomplete-wrapper">
+          <input
+            type="text"
+            placeholder="Album"
+            value={file.album || ''}
+            onChange={e => handleChange('album', e.target.value)}
+            onFocus={() => setFocusedField('album')}
+            onBlur={() => setTimeout(() => setFocusedField(null), 200)}
+          />
+          {focusedField === 'album' && albumOptions.length > 0 && (
+            <div className="autocomplete-list">
+              {albumOptions
+                .filter(album =>
+                  typeof instr === 'string' &&
+                  album.toLowerCase().includes((file.album || '').toLowerCase())
+                )
+                .map((album, idx) => (
+                  <div
+                    key={idx}
+                    className="autocomplete-item"
+                    onClick={() => handleChange('album', album)}
+                  >
+                    {album}
+                  </div>
+                ))
+              }
+            </div>
+          )}
+        </div>
       )}
       {type === 'sheet' && (
-        <input type="text" placeholder="Instrument" value={file.instrument || ''} onChange={e => handleChange('instrument', e.target.value)} />
+        <div className="autocomplete-wrapper">
+          <input
+            type="text"
+            placeholder="Instrument"
+            value={file.instrument || ''}
+            onChange={e => handleChange('instrument', e.target.value)}
+            onFocus={() => setFocusedField('instrument')}
+            onBlur={() => setTimeout(() => setFocusedField(null), 200)}
+          />
+          {focusedField === 'instrument' && instrumentOptions.length > 0 && (
+            <div className="autocomplete-list">
+              {instrumentOptions
+                .filter(instr =>
+                  typeof instr === 'string' &&
+                  instr.toLowerCase().includes((file.instrument || '').toLowerCase())
+                )
+                .map((instr, idx) => (
+                  <div
+                    key={idx}
+                    className="autocomplete-item"
+                    onClick={() => handleChange('instrument', instr)}
+                  >
+                    {instr}
+                  </div>
+                ))
+              }
+            </div>
+          )}
+        </div>
       )}
       {type === 'lyrics' && (
         <input type="text" placeholder="Lyrics Name" value={file.name || ''} onChange={e => handleChange('name', e.target.value)} />
@@ -44,7 +108,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
   );
 }
 
-function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, onRemoveFromCollection }) {
+function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, onRemoveFromCollection, songs }) {
   const updatePart = (index, updatedFile) => {
     const updatedParts = [...collection.parts];
     updatedParts[index] = updatedFile;
@@ -77,7 +141,8 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
             onRemove={() => onRemoveFile(file, collection.collectionId)}
             type={type}
             collections={[]}
-            onAddToCollection={() => {}}
+            onAddToCollection={() => { }}
+            songs={songs}
           />
           <button
             className="remove-from-collection"
@@ -91,7 +156,7 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
   );
 }
 
-function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection }) {
+function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection, songs }) {
   return files.map((file, index) => (
     <FileEditor
       key={file.fileId || index}
@@ -101,11 +166,12 @@ function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddT
       onChange={updated => onUpdateFile(index, updated)}
       onRemove={() => onRemoveFile(file)}
       onAddToCollection={onAddToCollection}
+      songs={songs}
     />
   ));
 }
 
-function SongAssetEditor({ title, files, onChange, type }) {
+function SongAssetEditor({ title, files, onChange, type, songs }) {
   const collections = files.filter(f => Array.isArray(f.parts));
   const ungrouped = files.filter(f => !Array.isArray(f.parts));
 
@@ -198,6 +264,7 @@ function SongAssetEditor({ title, files, onChange, type }) {
           onRemove={() => removeCollection(collection)}
           onRemoveFile={removeFile}
           onRemoveFromCollection={removeFromCollection}
+          songs={songs}
         />
       ))}
 
@@ -208,6 +275,7 @@ function SongAssetEditor({ title, files, onChange, type }) {
         onUpdateFile={updateUngroupedFile}
         onRemoveFile={removeFile}
         onAddToCollection={addToCollection}
+        songs={songs}
       />
 
       <div className="section-actions">

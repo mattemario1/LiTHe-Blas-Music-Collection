@@ -90,6 +90,7 @@ function App() {
         setSearchQuery={setSearchQuery}
         selectedFilters={selectedFilters}
         setSelectedFilters={setSelectedFilters}
+        songs={songs}
       />
       <div className={`main-content ${audioUrl ? 'with-player' : ''}`}>
         <SongList songs={filteredSongs} setSelectedSong={setSelectedSong} />

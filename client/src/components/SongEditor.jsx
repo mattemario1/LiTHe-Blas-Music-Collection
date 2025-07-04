@@ -75,9 +75,9 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         </div>
       )}
       <SongFieldsEditor song={editedSong} onChange={handleChange} />
-      <SongAssetEditor title="🎧 Recordings" files={editedSong.recordings || []} onChange={(files) => handleChange('recordings', files)} type="recording" />
-      <SongAssetEditor title="🎼 Sheet Music" files={editedSong.sheetMusic || []} onChange={(files) => handleChange('sheetMusic', files)} type="sheet" />
-      <SongAssetEditor title="📝 Lyrics" files={editedSong.lyrics || []} onChange={(files) => handleChange('lyrics', files)} type="lyrics" />
+      <SongAssetEditor title="🎧 Recordings" files={editedSong.recordings || []} onChange={(files) => handleChange('recordings', files)} type="recording" songs={songs} />
+      <SongAssetEditor title="🎼 Sheet Music" files={editedSong.sheetMusic || []} onChange={(files) => handleChange('sheetMusic', files)} type="sheet" songs={songs} />
+      <SongAssetEditor title="📝 Lyrics" files={editedSong.lyrics || []} onChange={(files) => handleChange('lyrics', files)} type="lyrics" songs={songs} />
       <div className="editor-actions">
         <button onClick={handleSave}>Save</button>
         <button onClick={onCancel}>Cancel</button>
