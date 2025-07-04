@@ -1,3 +1,4 @@
+
 // SongDetails.jsx
 import React, { useState } from 'react';
 import './SongDetails.css';
@@ -26,27 +27,27 @@ function ExpandableBoxList({
     setExpandedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleActionClick = (e, file, validator, action, errorMsg) => {
+  const handleActionClick = (e, fileId, validator, action, errorMsg) => {
     e.stopPropagation();
-    if (!file || !validator(file)) {
+    if (!fileId || !validator(fileId)) {
       alert(errorMsg);
       return;
     }
-    action(file);
+    action(fileId);
   };
 
   const renderActions = (item) => {
-    const file = item.file;
+    const fileId = item.fileId;
 
     return (
       <div className="file-actions horizontal">
         <a
           className="action-button download"
-          href={file || "#"}
+          href={fileId ? `http://localhost:5000/file/${fileId}` : "#"}
           download
           onClick={(e) => {
             e.stopPropagation();
-            if (!file) {
+            if (!fileId) {
               alert("No file available for download.");
               e.preventDefault();
             }
@@ -61,8 +62,8 @@ function ExpandableBoxList({
             onClick={(e) =>
               handleActionClick(
                 e,
-                file,
-                f => /\.(mp3|wav|ogg)$/i.test(f),
+                fileId,
+                f => typeof f === 'string',
                 onPlayAudio,
                 "Invalid or missing audio file."
               )
@@ -78,8 +79,8 @@ function ExpandableBoxList({
             onClick={(e) =>
               handleActionClick(
                 e,
-                file,
-                f => f.toLowerCase().endsWith('.pdf'),
+                fileId,
+                f => typeof f === 'string',
                 onShowPdf,
                 "Invalid or missing PDF file."
               )
@@ -95,8 +96,8 @@ function ExpandableBoxList({
             onClick={(e) =>
               handleActionClick(
                 e,
-                file,
-                f => /\.(txt|md)$/i.test(f),
+                fileId,
+                f => typeof f === 'string',
                 onShowLyrics,
                 "Invalid or missing lyrics file."
               )
@@ -166,6 +167,33 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const handleShowPdf = async (fileId) => {
+    try {
+      const url = `http://localhost:5000/file/${fileId}`;
+      setPdfUrl(url);
+    } catch (err) {
+      alert("Failed to load PDF.");
+    }
+  };
+
+  const handleShowLyrics = async (fileId) => {
+    try {
+      const url = `http://localhost:5000/file/${fileId}`;
+      setLyricsUrl(url);
+    } catch (err) {
+      alert("Failed to load lyrics.");
+    }
+  };
+
+  const handlePlayAudio = async (fileId) => {
+    try {
+      const url = `http://localhost:5000/file/${fileId}`;
+      onPlayAudio(url);
+    } catch (err) {
+      alert("Failed to play audio.");
+    }
+  };
+
   if (!song) {
     return <div className="song-details empty">Select a song to see details.</div>;
   }
@@ -180,7 +208,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
         }}
         onCancel={() => setIsEditing(false)}
         songs={songs}
-      setSongs={setSongs}
+        setSongs={setSongs}
       />
     );
   }
@@ -201,7 +229,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
         labelKey="album"
         dateKey="date"
         type="recording"
-        onPlayAudio={onPlayAudio}
+        onPlayAudio={handlePlayAudio}
       />
 
       <ExpandableBoxList
@@ -210,7 +238,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
         labelKey="instrument"
         dateKey="date"
         type="sheet"
-        onShowPdf={setPdfUrl}
+        onShowPdf={handleShowPdf}
       />
 
       <ExpandableBoxList
@@ -219,7 +247,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
         labelKey="name"
         dateKey="date"
         type="lyrics"
-        onShowLyrics={setLyricsUrl}
+        onShowLyrics={handleShowLyrics}
       />
 
       {pdfUrl && <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />}
