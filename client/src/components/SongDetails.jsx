@@ -193,10 +193,6 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
     }
   };
 
-  if (!song) {
-    return <div className="song-details empty">Select a song to see details.</div>;
-  }
-
   if (isEditing) {
     return (
       <SongEditor

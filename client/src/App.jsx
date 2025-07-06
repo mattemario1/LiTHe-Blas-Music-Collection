@@ -95,15 +95,16 @@ function App() {
       />
       <div className={`main-content ${audioUrl ? 'with-player' : ''}`}>
         <SongList songs={filteredSongs} setSelectedSong={setSelectedSong} />
-        <SongDetails
-          song={selectedSong}
-          onPlayAudio={handlePlayAudio}
-          onUpdateSong={handleUpdateSong}
-          songs={songs}
-          setSongs={setSongs}
-          // Pass a function to allow the details view to go "back"
-          onBack={() => setSelectedSong(null)}
-        />
+        {selectedSong && (
+          <SongDetails
+            song={selectedSong}
+            onPlayAudio={handlePlayAudio}
+            onUpdateSong={handleUpdateSong}
+            songs={songs}
+            setSongs={setSongs}
+            onBack={() => setSelectedSong(null)}
+          />
+        )}
       </div>
       <AudioPlayer audioUrl={audioUrl} onClose={() => setAudioUrl(null)} />
       {/* Add a class name to this container so we can hide it */}
