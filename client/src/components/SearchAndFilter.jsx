@@ -3,7 +3,6 @@ import './SearchAndFilter.css';
 import songsData from '../data/songs';
 
 function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs }) {
-  const [showFilters, setShowFilters] = useState(false);
   const [focused, setFocused] = useState(false);
 
   const albums = Array.from(new Set(songs.flatMap(song => song.recordings.map(r => r.album))));
@@ -12,23 +11,31 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
     name.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery
   );
 
-
   const handleChange = (field, value) => {
     setSelectedFilters(prev => ({ ...prev, [field]: value }));
   };
 
   return (
-    <div className="search-filter-container" style={{ position: 'relative' }}>
+    <div className="search-filter-container">
       <div className="searchbox-wrapper">
         <input
-          className="search-box"
           type="text"
+          className="search-box"
           placeholder="🔍 Search songs..."
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
         />
+        {searchQuery && (
+          <button
+            className="clear-button"
+            onClick={() => setSearchQuery('')}
+            aria-label="Clear search"
+          >
+            ✕
+          </button>
+        )}
         {focused && filteredSuggestions.length > 0 && (
           <div className="autocomplete-list">
             {filteredSuggestions.map((name, index) => (
@@ -44,39 +51,33 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
         )}
       </div>
 
-      <div className="filter-toggle" onClick={() => setShowFilters(!showFilters)}>
-        🎛️ Filters
-      </div>
-
-      {showFilters && (
-        <div className="filter-panel">
-          <div className="filter-group">
-            <label>Type</label>
-            <select onChange={e => handleChange('type', e.target.value)} defaultValue="">
-              <option value="">-- Select --</option>
-              <option value="Orkesterlåt">Orkesterlåt</option>
-              <option value="Balettlåt">Balettlåt</option>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>Status</label>
-            <select onChange={e => handleChange('status', e.target.value)} defaultValue="">
-              <option value="">-- Select --</option>
-              <option value="Aktiv">Aktiv</option>
-              <option value="Gammal">Gammal</option>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>Album</label>
-            <select onChange={e => handleChange('album', e.target.value)} defaultValue="">
-              <option value="">-- Select --</option>
-              {albums.map((album, index) => (
-                <option key={index} value={album}>{album}</option>
-              ))}
-            </select>
-          </div>
+      <div className="filter-panel">
+        <div className="filter-group">
+          <label>Type</label>
+          <select onChange={(e) => handleChange('type', e.target.value)} defaultValue="">
+            <option value="">-- Select --</option>
+            <option value="Orkesterlåt">Orkesterlåt</option>
+            <option value="Balettlåt">Balettlåt</option>
+          </select>
         </div>
-      )}
+        <div className="filter-group">
+          <label>Status</label>
+          <select onChange={(e) => handleChange('status', e.target.value)} defaultValue="">
+            <option value="">-- Select --</option>
+            <option value="Aktiv">Aktiv</option>
+            <option value="Gammal">Gammal</option>
+          </select>
+        </div>
+        <div className="filter-group">
+          <label>Album</label>
+          <select onChange={(e) => handleChange('album', e.target.value)} defaultValue="">
+            <option value="">-- Select --</option>
+            {albums.map((album, index) => (
+              <option key={index} value={album}>{album}</option>
+            ))}
+          </select>
+        </div>
+      </div>
     </div>
   );
 }
