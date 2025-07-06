@@ -22,5 +22,8 @@ RUN npm install -g serve
 # Expose ports
 EXPOSE 3000 5000
 
+
+RUN npm install -g concurrently
+
 # Start both frontend and backend
-CMD ["sh", "-c", "node server/GoogleDriveAPI.js & serve -s client/dist -l 3000"]
+CMD ["concurrently", "\"node server/GoogleDriveAPI.js\"", "\"serve -s client/dist -l 3000\""]
