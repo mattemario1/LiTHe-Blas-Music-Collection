@@ -1,4 +1,3 @@
-
 // SongDetails.jsx
 import React, { useState } from 'react';
 import './SongDetails.css';
@@ -162,7 +161,7 @@ function ExpandableBoxList({
   );
 }
 
-function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
+function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack }) {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -215,6 +214,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs }) {
 
   return (
     <div className="song-details">
+      <button onClick={onBack} className="back-button-mobile">
+        <i className="fas fa-arrow-left"></i> Back to List
+      </button>
+
       <h2>{song.name}</h2>
       <p className="description">{song.description}</p>
       <div className="meta">

@@ -84,7 +84,8 @@ function App() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="App">
+    // Add a dynamic class here based on whether a song is selected
+    <div className={`App ${selectedSong ? 'details-view-active' : ''}`}>
       <SearchAndFilter
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -100,10 +101,13 @@ function App() {
           onUpdateSong={handleUpdateSong}
           songs={songs}
           setSongs={setSongs}
+          // Pass a function to allow the details view to go "back"
+          onBack={() => setSelectedSong(null)}
         />
       </div>
       <AudioPlayer audioUrl={audioUrl} onClose={() => setAudioUrl(null)} />
-      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+      {/* Add a class name to this container so we can hide it */}
+      <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button onClick={handleAddNewSong}>➕ New Song</button>
         <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>🗑️ Delete Selected Song</button>
       </div>

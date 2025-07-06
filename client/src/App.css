@@ -46,3 +46,59 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* --- Styles for the new mobile Back Button --- */
+/* Hide the back button on larger screens by default */
+.back-button-mobile {
+  display: none;
+  margin-bottom: 15px;
+  padding: 8px 15px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  align-self: flex-start; /* Position it to the left */
+}
+
+.back-button-mobile:hover {
+  background-color: #0056b3;
+}
+
+.back-button-mobile i {
+  margin-right: 8px;
+}
+
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 768px) {
+  /* On mobile, the main view is the list. Hide details by default. */
+  .song-details {
+    display: none;
+  }
+  
+  .song-list {
+    width: 100%; /* The list takes up the full screen */
+    border-right: none; /* No need for a border when it's full width */
+  }
+
+  /* When a song is selected, the .details-view-active class is added to .App */
+  /* This block flips the visibility */
+  .App.details-view-active .search-filter-container,
+  .App.details-view-active .song-list,
+  .App.details-view-active .action-buttons {
+    display: none; /* Hide the search, list, and footer buttons */
+  }
+
+  .App.details-view-active .song-details {
+    display: flex; /* Show the details view */
+    width: 100%;   /* Make it take the full screen width */
+    height: 100%;  /* And full height */
+  }
+
+  /* Show the mobile back button only when the details view is active on mobile */
+  .App.details-view-active .back-button-mobile {
+    display: inline-block;
+  }
+}
