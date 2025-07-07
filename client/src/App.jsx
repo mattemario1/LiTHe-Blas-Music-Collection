@@ -13,6 +13,12 @@ function App() {
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [audioInfo, setAudioInfo] = useState({ 
+    url: null, 
+    songName: '', 
+    album: '', 
+    date: null
+  });
 
   useEffect(() => {
     fetch('http://localhost:5000/songs')
@@ -32,8 +38,13 @@ function App() {
       });
   }, []);
 
-  const handlePlayAudio = (fileUrl) => {
-    setAudioUrl(fileUrl);
+  const handlePlayAudio = (fileUrl, songName, album, date) => {
+    setAudioInfo({ 
+      url: fileUrl, 
+      songName, 
+      album, 
+      date 
+    });
   };
 
   const handleUpdateSong = async (updatedSong) => {
@@ -106,7 +117,18 @@ function App() {
           />
         )}
       </div>
-      <AudioPlayer audioUrl={audioUrl} onClose={() => setAudioUrl(null)} />
+      <AudioPlayer 
+        audioUrl={audioInfo.url} 
+        songName={audioInfo.songName}
+        songAlbum={audioInfo.album}
+        songDate={audioInfo.date}  // Pass date to player
+        onClose={() => setAudioInfo({ 
+          url: null, 
+          songName: '', 
+          album: '', 
+          date: null 
+        })} 
+      />
       {/* Add a class name to this container so we can hide it */}
       <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button onClick={handleAddNewSong}>➕ New Song</button>

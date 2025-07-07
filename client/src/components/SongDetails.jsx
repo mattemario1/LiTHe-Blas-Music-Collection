@@ -26,13 +26,13 @@ function ExpandableBoxList({
     setExpandedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleActionClick = (e, fileId, validator, action, errorMsg) => {
+  const handleActionClick = (e, item, validator, action, errorMsg) => {
     e.stopPropagation();
-    if (!fileId || !validator(fileId)) {
+    if (!validator(item)) {
       alert(errorMsg);
       return;
     }
-    action(fileId);
+    action(item);  // Pass the entire item
   };
 
   const renderActions = (item) => {
@@ -61,8 +61,8 @@ function ExpandableBoxList({
             onClick={(e) =>
               handleActionClick(
                 e,
-                fileId,
-                f => typeof f === 'string',
+                item,  // Pass entire item instead of just fileId
+                i => i.fileId && typeof i.fileId === 'string',
                 onPlayAudio,
                 "Invalid or missing audio file."
               )
@@ -184,10 +184,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
     }
   };
 
-  const handlePlayAudio = async (fileId) => {
+  const handlePlayAudio = async (item) => {
     try {
-      const url = `http://localhost:5000/file/${fileId}`;
-      onPlayAudio(url);
+      const url = `http://localhost:5000/file/${item.fileId}`;
+      onPlayAudio(url, song.name, item.album || 'Unknown Album', item.date);
     } catch (err) {
       alert("Failed to play audio.");
     }
