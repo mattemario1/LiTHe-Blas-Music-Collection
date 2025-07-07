@@ -3,16 +3,47 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #222;
+  background: black;
   padding: 10px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   z-index: 1000;
+  width: 100%;
 }
 
-.audio-element {
-  width: 80%;
+.loading-bar-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.audio-player-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.rhap_container {
+  background-color: black !important;
+  color: white !important;
+  flex: 1;
+  width: 100% !important;
+}
+
+.rhap_controls-section,
+.rhap_progress-section,
+.rhap_time {
+  color: white !important;
+}
+
+.rhap_progress-bar-show-download,
+.rhap_progress-indicator,
+.rhap_download-progress,
+.rhap_progress-filled {
+  background-color: white !important;
 }
 
 .close-button {
@@ -21,22 +52,60 @@
   color: white;
   font-size: 20px;
   margin-left: 10px;
+  margin-right: 10px;   /* Prevent clipping on the right */
+  position: relative;   /* Ensures proper positioning */
+  z-index: 1;           /* Keeps it above other elements */
   cursor: pointer;
 }
 
-.skip-button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 16px;
-  margin: 0 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: color 0.2s ease;
+.loading-bar {
+  width: 100%;
+  max-width: 600px;
+  height: 4px;
+  background-color: black;
+  overflow: hidden;
+  margin-bottom: 8px;
+  border-radius: 2px;
+  position: relative;
 }
 
-.skip-button:hover {
-  color: #1db954; /* Spotify green or any accent color */
+.loading-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-color: #1db954;
+  animation: loadingAnimation 1.2s infinite linear;
+}
+
+@keyframes loadingAnimation {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+/* Desktop layout: close button to the right of the player */
+@media (min-width: 601px) {
+  .audio-player-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .audio-player-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .rhap_container {
+    flex: 1;
+  }
+}
+
+/* Mobile layout: stack controls below progress bar */
+@media (max-width: 600px) {
+  .audio-player-container {
+    flex-direction: column;
+    align-items: center;
+  }
 }
