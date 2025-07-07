@@ -4,65 +4,31 @@
   left: 0;
   right: 0;
   background: black;
-  padding: 10px;
+  padding: 40px 0px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 1000;
   width: 100%;
-}
-
-.loading-bar-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.audio-player-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.rhap_container {
-  background-color: black !important;
-  color: white !important;
-  flex: 1;
-  width: 100% !important;
-}
-
-.rhap_controls-section,
-.rhap_progress-section,
-.rhap_time {
-  color: white !important;
-}
-
-.rhap_progress-bar-show-download,
-.rhap_progress-indicator,
-.rhap_download-progress,
-.rhap_progress-filled {
-  background-color: white !important;
+  box-sizing: border-box;
 }
 
 .close-button {
+  position: absolute;
+  top: 8px;
+  right: 12px;
   background: transparent;
   border: none;
   color: white;
-  font-size: 20px;
-  margin-left: 10px;
-  margin-right: 10px;   /* Prevent clipping on the right */
-  position: relative;   /* Ensures proper positioning */
-  z-index: 1;           /* Keeps it above other elements */
+  font-size: 22px;
+  z-index: 2;
   cursor: pointer;
 }
 
 .loading-bar {
   width: 100%;
-  max-width: 600px;
   height: 4px;
-  background-color: black;
+  background-color: #333;
   overflow: hidden;
   margin-bottom: 8px;
   border-radius: 2px;
@@ -84,28 +50,54 @@
   100% { left: 100%; }
 }
 
-/* Desktop layout: close button to the right of the player */
-@media (min-width: 601px) {
-  .audio-player-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .audio-player-inner {
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .rhap_container {
-    flex: 1;
-  }
+.rhap_container {
+  background-color: black !important;
+  color: white !important;
+  width: 100% !important;
+  padding: 0 20px !important;
+  box-sizing: border-box;
 }
 
-/* Mobile layout: stack controls below progress bar */
-@media (max-width: 600px) {
-  .audio-player-container {
-    flex-direction: column;
-    align-items: center;
+.rhap_controls-section,
+.rhap_progress-section,
+.rhap_time {
+  color: white !important;
+}
+
+.rhap_progress-bar-show-download,
+.rhap_progress-indicator,
+.rhap_download-progress,
+.rhap_progress-filled {
+  background-color: white !important;
+}
+
+.rhap_main {
+    gap: 16px;
+  }
+
+/* 🖥 DESKTOP (>600px) */
+@media (min-width: 601px) {
+  .rhap_main {
+    flex-direction: row;
+  }
+
+  .rhap_progress-section {
+    flex: 5 1 auto;
+  }
+
+  .rhap_additional-controls {
+    flex: 0 0 auto;
+  }
+
+  .rhap_main-controls {
+    flex: 1 1 auto;
+  }
+
+  .rhap_volume-controls {
+    flex: 2 0 auto;
+  }
+
+  .rhap_volume-container {
+    flex: 1 1 100px;
   }
 }

@@ -14,25 +14,19 @@ const CustomAudioPlayer = ({ audioUrl, onClose }) => {
 
   return (
     <div className="audio-player-container">
-      <div className="loading-bar-wrapper">
-        {isLoading && (
-          <div className="loading-bar">
-            <div className="loading-progress"></div>
-          </div>
-        )}
-      </div>
-      <div className="audio-player-inner">
-        <AudioPlayer
-          src={audioUrl}
-          autoPlayAfterSrcChange={true}
-          showJumpControls={false}
-          onLoadedData={() => setIsLoading(false)}
-          autoPlay
-        />
-        <button className="close-button" onClick={onClose}>
-          ✖
-        </button>
-      </div>
+      <button className="close-button" onClick={onClose}>✖</button>
+      {isLoading && (
+        <div className="loading-bar">
+          <div className="loading-progress"></div>
+        </div>
+      )}
+      <AudioPlayer
+        src={audioUrl}
+        autoPlayAfterSrcChange={true}
+        showJumpControls={false}
+        onLoadedData={() => setIsLoading(false)}
+        autoPlay
+      />
     </div>
   );
 };
