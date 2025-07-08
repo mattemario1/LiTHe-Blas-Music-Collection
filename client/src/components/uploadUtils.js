@@ -82,7 +82,20 @@ export const uploadFileIfNeeded = async (fileObj, assetType, songName, collectio
   formData.append('file', fileObj.localFile);
   formData.append('songName', songName || 'Untitled Song');
   formData.append('assetType', assetType);
-  formData.append('fileName', constructFileName(fileObj, assetType, songName));
+  
+  // FIX: Handle file extension safely
+  const originalName = fileObj.localFile.name || 'file';
+  const extension = originalName.includes('.') 
+    ? originalName.split('.').pop() 
+    : '';
+  const baseName = constructFileName(fileObj, assetType, songName);
+  
+  const fileName = extension 
+    ? `${baseName}.${extension}`
+    : baseName;
+  
+  formData.append('fileName', fileName);
+  
   if (collectionName) formData.append('collectionName', collectionName);
   
   // Include duration in the file object
