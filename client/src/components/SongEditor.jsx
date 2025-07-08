@@ -56,11 +56,20 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         setProgressMessage
       );
 
+      const updatedOtherFiles = await uploadFilesInArray(
+        editedSong.otherFiles || [],
+        'Other Files',
+        editedSong.name,
+        setProgressMessage
+      );
+
+
       const finalSong = {
         ...editedSong,
         recordings: updatedRecordings,
         sheetMusic: updatedSheetMusic,
         lyrics: updatedLyrics,
+        otherFiles: updatedOtherFiles,
       };
 
       const newFileIds = new Set(getAllFiles(finalSong).map(f => f.fileId).filter(Boolean));
@@ -115,6 +124,13 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         files={editedSong.lyrics || []}
         onChange={(files) => handleChange('lyrics', files)}
         type="lyrics"
+        songs={songs}
+      />
+      <SongAssetEditor
+        title="📁 Other Files"
+        files={editedSong.otherFiles || []}
+        onChange={(files) => handleChange('otherFiles', files)}
+        type="other"
         songs={songs}
       />
       

@@ -31,6 +31,9 @@ export const constructFileName = (fileObj, assetType, songName) => {
     case 'Lyrics':
       fileNameDetail = fileObj.name || 'Lyrics';
       break;
+    case 'Other Files':
+      fileNameDetail = fileObj.name || 'File';
+      break;
     default:
       fileNameDetail = fileObj.name || 'File';
   }
@@ -39,11 +42,21 @@ export const constructFileName = (fileObj, assetType, songName) => {
 
 export const getAllFiles = (songData) => {
   const allFiles = [];
-  const assetTypes = { recordings: 'Recordings', sheetMusic: 'Sheet Music', lyrics: 'Lyrics' };
+  const assetTypes = {
+    recordings: 'Recordings',
+    sheetMusic: 'Sheet Music',
+    lyrics: 'Lyrics',
+    otherFiles: 'Other Files' // Add new asset type
+  };
+  
   Object.keys(assetTypes).forEach(key => {
     (songData[key] || []).forEach(item => {
       if (Array.isArray(item.parts)) {
-        item.parts.forEach(part => allFiles.push({ ...part, assetType: assetTypes[key], collectionName: item.collection }));
+        item.parts.forEach(part => allFiles.push({ 
+          ...part, 
+          assetType: assetTypes[key], 
+          collectionName: item.collection 
+        }));
       } else {
         allFiles.push({ ...item, assetType: assetTypes[key] });
       }

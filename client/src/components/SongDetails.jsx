@@ -262,6 +262,14 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         onShowLyrics={handleShowLyrics}
       />
 
+      <ExpandableBoxList
+        title="📁 Other Files"
+        items={song.otherFiles || []}
+        labelKey="name"
+        dateKey="date"
+        type="other"
+      />
+
       {pdfUrl && <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />}
       {lyricsUrl && <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />}
     </div>

@@ -84,7 +84,19 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
         </div>
       )}
       {type === 'lyrics' && (
-        <input type="text" placeholder="Lyrics Name" value={file.name || ''} onChange={e => handleChange('name', e.target.value)} />
+        <input type="text"
+          placeholder="Lyrics Name"
+          value={file.name || ''}
+          onChange={e => handleChange('name', e.target.value)}
+        />
+      )}
+      {type === 'other' && (
+        <input
+          type="text"
+          placeholder="Name"
+          value={file.name || ''}
+          onChange={e => handleChange('name', e.target.value)}
+        />
       )}
       <input type="text" placeholder="Description" value={file.description || ''} onChange={e => handleChange('description', e.target.value)} />
       <input type="text" placeholder="Date" value={file.date || ''} onChange={e => handleChange('date', e.target.value)} />
@@ -246,7 +258,8 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
       date: '',
       tags: [],
       ...(type === 'recording' ? { album: '' } : {}),
-      ...(type === 'sheet' ? { instrument: '' } : {})
+      ...(type === 'sheet' ? { instrument: '' } : {}),
+      ...(type === 'other' ? { name: '' } : {})
     };
     onChange([...files, newFile]);
   };

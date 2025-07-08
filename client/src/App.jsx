@@ -68,7 +68,8 @@ function App() {
       status: '',
       recordings: [],
       sheetMusic: [],
-      lyrics: []
+      lyrics: [],
+      otherFiles: []
     };
     setSongs(prev => [...prev, newSong]);
     setSelectedSong(newSong);
