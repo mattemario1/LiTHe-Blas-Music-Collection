@@ -95,8 +95,18 @@ function App() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    // Add a dynamic class here based on whether a song is selected
     <div className={`App ${selectedSong ? 'details-view-active' : ''}`}>
+      {/* Back button in top-left corner */}
+      {selectedSong && (
+        <button 
+          className="back-button-mobile" 
+          onClick={() => setSelectedSong(null)}
+          aria-label="Back to song list"
+        >
+          <i className="fas fa-arrow-left"></i> Back
+        </button>
+      )}
+      
       <SearchAndFilter
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -104,6 +114,7 @@ function App() {
         setSelectedFilters={setSelectedFilters}
         songs={songs}
       />
+      
       <div className={`main-content ${audioUrl ? 'with-player' : ''}`}>
         <SongList songs={filteredSongs} setSelectedSong={setSelectedSong} />
         {selectedSong && (
@@ -117,11 +128,12 @@ function App() {
           />
         )}
       </div>
+      
       <AudioPlayer 
         audioUrl={audioInfo.url} 
         songName={audioInfo.songName}
         songAlbum={audioInfo.album}
-        songDate={audioInfo.date}  // Pass date to player
+        songDate={audioInfo.date}
         onClose={() => setAudioInfo({ 
           url: null, 
           songName: '', 
@@ -129,7 +141,7 @@ function App() {
           date: null 
         })} 
       />
-      {/* Add a class name to this container so we can hide it */}
+      
       <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button onClick={handleAddNewSong}>➕ New Song</button>
         <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>🗑️ Delete Selected Song</button>

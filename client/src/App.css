@@ -47,29 +47,37 @@ body {
   flex-direction: column;
 }
 
-/* --- Styles for the new mobile Back Button --- */
-/* Hide the back button on larger screens by default */
+/* --- Updated back button styles --- */
 .back-button-mobile {
   display: none;
-  margin-bottom: 15px;
-  padding: 8px 15px;
+  position: fixed; /* Fixed position */
+  top: 15px;
+  left: 15px; /* Position in top-left corner */
+  z-index: 1000; /* Ensure it stays on top */
+  padding: 10px 15px;
   font-size: 16px;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 25px; /* Rounded corners */
   cursor: pointer;
-  align-self: flex-start; /* Position it to the left */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  transition: all 0.2s ease;
 }
 
 .back-button-mobile:hover {
   background-color: #0056b3;
+  transform: translateY(-2px); /* Lift effect */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.back-button-mobile:active {
+  transform: translateY(0);
 }
 
 .back-button-mobile i {
   margin-right: 8px;
 }
-
 
 /* --- MOBILE RESPONSIVE STYLES --- */
 @media (max-width: 768px) {
@@ -95,6 +103,7 @@ body {
     display: flex; /* Show the details view */
     width: 100%;   /* Make it take the full screen width */
     height: 100%;  /* And full height */
+    padding-top: 60px; /* Added padding to avoid button overlap */
   }
 
   /* Show the mobile back button only when the details view is active on mobile */

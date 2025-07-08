@@ -117,9 +117,13 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         type="lyrics"
         songs={songs}
       />
-      <div className="editor-actions">
-        <button onClick={handleSave}>Save</button>
-        <button onClick={onCancel}>Cancel</button>
+      
+      {/* Improved sticky buttons with original styling */}
+      <div className="editor-actions-sticky">
+        <div className="editor-actions">
+          <button onClick={handleSave}>Save</button>
+          <button onClick={onCancel}>Cancel</button>
+        </div>
       </div>
     </div>
   );
