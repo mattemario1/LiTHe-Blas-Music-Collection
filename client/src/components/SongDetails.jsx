@@ -5,6 +5,13 @@ import PdfModal from './PdfModal';
 import LyricsModal from './LyricsModal';
 import SongEditor from './SongEditor';
 
+const formatDuration = (seconds) => {
+  if (!seconds || seconds <= 0) return null;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+};
+
 function ExpandableBoxList({
   title,
   items,
@@ -37,6 +44,7 @@ function ExpandableBoxList({
 
   const renderActions = (item) => {
     const fileId = item.fileId;
+    const duration = formatDuration(item.duration);
 
     return (
       <div className="file-actions horizontal">
@@ -56,20 +64,25 @@ function ExpandableBoxList({
         </a>
 
         {type === 'recording' && (
-          <button
-            className="action-button play"
-            onClick={(e) =>
-              handleActionClick(
-                e,
-                item,  // Pass entire item instead of just fileId
-                i => i.fileId && typeof i.fileId === 'string',
-                onPlayAudio,
-                "Invalid or missing audio file."
-              )
-            }
-          >
-            <i className="fas fa-play"></i> Play Music
-          </button>
+          <div className="play-action-container">
+            <button
+              className="action-button play"
+              onClick={(e) =>
+                handleActionClick(
+                  e,
+                  item,
+                  i => i.fileId && typeof i.fileId === 'string',
+                  onPlayAudio,
+                  "Invalid or missing audio file."
+                )
+              }
+            >
+              <i className="fas fa-play"></i> Play Music
+            </button>
+            {duration && (
+              <span className="duration-badge">{duration}</span>
+            )}
+          </div>
         )}
 
         {type === 'sheet' && (

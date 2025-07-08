@@ -1,4 +1,24 @@
 // uploadUtils.js
+
+const getAudioDuration = (file) => {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    
+    audio.onloadedmetadata = () => {
+      resolve(audio.duration);
+      URL.revokeObjectURL(url);
+    };
+    
+    audio.onerror = () => {
+      resolve(0);
+      URL.revokeObjectURL(url);
+    };
+    
+    audio.src = url;
+  });
+};
+
 export const constructFileName = (fileObj, assetType, songName) => {
   let fileNameDetail = '';
   switch (assetType) {
@@ -35,12 +55,27 @@ export const getAllFiles = (songData) => {
 export const uploadFileIfNeeded = async (fileObj, assetType, songName, collectionName, setProgress) => {
   if (!fileObj.localFile || typeof fileObj.localFile !== 'object') return fileObj;
 
+  // Calculate duration for audio files
+  let duration = 0;
+  if (assetType === 'Recordings' && fileObj.localFile.type.startsWith('audio/')) {
+    try {
+      duration = await getAudioDuration(fileObj.localFile);
+    } catch (error) {
+      console.error('Error calculating duration:', error);
+    }
+  }
+
   const formData = new FormData();
   formData.append('file', fileObj.localFile);
   formData.append('songName', songName || 'Untitled Song');
   formData.append('assetType', assetType);
   formData.append('fileName', constructFileName(fileObj, assetType, songName));
   if (collectionName) formData.append('collectionName', collectionName);
+  
+  // Include duration in the file object
+  if (duration > 0) {
+    formData.append('duration', duration.toString());
+  }
 
   const fileLabel = fileObj.localFile.name || 'Unnamed File';
   setProgress?.(`Uploading ${assetType}: ${fileLabel}`);
@@ -48,7 +83,14 @@ export const uploadFileIfNeeded = async (fileObj, assetType, songName, collectio
   const res = await fetch('http://localhost:5000/upload-file', { method: 'POST', body: formData });
   const data = await res.json();
   const driveUrl = `https://drive.google.com/uc?export=download&id=${data.fileId}`;
-  return { ...fileObj, file: driveUrl, fileId: data.fileId, localFile: undefined };
+  
+  return { 
+    ...fileObj, 
+    file: driveUrl, 
+    fileId: data.fileId, 
+    localFile: undefined,
+    duration: duration > 0 ? duration : fileObj.duration // Preserve existing duration if any
+  };
 };
 
 export const uploadFilesInArray = async (arr, assetType, songName, setProgress) => {

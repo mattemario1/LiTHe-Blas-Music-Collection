@@ -160,3 +160,18 @@
   font-size: 0.95em;
   color: #555;
 }
+
+.play-action-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duration-badge {
+  padding: 2px 8px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.85em;
+  color: #555;
+  white-space: nowrap;
+}
