@@ -35,7 +35,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
             <div className="autocomplete-list">
               {albumOptions
                 .filter(album =>
-                  typeof instr === 'string' &&
+                  typeof album === 'string' &&
                   album.toLowerCase().includes((file.album || '').toLowerCase())
                 )
                 .map((album, idx) => (
