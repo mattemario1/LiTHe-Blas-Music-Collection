@@ -100,7 +100,6 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
       )}
       <input type="text" placeholder="Description" value={file.description || ''} onChange={e => handleChange('description', e.target.value)} />
       <input type="text" placeholder="Date" value={file.date || ''} onChange={e => handleChange('date', e.target.value)} />
-      <input type="text" placeholder="Tags (comma separated)" value={file.tags?.join(', ') || ''} onChange={e => handleChange('tags', e.target.value.split(',').map(t => t.trim()))} />
       <input type="file" onChange={handleFileInput} />
 
       {collections.length > 0 && (
@@ -256,7 +255,6 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
       file: '',
       description: '',
       date: '',
-      tags: [],
       ...(type === 'recording' ? { album: '' } : {}),
       ...(type === 'sheet' ? { instrument: '' } : {}),
       ...(type === 'other' ? { name: '' } : {})

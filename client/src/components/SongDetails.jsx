@@ -132,7 +132,6 @@ function ExpandableBoxList({
       {isExpanded && (
         <div className="details-inline">
           <p>{item.description}</p>
-          <p><strong>Tags:</strong> {item.tags?.join(', ') || 'None'}</p>
         </div>
       )}
     </div>

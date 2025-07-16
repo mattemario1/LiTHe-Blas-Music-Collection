@@ -40,7 +40,6 @@ export const constructFileName = (fileObj, assetType, songName) => {
   return `${songName || 'Untitled Song'} - ${fileNameDetail}`;
 };
 
-// ADDED THIS FUNCTION TO FIX THE EXPORT ISSUE
 export const getAllFiles = (songData) => {
   const allFiles = [];
   const assetTypes = {
@@ -89,7 +88,6 @@ export const uploadFileIfNeeded = async (fileObj, assetType, songName, songId, c
     name: fileObj.name,
     description: fileObj.description,
     date: fileObj.date,
-    tags: fileObj.tags,
     album: fileObj.album,
     instrument: fileObj.instrument,
     duration: duration || fileObj.duration

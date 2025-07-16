@@ -52,7 +52,6 @@ async function initDB() {
       name TEXT,
       description TEXT,
       date TEXT,
-      tags TEXT,
       album TEXT,
       instrument TEXT,
       duration REAL,
@@ -96,7 +95,6 @@ async function getAssets(songId, assetType) {
           'name', f.name,
           'description', f.description,
           'date', f.date,
-          'tags', f.tags,
           'album', f.album,
           'instrument', f.instrument,
           'duration', f.duration,
@@ -246,15 +244,14 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       // Add to existing collection
       await run(
         `INSERT INTO files (
-          song_id, collection_id, name, description, date, tags, 
+          song_id, collection_id, name, description, date, 
           album, instrument, duration, file_path, asset_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           songId, collectionId, 
           metadataObj.name || '',
           metadataObj.description || '',
           metadataObj.date || '',
-          metadataObj.tags ? metadataObj.tags.join(',') : '',
           metadataObj.album || '',
           metadataObj.instrument || '',
           metadataObj.duration || 0,
@@ -278,15 +275,14 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       
       await run(
         `INSERT INTO files (
-          song_id, collection_id, name, description, date, tags, 
+          song_id, collection_id, name, description, date,  
           album, instrument, duration, file_path, asset_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           songId, collectionRes, 
           metadataObj.name || '',
           metadataObj.description || '',
           metadataObj.date || '',
-          metadataObj.tags ? metadataObj.tags.join(',') : '',
           metadataObj.album || '',
           metadataObj.instrument || '',
           metadataObj.duration || 0,
@@ -299,15 +295,14 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       // Ungrouped file
       await run(
         `INSERT INTO files (
-          song_id, name, description, date, tags, 
+          song_id, name, description, date, 
           album, instrument, duration, file_path, asset_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           songId,
           metadataObj.name || '',
           metadataObj.description || '',
           metadataObj.date || '',
-          metadataObj.tags ? metadataObj.tags.join(',') : '',
           metadataObj.album || '',
           metadataObj.instrument || '',
           metadataObj.duration || 0,
