@@ -43,18 +43,17 @@ function ExpandableBoxList({
   };
 
   const renderActions = (item) => {
-    const fileId = item.fileId;
     const duration = formatDuration(item.duration);
 
     return (
       <div className="file-actions horizontal">
         <a
           className="action-button download"
-          href={fileId ? `http://localhost:5000/file/${fileId}` : "#"}
+          href={item.file_path ? `http://localhost:5000/file/${item.file_path}` : "#"}
           download
           onClick={(e) => {
             e.stopPropagation();
-            if (!fileId) {
+            if (!item.file_path) {
               alert("No file available for download.");
               e.preventDefault();
             }
@@ -71,7 +70,7 @@ function ExpandableBoxList({
                 handleActionClick(
                   e,
                   item,
-                  i => i.fileId && typeof i.fileId === 'string',
+                  i => i.file_path && typeof i.file_path === 'string',
                   onPlayAudio,
                   "Invalid or missing audio file."
                 )
@@ -91,7 +90,7 @@ function ExpandableBoxList({
             onClick={(e) =>
               handleActionClick(
                 e,
-                fileId,
+                item.file_path,
                 f => typeof f === 'string',
                 onShowPdf,
                 "Invalid or missing PDF file."
@@ -108,7 +107,7 @@ function ExpandableBoxList({
             onClick={(e) =>
               handleActionClick(
                 e,
-                fileId,
+                item.file_path,
                 f => typeof f === 'string',
                 onShowLyrics,
                 "Invalid or missing lyrics file."
@@ -178,6 +177,19 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const handlePlayAudio = async (item) => {
+    try {
+      onPlayAudio(
+        `http://localhost:5000/file/${item.file_path}`,
+        song.name,
+        item.album || 'Unknown Album',
+        item.date
+      );
+    } catch (err) {
+      alert("Failed to play audio.");
+    }
+  };
+
   const handleShowPdf = async (filePath) => {
     try {
       const url = `http://localhost:5000/file/${filePath}`;
@@ -193,19 +205,6 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       setLyricsUrl(url);
     } catch (err) {
       alert("Failed to load lyrics.");
-    }
-  };
-
-  const handlePlayAudio = async (item) => {
-    try {
-    onPlayAudio(
-      `http://localhost:5000/uploads/${item.file}`,
-      song.name,
-      item.album || 'Unknown Album',
-      item.date
-    );
-    } catch (err) {
-      alert("Failed to play audio.");
     }
   };
 

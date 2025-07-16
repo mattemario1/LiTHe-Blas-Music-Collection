@@ -237,11 +237,11 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     // Write file from memory buffer
     fs.writeFileSync(filePath, req.file.buffer);
     
-    // Save to database (rest of your existing code)
+    // Get relative path for database storage
     const relativePath = path.relative(UPLOADS_DIR, filePath);
-    
+
+    // Database insertion
     if (collectionId) {
-      // Add to existing collection
       await run(
         `INSERT INTO files (
           song_id, collection_id, name, description, date, 
@@ -320,6 +320,15 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+app.get('/file/:filePath(*)', (req, res) => {
+  const filePath = path.join(UPLOADS_DIR, req.params.filePath);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: 'File not found' });
+  }
+});
+
 // Update song endpoint
 app.put('/api/songs/:id', async (req, res) => {
   try {
@@ -375,14 +384,13 @@ app.post('/api/files/batch-delete', async (req, res) => {
       return res.status(400).json({ error: 'fileIds must be an array' });
     }
 
-    if (fileIds.length === 0) {
-      return res.status(200).json({ message: 'No files to delete.' });
-    }
-
-    // First, get the file paths to delete from the filesystem
+    // Get the file paths to delete
     const placeholders = fileIds.map(() => '?').join(',');
-    const files = await query(`SELECT file_path FROM files WHERE id IN (${placeholders})`, fileIds);
-    
+    const files = await query(
+      `SELECT file_path FROM files WHERE id IN (${placeholders})`, 
+      fileIds
+    );
+
     // Delete from database
     await run(`DELETE FROM files WHERE id IN (${placeholders})`, fileIds);
     

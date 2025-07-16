@@ -108,7 +108,7 @@ export const uploadFileIfNeeded = async (fileObj, assetType, songName, songId, c
   const data = await res.json();
   return { 
     ...fileObj, 
-    file: data.filePath, 
+    file_path: data.filePath,
     localFile: undefined,
     duration: duration > 0 ? duration : fileObj.duration
   };
