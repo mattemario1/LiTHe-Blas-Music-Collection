@@ -179,18 +179,18 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleShowPdf = async (fileId) => {
+  const handleShowPdf = async (filePath) => {
     try {
-      const url = `http://localhost:5000/file/${fileId}`;
+      const url = `http://localhost:5000/file/${filePath}`;
       setPdfUrl(url);
     } catch (err) {
       alert("Failed to load PDF.");
     }
   };
 
-  const handleShowLyrics = async (fileId) => {
+  const handleShowLyrics = async (filePath) => {
     try {
-      const url = `http://localhost:5000/file/${fileId}`;
+      const url = `http://localhost:5000/file/${filePath}`;
       setLyricsUrl(url);
     } catch (err) {
       alert("Failed to load lyrics.");
@@ -199,8 +199,12 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
 
   const handlePlayAudio = async (item) => {
     try {
-      const url = `http://localhost:5000/file/${item.fileId}`;
-      onPlayAudio(url, song.name, item.album || 'Unknown Album', item.date);
+    onPlayAudio(
+      `http://localhost:5000/uploads/${item.file}`,
+      song.name,
+      item.album || 'Unknown Album',
+      item.date
+    );
     } catch (err) {
       alert("Failed to play audio.");
     }

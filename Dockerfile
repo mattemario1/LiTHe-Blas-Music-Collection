@@ -17,13 +17,12 @@ RUN cd client && npm install && npm run build
 COPY server ./server/
 
 # Install serve for frontend
-RUN npm install -g serve
+RUN npm install -g serve concurrently
+
+# Create uploads directory in container (will be overridden by mount)
+RUN mkdir -p /app/server/uploads
 
 # Expose ports
 EXPOSE 3000 5000
 
-
-RUN npm install -g concurrently
-
-# Start both frontend and backend
-CMD ["concurrently", "\"node server/GoogleDriveAPI.js\"", "\"serve -s client/dist -l 3000\""]
+CMD ["concurrently", "\"node server/server.js\"", "\"serve -s client/dist -l 3000\""]

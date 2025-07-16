@@ -3,28 +3,21 @@ import './SongEditor.css';
 import SongFieldsEditor from './SongFieldsEditor';
 import SongAssetEditor from './SongAssetEditor';
 import {
-  uploadFilesInArray, getAllFiles, constructFileName,
-  deleteRemovedFiles, renameChangedFiles, uploadSongsJson
+  uploadFilesInArray, 
+  getAllFiles, // NOW PROPERLY IMPORTED
+  deleteRemovedFiles
 } from './uploadUtils';
 
 function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
   const [editedSong, setEditedSong] = useState({ ...song });
   const [progressMessage, setProgressMessage] = useState('');
   const originalFileIds = useRef(new Set());
-  const originalFileNames = useRef(new Map());
 
   useEffect(() => {
     const initialFiles = getAllFiles(song);
     const idSet = new Set();
-    const nameMap = new Map();
-    initialFiles.forEach(f => {
-      if (f.fileId) {
-        idSet.add(f.fileId);
-        nameMap.set(f.fileId, constructFileName(f, f.assetType, song.name));
-      }
-    });
+    initialFiles.forEach(f => f.fileId && idSet.add(f.fileId));
     originalFileIds.current = idSet;
-    originalFileNames.current = nameMap;
   }, [song]);
 
   const handleChange = (field, value) => {
@@ -35,10 +28,28 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
     setProgressMessage('Starting upload...');
 
     try {
+      // First save basic song info to get ID if new
+      if (!editedSong.id) {
+        const response = await fetch('http://localhost:5000/api/songs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: editedSong.name,
+            description: editedSong.description,
+            type: editedSong.type,
+            status: editedSong.status
+          })
+        });
+        const data = await response.json();
+        editedSong.id = data.id;
+      }
+
+      // Upload all files
       const updatedRecordings = await uploadFilesInArray(
         editedSong.recordings || [],
         'Recordings',
         editedSong.name,
+        editedSong.id,
         setProgressMessage
       );
 
@@ -46,6 +57,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         editedSong.sheetMusic || [],
         'Sheet Music',
         editedSong.name,
+        editedSong.id,
         setProgressMessage
       );
 
@@ -53,6 +65,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         editedSong.lyrics || [],
         'Lyrics',
         editedSong.name,
+        editedSong.id,
         setProgressMessage
       );
 
@@ -60,9 +73,9 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         editedSong.otherFiles || [],
         'Other Files',
         editedSong.name,
+        editedSong.id,
         setProgressMessage
       );
-
 
       const finalSong = {
         ...editedSong,
@@ -72,16 +85,13 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         otherFiles: updatedOtherFiles,
       };
 
+      // Handle file deletions
       const newFileIds = new Set(getAllFiles(finalSong).map(f => f.fileId).filter(Boolean));
-      const allNewFiles = getAllFiles(finalSong);
-
       await deleteRemovedFiles(originalFileIds.current, newFileIds);
-      await renameChangedFiles(originalFileNames.current, finalSong, allNewFiles, setProgressMessage);
 
+      // Update local state
       const updatedSongs = songs.map(s => s.id === finalSong.id ? finalSong : s);
       setSongs(updatedSongs);
-
-      await uploadSongsJson(updatedSongs, setProgressMessage);
 
       setProgressMessage('Saving changes...');
       onSave(finalSong);
@@ -104,7 +114,9 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
           </div>
         </div>
       )}
+      
       <SongFieldsEditor song={editedSong} onChange={handleChange} />
+      
       <SongAssetEditor
         title="🎧 Recordings"
         files={editedSong.recordings || []}
@@ -112,6 +124,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         type="recording"
         songs={songs}
       />
+      
       <SongAssetEditor
         title="🎼 Sheet Music"
         files={editedSong.sheetMusic || []}
@@ -119,6 +132,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         type="sheet"
         songs={songs}
       />
+      
       <SongAssetEditor
         title="📝 Lyrics"
         files={editedSong.lyrics || []}
@@ -126,6 +140,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         type="lyrics"
         songs={songs}
       />
+      
       <SongAssetEditor
         title="📁 Other Files"
         files={editedSong.otherFiles || []}
@@ -134,7 +149,6 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         songs={songs}
       />
       
-      {/* Improved sticky buttons with original styling */}
       <div className="editor-actions-sticky">
         <div className="editor-actions">
           <button onClick={handleSave}>Save</button>

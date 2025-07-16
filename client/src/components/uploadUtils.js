@@ -40,13 +40,14 @@ export const constructFileName = (fileObj, assetType, songName) => {
   return `${songName || 'Untitled Song'} - ${fileNameDetail}`;
 };
 
+// ADDED THIS FUNCTION TO FIX THE EXPORT ISSUE
 export const getAllFiles = (songData) => {
   const allFiles = [];
   const assetTypes = {
     recordings: 'Recordings',
     sheetMusic: 'Sheet Music',
     lyrics: 'Lyrics',
-    otherFiles: 'Other Files' // Add new asset type
+    otherFiles: 'Other Files'
   };
   
   Object.keys(assetTypes).forEach(key => {
@@ -65,8 +66,8 @@ export const getAllFiles = (songData) => {
   return allFiles;
 };
 
-export const uploadFileIfNeeded = async (fileObj, assetType, songName, collectionName, setProgress) => {
-  if (!fileObj.localFile || typeof fileObj.localFile !== 'object') return fileObj;
+export const uploadFileIfNeeded = async (fileObj, assetType, songName, songId, collectionName, setProgress) => {
+  if (!fileObj.localFile) return fileObj;
 
   // Calculate duration for audio files
   let duration = 0;
@@ -80,55 +81,65 @@ export const uploadFileIfNeeded = async (fileObj, assetType, songName, collectio
 
   const formData = new FormData();
   formData.append('file', fileObj.localFile);
-  formData.append('songName', songName || 'Untitled Song');
+  formData.append('songId', songId);
   formData.append('assetType', assetType);
-  
-  // FIX: Handle file extension safely
-  const originalName = fileObj.localFile.name || 'file';
-  const extension = originalName.includes('.') 
-    ? originalName.split('.').pop() 
-    : '';
-  const baseName = constructFileName(fileObj, assetType, songName);
-  
-  const fileName = extension 
-    ? `${baseName}.${extension}`
-    : baseName;
-  
-  formData.append('fileName', fileName);
-  
-  if (collectionName) formData.append('collectionName', collectionName);
-  
-  // Include duration in the file object
-  if (duration > 0) {
-    formData.append('duration', duration.toString());
+  formData.append('collectionName', collectionName || '');
+  formData.append('fileName', fileObj.localFile.name);
+  formData.append('metadata', JSON.stringify({
+    name: fileObj.name,
+    description: fileObj.description,
+    date: fileObj.date,
+    tags: fileObj.tags,
+    album: fileObj.album,
+    instrument: fileObj.instrument,
+    duration: duration || fileObj.duration
+  }));
+
+  if (fileObj.collectionId) {
+    formData.append('collectionId', fileObj.collectionId);
   }
 
   const fileLabel = fileObj.localFile.name || 'Unnamed File';
   setProgress?.(`Uploading ${assetType}: ${fileLabel}`);
 
-  const res = await fetch('http://localhost:5000/upload-file', { method: 'POST', body: formData });
+  const res = await fetch('http://localhost:5000/api/upload', {
+    method: 'POST',
+    body: formData
+  });
+
   const data = await res.json();
-  const driveUrl = `https://drive.google.com/uc?export=download&id=${data.fileId}`;
-  
   return { 
     ...fileObj, 
-    file: driveUrl, 
-    fileId: data.fileId, 
+    file: data.filePath, 
     localFile: undefined,
-    duration: duration > 0 ? duration : fileObj.duration // Preserve existing duration if any
+    duration: duration > 0 ? duration : fileObj.duration
   };
 };
 
-export const uploadFilesInArray = async (arr, assetType, songName, setProgress) => {
+export const uploadFilesInArray = async (arr, assetType, songName, songId, setProgress) => {
   const result = [];
   for (const item of arr) {
     if (Array.isArray(item.parts)) {
       const updatedParts = await Promise.all(
-        item.parts.map(part => uploadFileIfNeeded(part, assetType, songName, item.collection, setProgress))
+        item.parts.map(part => uploadFileIfNeeded(
+          part, 
+          assetType, 
+          songName, 
+          songId, 
+          item.collection, 
+          setProgress
+        ))
       );
       result.push({ ...item, parts: updatedParts });
     } else {
-      result.push(await uploadFileIfNeeded(item, assetType, songName, null, setProgress));
+      result.push(await uploadFileIfNeeded(
+        item, 
+        assetType, 
+        songName, 
+        songId, 
+        null, 
+        setProgress
+      ));
     }
   }
   return result;
@@ -137,50 +148,10 @@ export const uploadFilesInArray = async (arr, assetType, songName, setProgress) 
 export const deleteRemovedFiles = async (oldIds, newIds) => {
   const toDelete = [...oldIds].filter(id => !newIds.has(id));
   if (toDelete.length > 0) {
-    await fetch('http://localhost:5000/batch-delete-files', {
+    await fetch('http://localhost:5000/api/files/batch-delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileIds: toDelete })
     });
-  }
-};
-
-export const renameChangedFiles = async (fileMap, song, newFiles, setProgress) => {
-  const renameList = [];
-  for (const file of newFiles) {
-    if (file.fileId && fileMap.has(file.fileId)) {
-      const original = fileMap.get(file.fileId);
-      const newName = constructFileName(file, file.assetType, song.name);
-      if (original !== newName) {
-        setProgress?.(`Renaming: ${newName}`);
-        renameList.push({ fileId: file.fileId, newFileName: newName });
-      }
-    }
-  }
-
-  if (renameList.length > 0) {
-    await fetch('http://localhost:5000/batch-rename-files', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ files: renameList })
-    });
-  }
-};
-
-export const uploadSongsJson = async (songs, setProgress) => {
-  setProgress?.("Uploading updated song data...");
-
-  try {
-    const res = await fetch('http://localhost:5000/songs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(songs),
-    });
-
-    const text = await res.text();
-    JSON.parse(text); // Validate response
-  } catch (err) {
-    console.error('Upload failed:', err);
-    throw new Error("Failed to upload song data JSON.");
   }
 };

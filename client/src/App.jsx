@@ -4,7 +4,6 @@ import SearchAndFilter from './components/SearchAndFilter';
 import SongList from './components/SongList';
 import SongDetails from './components/SongDetails';
 import AudioPlayer from './components/AudioPlayer';
-import { uploadSongsJson } from './components/uploadUtils';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function App() {
@@ -12,7 +11,6 @@ function App() {
   const [selectedFilters, setSelectedFilters] = useState({ type: '', status: '', album: '' });
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
-  const [audioUrl, setAudioUrl] = useState(null);
   const [audioInfo, setAudioInfo] = useState({ 
     url: null, 
     songName: '', 
@@ -21,7 +19,7 @@ function App() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/songs')
+    fetch('http://localhost:5000/api/songs')
       .then(res => res.json())
       .then(data => {
         console.log("Fetched songs:", data);
@@ -29,7 +27,7 @@ function App() {
           setSongs(data);
         } else {
           console.error("Expected an array but got:", data);
-          alert("Failed to load songs: songs.json not found or invalid.");
+          alert("Failed to load songs.");
         }
       })
       .catch(err => {
@@ -52,16 +50,25 @@ function App() {
     setSongs(updatedSongs);
     setSelectedSong(updatedSong);
 
+    // Update song in backend
     try {
-      await uploadSongsJson(updatedSongs); // Simple call; no progress bar here
+      const response = await fetch(`http://localhost:5000/api/songs/${updatedSong.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSong)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update song on server');
+      }
     } catch (err) {
-      alert("Failed to upload updated song data.");
+      console.error('Error updating song:', err);
+      alert("Failed to update song data on server.");
     }
   };
 
-  const handleAddNewSong = () => {
+  const handleAddNewSong = async () => {
     const newSong = {
-      id: Date.now(),
       name: '',
       description: '',
       type: '',
@@ -71,17 +78,49 @@ function App() {
       lyrics: [],
       otherFiles: []
     };
-    setSongs(prev => [...prev, newSong]);
-    setSelectedSong(newSong);
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/songs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSong)
+      });
+      
+      const data = await response.json();
+      const createdSong = { ...newSong, id: data.id };
+      
+      setSongs(prev => [...prev, createdSong]);
+      setSelectedSong(createdSong);
+    } catch (err) {
+      console.error('Error creating song:', err);
+      alert("Failed to create new song.");
+    }
   };
 
-  const handleDeleteSelectedSong = () => {
+  const handleDeleteSelectedSong = async () => {
     if (!selectedSong) return;
-    const confirmDelete = window.confirm(`Are you sure you want to delete the song "${selectedSong.name || 'Untitled'}"?`);
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the song "${selectedSong.name || 'Untitled'}"?`
+    );
+    
     if (confirmDelete) {
-      const updatedSongs = songs.filter(song => song.id !== selectedSong.id);
-      setSongs(updatedSongs);
-      setSelectedSong(null);
+      try {
+        const response = await fetch(`http://localhost:5000/api/songs/${selectedSong.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          const updatedSongs = songs.filter(song => song.id !== selectedSong.id);
+          setSongs(updatedSongs);
+          setSelectedSong(null);
+        } else {
+          throw new Error('Failed to delete song on server');
+        }
+      } catch (err) {
+        console.error('Error deleting song:', err);
+        alert("Failed to delete song.");
+      }
     }
   };
 
@@ -90,14 +129,14 @@ function App() {
       const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
       const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
-      const matchesAlbum = !selectedFilters.album || song.recordings?.some(r => r.album === selectedFilters.album);
+      const matchesAlbum = !selectedFilters.album || 
+        song.recordings?.some(r => r.album === selectedFilters.album);
       return matchesSearch && matchesType && matchesStatus && matchesAlbum;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className={`App ${selectedSong ? 'details-view-active' : ''}`}>
-      {/* Back button in top-left corner */}
       {selectedSong && (
         <button 
           className="back-button-mobile" 
@@ -116,7 +155,7 @@ function App() {
         songs={songs}
       />
       
-      <div className={`main-content ${audioUrl ? 'with-player' : ''}`}>
+      <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
         <SongList songs={filteredSongs} setSelectedSong={setSelectedSong} />
         {selectedSong && (
           <SongDetails
