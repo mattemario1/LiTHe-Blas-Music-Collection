@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './SearchAndFilter.css';
-import songsData from '../data/songs';
 
 function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs }) {
   const [focused, setFocused] = useState(false);
