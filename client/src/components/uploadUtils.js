@@ -19,25 +19,46 @@ const getAudioDuration = (file) => {
   });
 };
 
-export const constructFileName = (fileObj, assetType, songName) => {
+const sanitizeName = (name) => {
+  return name
+    .replace(/[/\\?%*:|"<>]/g, '_') // Replace illegal characters
+    .normalize('NFC') // Normalize characters
+};
+
+export const constructFileName = (fileObj, assetType, songName, originalFileName) => {
   let fileNameDetail = '';
   switch (assetType) {
     case 'Recordings':
-      fileNameDetail = fileObj.album || fileObj.name || 'Recording';
+      fileNameDetail = sanitizeName(fileObj.album || fileObj.name || 'Recording');
       break;
     case 'Sheet Music':
-      fileNameDetail = fileObj.instrument || fileObj.name || 'Sheet';
+      fileNameDetail = sanitizeName(fileObj.instrument || fileObj.name || 'Sheet');
       break;
     case 'Lyrics':
-      fileNameDetail = fileObj.name || 'Lyrics';
+      fileNameDetail = sanitizeName(fileObj.name || 'Lyrics');
       break;
     case 'Other Files':
-      fileNameDetail = fileObj.name || 'File';
+      fileNameDetail = sanitizeName(fileObj.name || 'File');
       break;
     default:
-      fileNameDetail = fileObj.name || 'File';
+      fileNameDetail = sanitizeName(fileObj.name || 'File');
   }
-  return `${songName || 'Untitled Song'} - ${fileNameDetail}`;
+  
+  // Extract year from date if available (look for 4-digit year)
+  let year = '';
+  if (fileObj.date) {
+    const yearMatch = fileObj.date.match(/\b\d{4}\b/);
+    if (yearMatch) {
+      year = ` -- ${yearMatch[0]}`;
+    }
+  }
+  
+  // Get file extension from original filename
+  const ext = originalFileName.includes('.') 
+    ? originalFileName.substring(originalFileName.lastIndexOf('.'))
+    : '';
+    
+  return `${songName || 'Untitled Song'} - ${fileNameDetail}${year}${ext}`;
 };
 
 export const getAllFiles = (songData) => {
@@ -78,12 +99,20 @@ export const uploadFileIfNeeded = async (fileObj, assetType, songName, songId, c
     }
   }
 
+  // Generate the new filename
+  const newFileName = constructFileName(
+    fileObj,
+    assetType,
+    songName,
+    fileObj.localFile.name
+  );
+
   const formData = new FormData();
   formData.append('file', fileObj.localFile);
   formData.append('songId', songId);
   formData.append('assetType', assetType);
   formData.append('collectionName', collectionName || '');
-  formData.append('fileName', fileObj.localFile.name);
+  formData.append('fileName', newFileName);  // Use the new filename here
   formData.append('metadata', JSON.stringify({
     name: fileObj.name,
     description: fileObj.description,
@@ -152,4 +181,22 @@ export const deleteRemovedFiles = async (oldIds, newIds) => {
       body: JSON.stringify({ fileIds: toDelete })
     });
   }
+};
+
+export const updateFileMetadata = async (fileObj, assetType, songName, songId) => {
+  const response = await fetch(`http://localhost:5000/api/files/${fileObj.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: fileObj.name,
+      description: fileObj.description,
+      date: fileObj.date,
+      album: fileObj.album,
+      instrument: fileObj.instrument,
+      duration: fileObj.duration
+    })
+  });
+  
+  if (!response.ok) throw new Error('Failed to update file metadata');
+  return await response.json(); // Return the updated file object
 };

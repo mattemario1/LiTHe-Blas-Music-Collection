@@ -5,8 +5,47 @@ import SongAssetEditor from './SongAssetEditor';
 import {
   uploadFilesInArray, 
   getAllFiles, // NOW PROPERLY IMPORTED
-  deleteRemovedFiles
+  deleteRemovedFiles,
+  updateFileMetadata
 } from './uploadUtils';
+
+const updateFileInSong = (song, updatedFile) => {
+  const assetTypes = {
+    'Recordings': 'recordings',
+    'Sheet Music': 'sheetMusic',
+    'Lyrics': 'lyrics',
+    'Other Files': 'otherFiles'
+  };
+  
+  const assetType = assetTypes[updatedFile.asset_type];
+  if (!assetType) return song;
+  
+  const newSong = { ...song };
+  const assets = [...(newSong[assetType] || [])];
+  
+  // Update in collections
+  for (let i = 0; i < assets.length; i++) {
+    if (Array.isArray(assets[i].parts)) {
+      // Collection item
+      const parts = [...assets[i].parts];
+      const partIndex = parts.findIndex(p => p.id === updatedFile.id);
+      
+      if (partIndex !== -1) {
+        parts[partIndex] = { ...parts[partIndex], ...updatedFile };
+        assets[i] = { ...assets[i], parts };
+        newSong[assetType] = assets;
+        return newSong;
+      }
+    } else if (assets[i].id === updatedFile.id) {
+      // Single file
+      assets[i] = { ...assets[i], ...updatedFile };
+      newSong[assetType] = assets;
+      return newSong;
+    }
+  }
+  
+  return newSong;
+};
 
 function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
   const [editedSong, setEditedSong] = useState({ ...song });
@@ -16,7 +55,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
   useEffect(() => {
     const initialFiles = getAllFiles(song);
     const idSet = new Set();
-    initialFiles.forEach(f => f.fileId && idSet.add(f.fileId));
+    initialFiles.forEach(f => f.id && idSet.add(f.id));
     originalFileIds.current = idSet;
   }, [song]);
 
@@ -44,41 +83,70 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         editedSong.id = data.id;
       }
 
+      // Update existing files with changed metadata
+      setProgressMessage('Updating file metadata...');
+      const allOriginalFiles = getAllFiles(song);
+      const allEditedFiles = getAllFiles(editedSong);
+      
+      // Create a copy of editedSong to update
+      let updatedSong = { ...editedSong };
+      
+      for (const editedFile of allEditedFiles) {
+        if (!editedFile.localFile && editedFile.id) {
+          const originalFile = allOriginalFiles.find(f => f.id === editedFile.id);
+          if (originalFile && JSON.stringify(editedFile) !== JSON.stringify(originalFile)) {
+            // Update metadata and get new file data
+            const updatedFile = await updateFileMetadata(
+              editedFile,
+              editedFile.assetType,
+              editedSong.name,
+              editedSong.id
+            );
+            
+            // Update the song with the new file data
+            updatedSong = updateFileInSong(updatedSong, updatedFile);
+          }
+        }
+      }
+      
+      // Use the updatedSong for subsequent operations
+      setEditedSong(updatedSong);
+
       // Upload all files
       const updatedRecordings = await uploadFilesInArray(
-        editedSong.recordings || [],
+        updatedSong.recordings || [],
         'Recordings',
-        editedSong.name,
-        editedSong.id,
+        updatedSong.name,
+        updatedSong.id,
         setProgressMessage
       );
 
       const updatedSheetMusic = await uploadFilesInArray(
-        editedSong.sheetMusic || [],
+        updatedSong.sheetMusic || [],
         'Sheet Music',
-        editedSong.name,
-        editedSong.id,
+        updatedSong.name,
+        updatedSong.id,
         setProgressMessage
       );
 
       const updatedLyrics = await uploadFilesInArray(
-        editedSong.lyrics || [],
+        updatedSong.lyrics || [],
         'Lyrics',
-        editedSong.name,
-        editedSong.id,
+        updatedSong.name,
+        updatedSong.id,
         setProgressMessage
       );
 
       const updatedOtherFiles = await uploadFilesInArray(
-        editedSong.otherFiles || [],
+        updatedSong.otherFiles || [],
         'Other Files',
-        editedSong.name,
-        editedSong.id,
+        updatedSong.name,
+        updatedSong.id,
         setProgressMessage
       );
 
       const finalSong = {
-        ...editedSong,
+        ...updatedSong,
         recordings: updatedRecordings,
         sheetMusic: updatedSheetMusic,
         lyrics: updatedLyrics,
@@ -86,7 +154,11 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
       };
 
       // Handle file deletions
-      const newFileIds = new Set(getAllFiles(finalSong).map(f => f.fileId).filter(Boolean));
+      const newFileIds = new Set(
+        getAllFiles(finalSong)
+          .map(f => f.id)  // Use 'id' instead of 'fileId'
+          .filter(Boolean)
+      );
       await deleteRemovedFiles(originalFileIds.current, newFileIds);
 
       // Update local state

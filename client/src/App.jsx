@@ -46,6 +46,7 @@ function App() {
   };
 
   const handleUpdateSong = async (updatedSong) => {
+    // Update local state first
     const updatedSongs = songs.map(song => song.id === updatedSong.id ? updatedSong : song);
     setSongs(updatedSongs);
     setSelectedSong(updatedSong);
@@ -53,9 +54,14 @@ function App() {
     // Update song in backend
     try {
       const response = await fetch(`http://localhost:5000/api/songs/${updatedSong.id}`, {
-        method: 'PUT',
+        method: 'PUT', // Ensure this is PUT
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedSong)
+        body: JSON.stringify({
+          name: updatedSong.name,
+          description: updatedSong.description,
+          type: updatedSong.type,
+          status: updatedSong.status
+        })
       });
       
       if (!response.ok) {
