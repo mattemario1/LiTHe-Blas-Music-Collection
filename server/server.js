@@ -449,31 +449,33 @@ app.put('/api/songs/:id', async (req, res) => {
           return res.status(500).json({ error: 'Failed to rename song folder' });
         }
 
-        // Get files BEFORE renaming so we have the original paths
+        // Get all files for this song
         const files = await query('SELECT * FROM files WHERE song_id = ?', [req.params.id]);
-        console.log(`[FILE RENAME] Renaming ${files.length} files for song ${req.params.id}`);
+        console.log(`[FILE RENAME] Processing ${files.length} files for song ${req.params.id}`);
         
         for (const file of files) {
           try {
-            // Calculate current path based on new folder location
-            const currentPath = file.file_path.replace(oldFolder, newFolder);
-            const currentFullPath = path.join(UPLOADS_DIR, currentPath);
-            
-            // Generate new filename with new song name
+            // Generate new filename based on new song name
             const newFileName = generateFileName(name, file);
             
-            // Build new path by replacing the filename
+            // Get current full path (already in new folder after directory rename)
+            const currentFullPath = path.join(UPLOADS_DIR, file.file_path.replace(oldFolder, newFolder));
+            
+            // Build new path with updated filename
             const newFilePath = path.join(
               path.dirname(currentFullPath),
               newFileName
             );
             
-            // Rename the file
-            if (fs.existsSync(currentFullPath)) {
+            // Only rename if paths are different
+            if (currentFullPath !== newFilePath) {
               console.log(`[FILE RENAME] Renaming: ${currentFullPath} -> ${newFilePath}`);
-              fs.renameSync(currentFullPath, newFilePath);
-            } else {
-              console.warn(`[FILE RENAME WARNING] File not found: ${currentFullPath}`);
+              if (fs.existsSync(currentFullPath)) {
+                fs.renameSync(currentFullPath, newFilePath);
+              } else {
+                console.warn(`[FILE RENAME WARNING] File not found: ${currentFullPath}`);
+                continue;
+              }
             }
             
             // Update database with new path
@@ -481,7 +483,7 @@ app.put('/api/songs/:id', async (req, res) => {
             await run('UPDATE files SET file_path = ? WHERE id = ?', [relativePath, file.id]);
             console.log(`[DB UPDATE] Updated file ${file.id} path to: ${relativePath}`);
           } catch (fileErr) {
-            console.error(`[FILE RENAME ERROR] Could not rename file ${file.id}:`, fileErr);
+            console.error(`[FILE RENAME ERROR] Could not process file ${file.id}:`, fileErr);
           }
         }
       }
@@ -590,18 +592,19 @@ function generateFileName(songName, file) {
       fileNameDetail = file.name || 'File';
   }
   
-  // Extract year from date
+  // Extract year from date if available
   let year = '';
   if (file.date) {
     const yearMatch = file.date.match(/\b\d{4}\b/);
-    if (yearMatch) {
-      year = ` -- ${yearMatch[0]}`;
-    }
+    if (yearMatch) year = ` -- ${yearMatch[0]}`;
   }
   
-  // Get file extension from original path
-  const ext = file.file_path ? path.extname(file.file_path) : '';
+  // Get file extension from current path
+  const ext = file.file_path ? 
+    file.file_path.substring(file.file_path.lastIndexOf('.')) : 
+    '';
   
+  // Construct safe filename
   return `${preserveSpecialChars(songName)} - ${preserveSpecialChars(fileNameDetail)}${year}${ext}`;
 }
 
