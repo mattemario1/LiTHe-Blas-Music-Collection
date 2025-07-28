@@ -1,0 +1,23 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ~/BARAKOD/song-app-uploads:/app/server/uploads
+      - ~/BARAKOD/song-app-data:/app/server/data
+    environment:
+      - UPLOADS_DIR=/app/server/uploads
+      - DB_PATH=/app/server/data/songs.db
+      - NODE_ENV=production

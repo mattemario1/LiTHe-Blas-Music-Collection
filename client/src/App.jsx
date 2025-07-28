@@ -20,19 +20,24 @@ function App() {
 
   useEffect(() => {
     fetch('http://localhost:5000/api/songs')
-      .then(res => res.json())
-      .then(data => {
-        console.log("Fetched songs:", data);
-        if (Array.isArray(data)) {
-          setSongs(data);
-        } else {
-          console.error("Expected an array but got:", data);
-          alert("Failed to load songs.");
+      .then(async (res) => {
+        const text = await res.text();
+        console.log("Raw response:", text);
+        try {
+          const data = JSON.parse(text);
+          if (Array.isArray(data)) {
+            setSongs(data);
+          } else {
+            console.error("Expected array but got:", data);
+          }
+        } catch (err) {
+          console.error("Failed to parse JSON:", err, "from text:", text);
+          throw err;
         }
       })
       .catch(err => {
-        console.error('Failed to load songs:', err);
-        alert('Failed to load songs from server.');
+        console.error('Fetch error:', err);
+        alert('Failed to load songs');
       });
   }, []);
 
@@ -95,14 +100,22 @@ function App() {
       lyrics: [],
       otherFiles: []
     };
-    
+
     try {
       const response = await fetch('http://localhost:5000/api/songs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(newSong)
       });
-      
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+      }
+
       const data = await response.json();
       const createdSong = { ...newSong, id: data.id };
       
@@ -110,7 +123,7 @@ function App() {
       setSelectedSong(createdSong);
     } catch (err) {
       console.error('Error creating song:', err);
-      alert("Failed to create new song.");
+      alert(`Failed to create song: ${err.message}`);
     }
   };
 

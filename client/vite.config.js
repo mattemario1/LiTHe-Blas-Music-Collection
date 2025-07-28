@@ -6,9 +6,24 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/songs': 'http://localhost:5000',
-      '/upload-file': 'http://localhost:5000',
-      '/file': 'http://localhost:5000'
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        // Add these headers:
+        headers: {
+          Connection: 'keep-alive'
+        }
+      },
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      },
+      '/file': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      }
     }
   },
   build: {
