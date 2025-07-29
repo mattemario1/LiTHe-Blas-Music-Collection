@@ -145,7 +145,7 @@ function ExpandableBoxList({
       {collectionItems.map((collection, collectionIndex) => (
         <div key={`collection-${collectionIndex}`} className="collection-block">
           <div className="collection-header" onClick={() => toggleCollection(collectionIndex)}>
-            <strong>{collection.collection ?? 'Collection'}</strong>
+            <strong>{collection.name ?? 'Collection'}</strong>
             <p>{collection.description}</p>
           </div>
           {expandedCollections[collectionIndex] && (
