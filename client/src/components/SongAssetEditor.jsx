@@ -112,7 +112,15 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
       )}
       <input type="text" placeholder="Description" value={file.description || ''} onChange={e => handleChange('description', e.target.value)} />
       <input type="text" placeholder="Date" value={file.date || ''} onChange={e => handleChange('date', e.target.value)} />
-      <input type="file" onChange={handleFileInput} />
+      <div className="file-input-group">
+        <input type="file" onChange={handleFileInput} />
+        {file.file_path && (
+          <div className="file-path-info">
+            <span className="file-path-label">Current file:</span>
+            <span className="file-path-value">{file.file_path}</span>
+          </div>
+        )}
+      </div>
 
       {collections.length > 0 && (
         <select onChange={e => onAddToCollection(file, e.target.value)}>
@@ -124,15 +132,6 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
       )}
 
       <div className="file-edit-actions">
-        {file.file_path && (
-          <a 
-            href={`http://localhost:5000/file/${file.file_path}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            View File
-          </a>
-        )}
         <button className="remove-button" onClick={onRemove}>Remove from Song</button>
       </div>
     </div>
