@@ -264,10 +264,16 @@ const upload = multer({
   }
 });
 
+// Replace the existing app.post('/api/upload') endpoint with this:
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
     console.log('[FILE UPLOAD] Starting file upload');
     
+    if (!req.file) {
+      console.error('[FILE UPLOAD ERROR] No file content was received by the server.');
+      return res.status(400).json({ error: 'No file content received. Please select a file to upload.' });
+    }
+
     if (!req.body.songId) {
       console.log('[FILE UPLOAD ERROR] songId is required');
       return res.status(400).json({ error: 'songId is required' });
@@ -285,15 +291,20 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'assetType is required' });
     }
 
+    // Log received collectionId
+    console.log(`[FILE UPLOAD] Received collectionId: ${collectionId}`);
+
     const metadataObj = JSON.parse(metadata || '{}');
-    const safeName = preserveSpecialChars(fileName || req.file.originalname);
-    
+    const safeName = preserveSpecialChars(fileName || (req.file ? req.file.originalname : 'unknown'));
+    const fileSizeMB = req.file ? (req.file.size / 1024 / 1024).toFixed(2) : 0;
+
     console.log(`[FILE UPLOAD] Parameters: 
       Song ID: ${songId}
       Asset Type: ${assetType}
       Collection: ${collectionName || 'N/A'}
+      Collection ID: ${collectionId || 'N/A'}
       File Name: ${safeName}
-      Size: ${(req.file.size / 1024 / 1024).toFixed(2)}MB`);
+      Size: ${fileSizeMB}MB`);
 
     const song = await get('SELECT name, id FROM songs WHERE id = ?', [songId]);
     const songName = song?.name ? preserveSpecialChars(song.name) : `song_${songId}`;
@@ -320,26 +331,48 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     const relativePath = path.relative(UPLOADS_DIR, filePath);
     console.log(`[FILE UPLOAD] File saved successfully. Relative path: ${relativePath}`);
 
+    // Prepare file data for insertion
+    const fileData = {
+      songId: songId,
+      name: metadataObj.name || '',
+      description: metadataObj.description || '',
+      date: metadataObj.date || '',
+      album: metadataObj.album || '',
+      instrument: metadataObj.instrument || '',
+      duration: metadataObj.duration || 0,
+      file_path: relativePath,
+      asset_type: assetType
+    };
+
+    let fileId;
+    
     if (collectionId) {
-      console.log(`[DB INSERT] Adding file to existing collection ${collectionId}`);
-      await run(
-        `INSERT INTO files (
-          song_id, collection_id, name, description, date, 
-          album, instrument, duration, file_path, asset_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          songId, collectionId, 
-          metadataObj.name || '',
-          metadataObj.description || '',
-          metadataObj.date || '',
-          metadataObj.album || '',
-          metadataObj.instrument || '',
-          metadataObj.duration || 0,
-          relativePath,
-          assetType
-        ]
-      );
-      console.log(`[DB INSERT] Added file with ID: ${this.lastID}`);
+      fileData.collection_id = collectionId;
+      const result = await new Promise((resolve, reject) => {
+        db.run(
+          `INSERT INTO files (
+            song_id, collection_id, name, description, date, 
+            album, instrument, duration, file_path, asset_type
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            fileData.songId,
+            fileData.collection_id,
+            fileData.name,
+            fileData.description,
+            fileData.date,
+            fileData.album,
+            fileData.instrument,
+            fileData.duration,
+            fileData.file_path,
+            fileData.asset_type
+          ],
+          function(err) {
+            if (err) reject(err);
+            else resolve({ lastID: this.lastID });
+          }
+        );
+      });
+      fileId = result.lastID;
     } else if (collectionName) {
       console.log(`[DB INSERT] Creating new collection: ${collectionName}`);
       const collectionRes = await new Promise((resolve, reject) => {
@@ -353,55 +386,141 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         );
       });
       
-      await run(
-        `INSERT INTO files (
-          song_id, collection_id, name, description, date,  
-          album, instrument, duration, file_path, asset_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          songId, collectionRes, 
-          metadataObj.name || '',
-          metadataObj.description || '',
-          metadataObj.date || '',
-          metadataObj.album || '',
-          metadataObj.instrument || '',
-          metadataObj.duration || 0,
-          relativePath,
-          assetType
-        ]
-      );
-      console.log(`[DB INSERT] Created collection ${collectionRes} and added file with ID: ${this.lastID}`);
+      fileData.collection_id = collectionRes;
+      const result = await new Promise((resolve, reject) => {
+        db.run(
+          `INSERT INTO files (
+            song_id, collection_id, name, description, date, 
+            album, instrument, duration, file_path, asset_type
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            fileData.songId,
+            fileData.collection_id,
+            fileData.name,
+            fileData.description,
+            fileData.date,
+            fileData.album,
+            fileData.instrument,
+            fileData.duration,
+            fileData.file_path,
+            fileData.asset_type
+          ],
+          function(err) {
+            if (err) reject(err);
+            else resolve({ lastID: this.lastID });
+          }
+        );
+      });
+      fileId = result.lastID;
+      console.log(`[DB INSERT] Created collection ${collectionRes} and added file with ID: ${fileId}`);
     } else {
       console.log('[DB INSERT] Adding ungrouped file');
-      await run(
-        `INSERT INTO files (
-          song_id, name, description, date, 
-          album, instrument, duration, file_path, asset_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          songId,
-          metadataObj.name || '',
-          metadataObj.description || '',
-          metadataObj.date || '',
-          metadataObj.album || '',
-          metadataObj.instrument || '',
-          metadataObj.duration || 0,
-          relativePath,
-          assetType
-        ]
-      );
-      console.log(`[DB INSERT] Added ungrouped file with ID: ${this.lastID}`);
+      const result = await new Promise((resolve, reject) => {
+        db.run(
+          `INSERT INTO files (
+            song_id, name, description, date, 
+            album, instrument, duration, file_path, asset_type
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            fileData.songId,
+            fileData.name,
+            fileData.description,
+            fileData.date,
+            fileData.album,
+            fileData.instrument,
+            fileData.duration,
+            fileData.file_path,
+            fileData.asset_type
+          ],
+          function(err) {
+            if (err) reject(err);
+            else resolve({ lastID: this.lastID });
+          }
+        );
+      });
+      fileId = result.lastID;
+      console.log(`[DB INSERT] Added ungrouped file with ID: ${fileId}`);
     }
     
-    res.json({ success: true, filePath: relativePath });
+    res.json({ success: true, filePath: relativePath, fileId });
   } catch (err) {
     console.error('[FILE UPLOAD ERROR] Upload failed:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// Create empty collection
+app.post('/api/collections', async (req, res) => {
+  try {
+    const { song_id, name, asset_type, description } = req.body;
+    console.log('[COLLECTION CREATE] Creating new collection', 
+      { song_id, name, asset_type });
+    
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO collections 
+        (song_id, name, asset_type, description) 
+        VALUES (?, ?, ?, ?)`,
+        [song_id, name, asset_type, description],
+        function(err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        }
+      );
+    });
+    
+    console.log(`[COLLECTION CREATE] Created collection ${result}`);
+    
+    // CREATE COLLECTION FOLDER IMMEDIATELY
+    try {
+      const song = await get('SELECT name FROM songs WHERE id = ?', [song_id]);
+      const songName = song?.name ? preserveSpecialChars(song.name) : `song_${song_id}`;
+      const folderName = getSongFolderName(songName, song_id);
+      const songDir = path.join(UPLOADS_DIR, folderName);
+      const assetDir = path.join(songDir, asset_type);
+      const collectionDir = path.join(assetDir, preserveSpecialChars(name));
+      
+      console.log(`[FILESYSTEM] Creating collection folder: ${collectionDir}`);
+      fs.mkdirSync(collectionDir, { recursive: true });
+    } catch (folderErr) {
+      console.error('[FOLDER CREATE ERROR] Could not create collection folder:', folderErr);
+    }
+    
+    res.json({ id: result });
+  } catch (err) {
+    console.error('[COLLECTION CREATE ERROR]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete collection
+app.delete('/api/collections/:id', async (req, res) => {
+  try {
+    const collectionId = req.params.id;
+    console.log(`[COLLECTION DELETE] Deleting collection ${collectionId}`);
+    
+    // Move files to ungrouped FIRST
+    await run(
+      'UPDATE files SET collection_id = NULL WHERE collection_id = ?',
+      [collectionId]
+    );
+    
+    // Now delete the collection
+    await run('DELETE FROM collections WHERE id = ?', [collectionId]);
+    
+    console.log(`[COLLECTION DELETE] Successfully deleted collection ${collectionId}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(`[COLLECTION DELETE ERROR] Error deleting collection ${req.params.id}:`, err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/file/:filePath(*)', (req, res) => {
-  const filePath = path.join(UPLOADS_DIR, req.params.filePath);
+  // Decode URI components to handle special characters
+  const decodedPath = decodeURIComponent(req.params.filePath);
+  const filePath = path.join(UPLOADS_DIR, decodedPath);
+  
   console.log(`[FILE REQUEST] Attempting to serve file: ${filePath}`);
   if (fs.existsSync(filePath)) {
     console.log(`[FILE REQUEST] Serving file: ${filePath}`);
@@ -412,7 +531,6 @@ app.get('/file/:filePath(*)', (req, res) => {
   }
 });
 
-// Update song endpoint - FIXED FILE RENAMING AFTER FOLDER RENAME
 app.put('/api/songs/:id', async (req, res) => {
   try {
     const { name, description, type, status } = req.body;
@@ -448,43 +566,38 @@ app.put('/api/songs/:id', async (req, res) => {
           console.error('[SONG RENAME ERROR] Folder rename failed:', renameError);
           return res.status(500).json({ error: 'Failed to rename song folder' });
         }
+      }
 
-        // Get all files for this song
-        const files = await query('SELECT * FROM files WHERE song_id = ?', [req.params.id]);
-        console.log(`[FILE RENAME] Processing ${files.length} files for song ${req.params.id}`);
-        
-        for (const file of files) {
-          try {
-            // Generate new filename based on new song name
-            const newFileName = generateFileName(name, file);
-            
-            // Get current full path (already in new folder after directory rename)
-            const currentFullPath = path.join(UPLOADS_DIR, file.file_path.replace(oldFolder, newFolder));
-            
-            // Build new path with updated filename
-            const newFilePath = path.join(
-              path.dirname(currentFullPath),
-              newFileName
-            );
-            
-            // Only rename if paths are different
-            if (currentFullPath !== newFilePath) {
-              console.log(`[FILE RENAME] Renaming: ${currentFullPath} -> ${newFilePath}`);
-              if (fs.existsSync(currentFullPath)) {
-                fs.renameSync(currentFullPath, newFilePath);
-              } else {
-                console.warn(`[FILE RENAME WARNING] File not found: ${currentFullPath}`);
-                continue;
-              }
-            }
-            
-            // Update database with new path
-            const relativePath = path.relative(UPLOADS_DIR, newFilePath);
-            await run('UPDATE files SET file_path = ? WHERE id = ?', [relativePath, file.id]);
-            console.log(`[DB UPDATE] Updated file ${file.id} path to: ${relativePath}`);
-          } catch (fileErr) {
-            console.error(`[FILE RENAME ERROR] Could not process file ${file.id}:`, fileErr);
+      // Update file names and paths to match new song name
+      const files = await query('SELECT * FROM files WHERE song_id = ?', [req.params.id]);
+      console.log(`[FILE RENAME] Processing ${files.length} files for song ${req.params.id}`);
+      
+      for (const file of files) {
+        try {
+          // Generate new filename based on new song name
+          const newFileName = generateFileName(name, file);
+          
+          // Get current file path relative to old folder
+          const relativePath = path.relative(oldFolder, file.file_path);
+          
+          // Build new path with new song folder
+          const newFilePath = path.join(newFolder, relativePath);
+          const newFullPath = path.join(UPLOADS_DIR, newFilePath);
+          
+          // Get current full path
+          const oldFullPath = path.join(UPLOADS_DIR, file.file_path);
+          
+          // Rename the file
+          if (fs.existsSync(oldFullPath)) {
+            console.log(`[FILE RENAME] Renaming: ${oldFullPath} -> ${newFullPath}`);
+            fs.renameSync(oldFullPath, newFullPath);
           }
+          
+          // Update database with new path
+          await run('UPDATE files SET file_path = ? WHERE id = ?', [newFilePath, file.id]);
+          console.log(`[DB UPDATE] Updated file ${file.id} path to: ${newFilePath}`);
+        } catch (fileErr) {
+          console.error(`[FILE RENAME ERROR] Could not process file ${file.id}:`, fileErr);
         }
       }
     }
@@ -495,8 +608,15 @@ app.put('/api/songs/:id', async (req, res) => {
       [name, description, type, status, req.params.id]
     );
     
+    // Return the updated song with all assets
+    const updatedSong = await get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
+    updatedSong.recordings = await getAssets(req.params.id, 'Recordings');
+    updatedSong.sheetMusic = await getAssets(req.params.id, 'Sheet Music');
+    updatedSong.lyrics = await getAssets(req.params.id, 'Lyrics');
+    updatedSong.otherFiles = await getAssets(req.params.id, 'Other Files');
+    
     console.log(`[SONG UPDATE] Successfully updated song ${req.params.id}`);
-    res.json({ success: true });
+    res.json(updatedSong);
   } catch (err) {
     console.error(`[SONG UPDATE ERROR] Error updating song ${req.params.id}:`, err);
     res.status(500).json({ error: err.message });
@@ -572,6 +692,7 @@ app.post('/api/files/batch-delete', async (req, res) => {
 });
 
 // Generate filename with consistent structure
+// Replace the existing generateFileName function with this:
 function generateFileName(songName, file) {
   // Determine base name based on asset type
   let fileNameDetail = '';
@@ -604,19 +725,19 @@ function generateFileName(songName, file) {
     file.file_path.substring(file.file_path.lastIndexOf('.')) : 
     '';
   
-  // Construct safe filename
+  // Construct safe filename with preserved special characters
   return `${preserveSpecialChars(songName)} - ${preserveSpecialChars(fileNameDetail)}${year}${ext}`;
 }
 
-// Update file metadata endpoint (FIXED RENAMING LOGIC)
+// Update file metadata endpoint (FIXED to handle collection_id)
 app.put('/api/files/:id', async (req, res) => {
   let oldFullPath, newPath;
   try {
-    const { name, description, date, album, instrument, duration } = req.body;
+    const { name, description, date, album, instrument, duration, collection_id } = req.body;
     const fileId = req.params.id;
     
     console.log(`[FILE UPDATE] Starting update for file ${fileId}`, 
-      { name, description, date, album, instrument, duration });
+      { name, description, date, album, instrument, duration, collection_id });
 
     // Get original file
     const file = await get('SELECT * FROM files WHERE id = ?', [fileId]);
@@ -638,30 +759,52 @@ app.put('/api/files/:id', async (req, res) => {
       album: album || file.album,
       instrument: instrument || file.instrument,
       duration: duration || file.duration,
+      collection_id: collection_id !== undefined ? collection_id : file.collection_id,
       asset_type: file.asset_type
     };
     
     // Generate new filename using consistent pattern
     const newFileName = generateFileName(songName, updatedFile);
     
-    // Build paths
+    // Build NEW path based on collection (if any)
+    const songFolder = getSongFolderName(songName, file.song_id);
+    const baseDir = path.join(UPLOADS_DIR, songFolder, updatedFile.asset_type);
+    
+    let collectionName = null;
+    if (updatedFile.collection_id) {
+      const collection = await get('SELECT name FROM collections WHERE id = ?', [updatedFile.collection_id]);
+      collectionName = collection?.name || null;
+    }
+    
+    const newDir = collectionName 
+      ? path.join(baseDir, preserveSpecialChars(collectionName))
+      : baseDir;
+    
+    // Ensure new directory exists
+    fs.mkdirSync(newDir, { recursive: true });
+    
+    // Build full new path
+    newPath = path.join(newDir, newFileName);
+    
+    // Get current full path
     oldFullPath = path.join(UPLOADS_DIR, file.file_path);
-    const newDirPath = path.dirname(oldFullPath);
-    newPath = path.join(newDirPath, newFileName);
-
-    // Rename file if path changed
+    
+    // Only move/rename if path changed
     if (oldFullPath !== newPath) {
-      console.log(`[FILE RENAME] Renaming file: ${oldFullPath} -> ${newPath}`);
+      console.log(`[FILE MOVE] Moving file: ${oldFullPath} -> ${newPath}`);
+      
+      // Move the file
       if (fs.existsSync(oldFullPath)) {
         fs.renameSync(oldFullPath, newPath);
       } else {
-        console.warn(`[FILE RENAME WARNING] Original file not found: ${oldFullPath}`);
+        console.warn(`[FILE MOVE WARNING] Original file not found: ${oldFullPath}`);
         return res.status(404).json({ error: 'Original file not found' });
       }
     }
 
     const relativePath = path.relative(UPLOADS_DIR, newPath);
     console.log(`[DB UPDATE] Updating file ${fileId} with new path: ${relativePath}`);
+    
     await run(
       `UPDATE files SET 
         name = ?,
@@ -670,7 +813,8 @@ app.put('/api/files/:id', async (req, res) => {
         album = ?,
         instrument = ?,
         duration = ?,
-        file_path = ?
+        file_path = ?,
+        collection_id = ?
       WHERE id = ?`,
       [
         updatedFile.name,
@@ -680,6 +824,7 @@ app.put('/api/files/:id', async (req, res) => {
         updatedFile.instrument,
         updatedFile.duration,
         relativePath,
+        updatedFile.collection_id,
         fileId
       ]
     );
@@ -688,15 +833,15 @@ app.put('/api/files/:id', async (req, res) => {
     console.log(`[FILE UPDATE] Successfully updated file ${fileId}`);
     res.json(resultFile);
   } catch (err) {
-    console.error(`[FILE UPDATE ERROR] Error updating file ${req.params.id}:`, err);
+    console.error(`[FILE UPDATE ERROR] Error updating file ${fileId}:`, err);
     
-    // Revert file rename if error occurred
+    // Attempt to revert file move if error occurred
     if (oldFullPath && newPath && fs.existsSync(newPath)) {
       try {
-        console.log(`[FILE ROLLBACK] Attempting to revert rename: ${newPath} -> ${oldFullPath}`);
+        console.log(`[FILE ROLLBACK] Attempting to revert move: ${newPath} -> ${oldFullPath}`);
         fs.renameSync(newPath, oldFullPath);
       } catch (revertErr) {
-        console.error('[FILE ROLLBACK ERROR] Error reverting file rename:', revertErr);
+        console.error('[FILE ROLLBACK ERROR] Error reverting file move:', revertErr);
       }
     }
     
@@ -749,6 +894,7 @@ app.put('/api/collections/:id', async (req, res) => {
           console.log(`[FILESYSTEM] Renaming collection directory: ${oldPath} -> ${newPath}`);
           fs.renameSync(oldPath, newPath);
           
+          // Update file paths for ALL files in the collection
           const files = await query(
             'SELECT id, file_path FROM files WHERE collection_id = ?',
             [req.params.id]
@@ -756,12 +902,21 @@ app.put('/api/collections/:id', async (req, res) => {
           console.log(`[DB UPDATE] Updating ${files.length} file paths`);
           
           for (const file of files) {
+            // Calculate new path by replacing old collection name
             const newFilePath = file.file_path.replace(
-              preserveSpecialChars(oldCollection.name),
-              preserveSpecialChars(name)
+              new RegExp(`${preserveSpecialChars(oldCollection.name)}\\/`, 'g'),
+              `${preserveSpecialChars(name)}/`
             );
+            
+            // Move the physical file
+            const oldFullPath = path.join(UPLOADS_DIR, file.file_path);
+            const newFullPath = path.join(UPLOADS_DIR, newFilePath);
+            
+            if (fs.existsSync(oldFullPath)) {
+              fs.renameSync(oldFullPath, newFullPath);
+            }
+            
             await run('UPDATE files SET file_path = ? WHERE id = ?', [newFilePath, file.id]);
-            console.log(`[DB UPDATE] Updated file ${file.id} path: ${newFilePath}`);
           }
         }
       }

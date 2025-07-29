@@ -4,9 +4,10 @@ import SongFieldsEditor from './SongFieldsEditor';
 import SongAssetEditor from './SongAssetEditor';
 import {
   uploadFilesInArray, 
-  getAllFiles, // NOW PROPERLY IMPORTED
+  getAllFiles,
   deleteRemovedFiles,
-  updateFileMetadata
+  updateFileMetadata,
+  preserveCollectionInfo
 } from './uploadUtils';
 
 const updateFileInSong = (song, updatedFile) => {
@@ -67,52 +68,137 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
     setProgressMessage('Starting upload...');
 
     try {
+      // Create a deep copy of the song with all files and collections
+      let updatedSong = {
+        ...editedSong,
+        recordings: editedSong.recordings?.map(item =>
+          item.parts ? { ...item, parts: item.parts.map(p => ({...p})) } : { ...item }
+        ) || [],
+        sheetMusic: editedSong.sheetMusic?.map(item =>
+          item.parts ? { ...item, parts: item.parts.map(p => ({...p})) } : { ...item }
+        ) || [],
+        lyrics: editedSong.lyrics?.map(item =>
+          item.parts ? { ...item, parts: item.parts.map(p => ({...p})) } : { ...item }
+        ) || [],
+        otherFiles: editedSong.otherFiles?.map(item =>
+          item.parts ? { ...item, parts: item.parts.map(p => ({...p})) } : { ...item }
+        ) || [],
+      };
+
       // First save basic song info to get ID if new
-      if (!editedSong.id) {
+      if (!updatedSong.id) {
         const response = await fetch('http://localhost:5000/api/songs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: editedSong.name,
-            description: editedSong.description,
-            type: editedSong.type,
-            status: editedSong.status
+            name: updatedSong.name || 'Untitled Song',
+            description: updatedSong.description || '',
+            type: updatedSong.type || '',
+            status: updatedSong.status || 'Active'
           })
         });
         const data = await response.json();
-        editedSong.id = data.id;
+        updatedSong.id = data.id;
       }
+
+      // Process collections (groups with parts)
+      setProgressMessage('Processing collections...');
+      const collections = [
+        ...(updatedSong.recordings || []).filter(c => Array.isArray(c.parts)),
+        ...(updatedSong.sheetMusic || []).filter(c => Array.isArray(c.parts)),
+        ...(updatedSong.lyrics || []).filter(c => Array.isArray(c.parts)),
+        ...(updatedSong.otherFiles || []).filter(c => Array.isArray(c.parts))
+      ];
+
+      // Map to track temporary IDs to server IDs
+      const idMap = new Map();
+      
+      for (const collection of collections) {
+        try {
+          if (collection.id && typeof collection.id === 'number') {
+            // Update existing collection
+            const response = await fetch(`http://localhost:5000/api/collections/${collection.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: collection.name || '',
+                description: collection.description || ''
+              })
+            });
+            
+            if (!response.ok) throw new Error('Failed to update collection');
+          } else {
+            // Create new collection
+            const response = await fetch('http://localhost:5000/api/collections', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                song_id: updatedSong.id,
+                name: collection.name || 'New Collection',
+                asset_type: collection.asset_type || 'Other Files',
+                description: collection.description || ''
+              })
+            });
+            
+            if (!response.ok) throw new Error('Failed to create collection');
+            
+            const data = await response.json();
+            if (collection.id) {
+              idMap.set(collection.id, data.id);
+            }
+            collection.id = data.id;
+          }
+        } catch (err) {
+          console.error(`Error processing collection ${collection.id || collection.name}:`, err);
+          throw err;
+        }
+      }
+
+      // Update collection IDs in the song structure
+      const updateIds = (arr) => {
+        return arr.map(item => {
+          if (Array.isArray(item.parts)) {
+            const newId = idMap.get(item.id) || item.id;
+            return {
+              ...item,
+              id: newId,
+              parts: item.parts.map(part => ({
+                ...part,
+                collection_id: newId
+              }))
+            };
+          }
+          return item;
+        });
+      };
+
+      updatedSong.recordings = updateIds(updatedSong.recordings || []);
+      updatedSong.sheetMusic = updateIds(updatedSong.sheetMusic || []);
+      updatedSong.lyrics = updateIds(updatedSong.lyrics || []);
+      updatedSong.otherFiles = updateIds(updatedSong.otherFiles || []);
 
       // Update existing files with changed metadata
       setProgressMessage('Updating file metadata...');
       const allOriginalFiles = getAllFiles(song);
-      const allEditedFiles = getAllFiles(editedSong);
-      
-      // Create a copy of editedSong to update
-      let updatedSong = { ...editedSong };
+      const allEditedFiles = getAllFiles(updatedSong);
       
       for (const editedFile of allEditedFiles) {
-        if (!editedFile.localFile && editedFile.id) {
+        if (typeof editedFile.id === 'number' && !editedFile.localFile) {
           const originalFile = allOriginalFiles.find(f => f.id === editedFile.id);
           if (originalFile && JSON.stringify(editedFile) !== JSON.stringify(originalFile)) {
-            // Update metadata and get new file data
             const updatedFile = await updateFileMetadata(
               editedFile,
               editedFile.assetType,
-              editedSong.name,
-              editedSong.id
+              updatedSong.name,
+              updatedSong.id
             );
-            
-            // Update the song with the new file data
             updatedSong = updateFileInSong(updatedSong, updatedFile);
           }
         }
       }
-      
-      // Use the updatedSong for subsequent operations
-      setEditedSong(updatedSong);
 
-      // Upload all files
+      // Upload all files (new and updated)
+      setProgressMessage('Uploading files...');
       const updatedRecordings = await uploadFilesInArray(
         updatedSong.recordings || [],
         'Recordings',
@@ -145,6 +231,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         setProgressMessage
       );
 
+      // Combine all updates
       const finalSong = {
         ...updatedSong,
         recordings: updatedRecordings,
@@ -153,25 +240,35 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         otherFiles: updatedOtherFiles,
       };
 
+      // Preserve collection information
+      const allCollections = [
+        ...updatedRecordings.filter(c => Array.isArray(c.parts)),
+        ...updatedSheetMusic.filter(c => Array.isArray(c.parts)),
+        ...updatedLyrics.filter(c => Array.isArray(c.parts)),
+        ...updatedOtherFiles.filter(c => Array.isArray(c.parts))
+      ];
+      
+      const songWithCollections = preserveCollectionInfo(finalSong, allCollections);
+
       // Handle file deletions
       const newFileIds = new Set(
-        getAllFiles(finalSong)
-          .map(f => f.id)  // Use 'id' instead of 'fileId'
+        getAllFiles(songWithCollections)
+          .map(f => f.id)
           .filter(Boolean)
       );
+      
       await deleteRemovedFiles(originalFileIds.current, newFileIds);
 
       // Update local state
-      const updatedSongs = songs.map(s => s.id === finalSong.id ? finalSong : s);
+      const updatedSongs = songs.map(s => s.id === songWithCollections.id ? songWithCollections : s);
       setSongs(updatedSongs);
 
-      setProgressMessage('Saving changes...');
-      onSave(finalSong);
+      setProgressMessage('Finalizing changes...');
+      onSave(songWithCollections);
     } catch (error) {
       console.error('Error during save:', error);
-      setProgressMessage('Error saving changes');
-    } finally {
-      setTimeout(() => setProgressMessage(''), 2000);
+      setProgressMessage(`Error: ${error.message}`);
+      setTimeout(() => setProgressMessage(''), 3000);
     }
   };
 

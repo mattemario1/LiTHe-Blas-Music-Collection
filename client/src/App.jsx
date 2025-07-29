@@ -50,9 +50,9 @@ function App() {
     });
   };
 
+  // Replace the existing handleUpdateSong function with this:
   const handleUpdateSong = async (updatedSong) => {
     try {
-      // Update song on server
       const response = await fetch(`http://localhost:5000/api/songs/${updatedSong.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -65,23 +65,19 @@ function App() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update song on server');
+        const errorText = await response.text();
+        throw new Error(`Failed to update song on server: ${errorText}`);
       }
 
-      // Get fresh song data from server
-      const songRes = await fetch(`http://localhost:5000/api/songs/${updatedSong.id}`);
-      if (!songRes.ok) {
-        throw new Error('Failed to fetch updated song data');
-      }
-      const freshSong = await songRes.json();
-
-      // Update local state
-      const updatedSongs = songs.map(song => 
-        song.id === freshSong.id ? freshSong : song
+      const updatedSongFromServer = await response.json();
+      
+      // Update local state with the fresh data
+      const updatedSongs = songs.map(song =>
+        song.id === updatedSongFromServer.id ? updatedSongFromServer : song
       );
       
       setSongs(updatedSongs);
-      setSelectedSong(freshSong);
+      setSelectedSong(updatedSongFromServer);
       
     } catch (err) {
       console.error('Error updating song:', err);

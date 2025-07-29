@@ -4,21 +4,33 @@ import React from 'react';
 const getId = () => Date.now().toString();
 
 function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection, songs }) {
-
   const [focusedField, setFocusedField] = React.useState(null);
   const handleChange = (field, value) => onChange({ ...file, [field]: value });
 
   const handleFileInput = (e) => {
     const uploaded = e.target.files[0];
-    if (uploaded) handleChange('localFile', uploaded);
+    if (!uploaded) return;
+    
+    if (uploaded.size > 50 * 1024 * 1024) {
+      alert('File size exceeds 50MB limit');
+      return;
+    }
+    
+    handleChange('localFile', uploaded);
   };
 
   const albumOptions = Array.from(new Set(
-    (songs ?? []).flatMap(song => song.recordings.map(rec => rec.album))
+    (songs ?? []).flatMap(song => song.recordings.flatMap(rec => 
+      rec.parts ? rec.parts.map(p => p.album) : [rec.album]
+    ).filter(Boolean))
   ));
+  
   const instrumentOptions = Array.from(new Set(
-    (songs ?? []).flatMap(song => song.sheetMusic.map(sheet => sheet.instrument))
+    (songs ?? []).flatMap(song => song.sheetMusic.flatMap(sheet => 
+      sheet.parts ? sheet.parts.map(p => p.instrument) : [sheet.instrument]
+    ).filter(Boolean))
   ));
+  
   return (
     <div className="file-edit-box">
       {type === 'recording' && (
@@ -106,20 +118,28 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
         <select onChange={e => onAddToCollection(file, e.target.value)}>
           <option value="">Add to Collection</option>
           {collections.map((c, i) => (
-            <option key={i} value={c.collection}>{c.collection}</option>
+            <option key={i} value={c.id}>{c.name}</option>
           ))}
         </select>
       )}
 
       <div className="file-edit-actions">
-        <a href={file.file} target="_blank" rel="noopener noreferrer">View File</a>
+        {file.file_path && (
+          <a 
+            href={`http://localhost:5000/file/${file.file_path}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            View File
+          </a>
+        )}
         <button className="remove-button" onClick={onRemove}>Remove from Song</button>
       </div>
     </div>
   );
 }
 
-function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, onRemoveFromCollection, songs }) {
+function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, songs }) {
   const updatePart = (index, updatedFile) => {
     const updatedParts = [...collection.parts];
     updatedParts[index] = updatedFile;
@@ -131,9 +151,9 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
       <div className="collection-header-edit">
         <input
           type="text"
-          value={collection.collection}
+          value={collection.name}
           placeholder="Collection Name"
-          onChange={e => onUpdate({ ...collection, collection: e.target.value })}
+          onChange={e => onUpdate({ ...collection, name: e.target.value })}
         />
         <input
           type="text"
@@ -145,11 +165,11 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
       </div>
 
       {collection.parts.map((file, i) => (
-        <div key={file.fileId || i}>
+        <div key={file.id || i}>
           <FileEditor
             file={file}
             onChange={updated => updatePart(i, updated)}
-            onRemove={() => onRemoveFile(file, collection.collectionId)}
+            onRemove={() => onRemoveFile(file, collection.id)}
             type={type}
             collections={[]}
             onAddToCollection={() => { }}
@@ -157,7 +177,7 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
           />
           <button
             className="remove-from-collection"
-            onClick={() => onRemoveFromCollection(file, collection.collectionId)}
+            onClick={() => onRemoveFile(file, collection.id)}
           >
             Remove from Collection
           </button>
@@ -170,7 +190,7 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
 function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection, songs }) {
   return files.map((file, index) => (
     <FileEditor
-      key={file.fileId || index}
+      key={file.id || index}
       file={file}
       type={type}
       collections={collections}
@@ -183,76 +203,124 @@ function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddT
 }
 
 function SongAssetEditor({ title, files, onChange, type, songs }) {
+  // Collections are items with parts array
   const collections = files.filter(f => Array.isArray(f.parts));
+  // Ungrouped files are items without parts
   const ungrouped = files.filter(f => !Array.isArray(f.parts));
-
-  const ensureFileIds = (arr) => arr.map(f => f.fileId ? f : { ...f, fileId: getId() });
-
+  
+  // Ensure all files have IDs
+  const ensureIds = (arr) => arr.map(f => f.id ? f : { ...f, id: getId() });
+  
+  // Update a collection
   const updateCollection = (index, updated) => {
-    const updatedFiles = files.map(f =>
-      f.collectionId === updated.collectionId ? updated : f
+    const updatedFiles = files.map(f => 
+      f.id === updated.id ? updated : f
     );
     onChange(updatedFiles);
   };
 
+  // Remove a collection and move its files to ungrouped
   const removeCollection = (collection) => {
-    const filtered = files.filter(f => f.collectionId !== collection.collectionId);
-    onChange(filtered);
+    const collectionFiles = collection.parts.map(file => ({
+      ...file,
+      collection_id: null  // Clear collection association
+    }));
+    
+    const filtered = files.filter(f => f.id !== collection.id);
+    onChange([...filtered, ...collectionFiles]);
   };
 
+  // Remove a file from a collection and move it to ungrouped
   const removeFromCollection = (file, collectionId) => {
-    const updatedCollections = collections.map(c =>
-      c.collectionId === collectionId
-        ? { ...c, parts: c.parts.filter(f => f.fileId !== file.fileId) }
+    const updatedCollections = collections.map(c => 
+      c.id == collectionId  // Loose equality
+        ? { ...c, parts: c.parts.filter(f => f.id !== file.id) }
         : c
     );
-    onChange([...updatedCollections, ...ungrouped, { ...file }]);
+    
+    // Add file to ungrouped with collection_id cleared
+    onChange([
+      ...updatedCollections, 
+      ...ungrouped, 
+      { ...file, collection_id: null }  // Ensure collection_id is cleared
+    ]);
   };
 
+  // Remove a file completely (from ungrouped or collection)
   const removeFile = (file, collectionId = null) => {
     if (collectionId) {
-      const updatedCollections = collections.map(c =>
-        c.collectionId === collectionId
-          ? { ...c, parts: c.parts.filter(f => f.fileId !== file.fileId) }
+      // Remove from specific collection
+      const updatedCollections = collections.map(c => 
+        c.id === collectionId
+          ? {...c, parts: c.parts.filter(f => f.id !== file.id)}
           : c
       );
       onChange([...updatedCollections, ...ungrouped]);
     } else {
-      const updatedUngrouped = ungrouped.filter(f => f.fileId !== file.fileId);
+      // Remove from ungrouped
+      const updatedUngrouped = ungrouped.filter(f => f.id !== file.id);
       onChange([...collections, ...updatedUngrouped]);
     }
   };
 
-  const addToCollection = (file, collectionName) => {
-    const updatedCollections = collections.map(c =>
-      c.collection === collectionName
-        ? { ...c, parts: [...ensureFileIds(c.parts), file] }
-        : c
-    );
-    const filteredUngrouped = ungrouped.filter(f => f.fileId !== file.fileId);
-    onChange([...updatedCollections, ...filteredUngrouped]);
+  // Add a file to a collection
+  const addToCollection = (file, collectionId) => {
+    const targetCollection = collections.find(c => c.id == collectionId); // Use loose equality
+    
+    if (targetCollection) {
+      // Clear collection_id if moving from another collection
+      const fileToAdd = file.id 
+        ? {...file, collection_id: collectionId} 
+        : {...file, id: getId(), collection_id: collectionId};
+      
+      const updatedCollection = {
+        ...targetCollection,
+        parts: [...targetCollection.parts, fileToAdd]
+      };
+      
+      const updatedCollections = collections.map(c => 
+        c.id == collectionId ? updatedCollection : c  // Loose equality
+      );
+      
+      // Remove from ungrouped OR previous collection
+      const filteredUngrouped = ungrouped.filter(f => f.id !== file.id);
+      onChange([...updatedCollections, ...filteredUngrouped]);
+    }
   };
 
+  // Update an ungrouped file
   const updateUngroupedFile = (index, updated) => {
     const updatedUngrouped = [...ungrouped];
     updatedUngrouped[index] = updated;
-    onChange([...collections, ...ensureFileIds(updatedUngrouped)]);
+    onChange([...collections, ...ensureIds(updatedUngrouped)]);
   };
 
-  const addNewCollection = () => {
-    const newCollection = {
-      collectionId: getId(),
-      collection: '',
-      description: '',
-      parts: [],
-    };
-    onChange([...files, newCollection]);
+  // Add a new collection
+const addNewCollection = () => {
+  // Map titles to asset types
+  const titleToType = {
+    '🎧 Recordings': 'Recordings',
+    '🎼 Sheet Music': 'Sheet Music',
+    '📝 Lyrics': 'Lyrics',
+    '📁 Other Files': 'Other Files'
   };
+  
+  const newCollection = {
+    id: `temp-${getId()}`,
+    name: '',
+    description: '',
+    parts: [],
+    asset_type: titleToType[title] || 'Other Files'
+  };
+  
+  onChange([...files, newCollection]);
+};
 
+  // Add a new ungrouped file
   const addNewFile = () => {
     const newFile = {
-      fileId: getId(),
-      file: '',
+      id: getId(),
+      file_path: '',
       description: '',
       date: '',
       ...(type === 'recording' ? { album: '' } : {}),
@@ -268,19 +336,18 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
 
       {collections.map((collection) => (
         <CollectionEditor
-          key={collection.collectionId}
+          key={collection.id}
           collection={collection}
           type={type}
-          onUpdate={(updated) => updateCollection(null, updated)}
+          onUpdate={updated => updateCollection(null, updated)}
           onRemove={() => removeCollection(collection)}
-          onRemoveFile={removeFile}
-          onRemoveFromCollection={removeFromCollection}
+          onRemoveFile={removeFromCollection}
           songs={songs}
         />
       ))}
 
       <FileList
-        files={ensureFileIds(ungrouped)}
+        files={ensureIds(ungrouped)}
         type={type}
         collections={collections}
         onUpdateFile={updateUngroupedFile}
