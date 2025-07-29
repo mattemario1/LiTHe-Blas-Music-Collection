@@ -545,60 +545,79 @@ app.put('/api/songs/:id', async (req, res) => {
     
     const oldFolder = getSongFolderName(oldSong.name, req.params.id);
     const newFolder = getSongFolderName(name, req.params.id);
-    
-    // Always create folder if it doesn't exist
+    const oldDir = path.join(UPLOADS_DIR, oldFolder);
     const newDir = path.join(UPLOADS_DIR, newFolder);
+    
+    // Create new folder structure (but don't rename yet)
     if (!fs.existsSync(newDir)) {
       console.log(`[FILESYSTEM] Creating song directory: ${newDir}`);
       fs.mkdirSync(newDir, { recursive: true });
     }
     
     if (oldSong.name !== name) {
-      const oldDir = path.join(UPLOADS_DIR, oldFolder);
-      
-      console.log(`[SONG RENAME] Checking directory rename: ${oldDir} -> ${newDir}`);
-      
-      if (fs.existsSync(oldDir) && oldDir !== UPLOADS_DIR) {
-        try {
-          console.log(`[FILESYSTEM] Renaming directory: ${oldDir} -> ${newDir}`);
-          fs.renameSync(oldDir, newDir);
-        } catch (renameError) {
-          console.error('[SONG RENAME ERROR] Folder rename failed:', renameError);
-          return res.status(500).json({ error: 'Failed to rename song folder' });
-        }
-      }
-
-      // Update file names and paths to match new song name
+      // First process all file renames BEFORE renaming the folder
       const files = await query('SELECT * FROM files WHERE song_id = ?', [req.params.id]);
       console.log(`[FILE RENAME] Processing ${files.length} files for song ${req.params.id}`);
       
+      let renameErrors = [];
+      
       for (const file of files) {
         try {
+          // Get current full path (still in old location)
+          const oldFullPath = path.join(UPLOADS_DIR, file.file_path);
+          
           // Generate new filename based on new song name
           const newFileName = generateFileName(name, file);
           
-          // Get current file path relative to old folder
-          const relativePath = path.relative(oldFolder, file.file_path);
+          // Get the relative path within the song folder
+          const relativePath = file.file_path.replace(`${oldFolder}/`, '');
+          const fileDir = path.dirname(relativePath);
           
-          // Build new path with new song folder
-          const newFilePath = path.join(newFolder, relativePath);
+          // Build new path with new song folder and new filename
+          const newFilePath = path.join(newFolder, fileDir, newFileName);
           const newFullPath = path.join(UPLOADS_DIR, newFilePath);
           
-          // Get current full path
-          const oldFullPath = path.join(UPLOADS_DIR, file.file_path);
+          // Ensure new directory exists
+          const newFileDir = path.dirname(newFullPath);
+          if (!fs.existsSync(newFileDir)) {
+            fs.mkdirSync(newFileDir, { recursive: true });
+          }
           
-          // Rename the file
+          // Rename the file BEFORE moving the folder
           if (fs.existsSync(oldFullPath)) {
             console.log(`[FILE RENAME] Renaming: ${oldFullPath} -> ${newFullPath}`);
             fs.renameSync(oldFullPath, newFullPath);
+            
+            // Update database with new path
+            await run('UPDATE files SET file_path = ? WHERE id = ?', [newFilePath, file.id]);
+            console.log(`[DB UPDATE] Updated file ${file.id} path to: ${newFilePath}`);
+          } else {
+            const errorMsg = `[FILE RENAME ERROR] Source file not found: ${oldFullPath}`;
+            console.error(errorMsg);
+            renameErrors.push(errorMsg);
           }
-          
-          // Update database with new path
-          await run('UPDATE files SET file_path = ? WHERE id = ?', [newFilePath, file.id]);
-          console.log(`[DB UPDATE] Updated file ${file.id} path to: ${newFilePath}`);
         } catch (fileErr) {
-          console.error(`[FILE RENAME ERROR] Could not process file ${file.id}:`, fileErr);
+          const errorMsg = `[FILE RENAME ERROR] Could not process file ${file.id}: ${fileErr.message}`;
+          console.error(errorMsg);
+          renameErrors.push(errorMsg);
         }
+      }
+      
+      // Instead of renaming the folder, remove the old folder after moving files
+      if (fs.existsSync(oldDir)) {
+        try {
+          console.log(`[FOLDER CLEANUP] Removing old folder: ${oldDir}`);
+          fs.rmSync(oldDir, { recursive: true, force: true });
+        } catch (cleanupError) {
+          const errorMsg = `[FOLDER CLEANUP ERROR] Could not remove old folder: ${cleanupError.message}`;
+          console.error(errorMsg);
+          renameErrors.push(errorMsg);
+        }
+      }
+      
+      // If there were any errors, throw them
+      if (renameErrors.length > 0) {
+        throw new Error(`File rename errors occurred:\n${renameErrors.join('\n')}`);
       }
     }
     
@@ -619,7 +638,11 @@ app.put('/api/songs/:id', async (req, res) => {
     res.json(updatedSong);
   } catch (err) {
     console.error(`[SONG UPDATE ERROR] Error updating song ${req.params.id}:`, err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ 
+      error: 'Failed to update song',
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
@@ -691,8 +714,6 @@ app.post('/api/files/batch-delete', async (req, res) => {
   }
 });
 
-// Generate filename with consistent structure
-// Replace the existing generateFileName function with this:
 function generateFileName(songName, file) {
   // Determine base name based on asset type
   let fileNameDetail = '';
@@ -722,7 +743,7 @@ function generateFileName(songName, file) {
   
   // Get file extension from current path
   const ext = file.file_path ? 
-    file.file_path.substring(file.file_path.lastIndexOf('.')) : 
+    path.extname(file.file_path) : 
     '';
   
   // Construct safe filename with preserved special characters
