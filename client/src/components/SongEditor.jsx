@@ -87,7 +87,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
 
       // First save basic song info to get ID if new
       if (!updatedSong.id) {
-        const response = await fetch('http://localhost:5000/api/songs', {
+        const response = await fetch('/api/songs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -117,7 +117,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
         try {
           if (collection.id && typeof collection.id === 'number') {
             // Update existing collection
-            const response = await fetch(`http://localhost:5000/api/collections/${collection.id}`, {
+            const response = await fetch(`/api/collections/${collection.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -129,7 +129,7 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
             if (!response.ok) throw new Error('Failed to update collection');
           } else {
             // Create new collection
-            const response = await fetch('http://localhost:5000/api/collections', {
+            const response = await fetch('/api/collections', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

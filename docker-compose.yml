@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: client/Dockerfile
     ports:
-      - "3000:80"
+      - "8080:8080"
+    networks:
+      - webnet
     depends_on:
       - backend
 
@@ -18,6 +20,13 @@ services:
       - ~/BARAKOD/song-app-uploads:/app/server/uploads
       - ~/BARAKOD/song-app-data:/app/server/data
     environment:
+      - BIND_ADDRESS=0.0.0.0
       - UPLOADS_DIR=/app/server/uploads
       - DB_PATH=/app/server/data/songs.db
       - NODE_ENV=production
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

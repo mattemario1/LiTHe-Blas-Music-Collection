@@ -155,7 +155,7 @@ export const getAllFiles = (songData) => {
     setProgress?.(`Uploading ${assetType}: ${fileLabel}`);
     
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       });
@@ -222,7 +222,7 @@ export const deleteRemovedFiles = async (oldIds, newIds) => {
   if (toDelete.length === 0) return;
 
   try {
-    const response = await fetch('http://localhost:5000/api/files/batch-delete', {
+    const response = await fetch('/api/files/batch-delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileIds: toDelete })
@@ -239,7 +239,7 @@ export const deleteRemovedFiles = async (oldIds, newIds) => {
 
 export const updateFileMetadata = async (fileObj, assetType, songName, songId) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/files/${fileObj.id}`, {
+    const response = await fetch(`/api/files/${fileObj.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

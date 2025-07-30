@@ -19,7 +19,7 @@ function App() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/songs')
+    fetch('/api/songs')
       .then(async (res) => {
         const text = await res.text();
         console.log("Raw response:", text);
@@ -53,7 +53,7 @@ function App() {
   // Replace the existing handleUpdateSong function with this:
   const handleUpdateSong = async (updatedSong) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/songs/${updatedSong.id}`, {
+      const response = await fetch(`/api/songs/${updatedSong.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -98,7 +98,7 @@ function App() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/songs', {
+      const response = await fetch('/api/songs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ function App() {
     
     if (confirmDelete) {
       try {
-        const response = await fetch(`http://localhost:5000/api/songs/${selectedSong.id}`, {
+        const response = await fetch(`/api/songs/${selectedSong.id}`, {
           method: 'DELETE'
         });
         

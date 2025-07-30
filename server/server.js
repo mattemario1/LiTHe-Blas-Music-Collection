@@ -7,8 +7,35 @@ const { promisify } = require('util');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',  // Vite dev server
+    'http://192.168.0.84:8080',  // Production frontend
+    'http://backend:5000'  // Docker internal
+  ],
+  credentials: true
+}));
+
+// Simplify CSP middleware
+app.use((req, res, next) => {
+  // Only set CSP for non-API routes
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads') && !req.path.startsWith('/file')) {
+    res.setHeader('Content-Security-Policy', 
+      "default-src 'self'; " +
+      "img-src 'self' data:; " +
+      "script-src 'self' 'unsafe-inline'; " +
+      "connect-src 'self' http://localhost:5000 http://192.168.0.84:5000; " +
+      "style-src 'self' 'unsafe-inline'"
+    );
+  }
+  next();
+});
+
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({ status: 'API running' });
+});
 
 // Configure paths using environment variables
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads');

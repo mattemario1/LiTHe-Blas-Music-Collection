@@ -49,7 +49,7 @@ function ExpandableBoxList({
       <div className="file-actions horizontal">
         <a
           className="action-button download"
-          href={item.file_path ? `http://localhost:5000/file/${item.file_path}` : "#"}
+          href={item.file_path ? `/file/${item.file_path}` : "#"}
           download
           onClick={(e) => {
             e.stopPropagation();
@@ -180,7 +180,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   const handlePlayAudio = async (item) => {
     try {
       onPlayAudio(
-        `http://localhost:5000/file/${item.file_path}`,
+        `/file/${item.file_path}`,
         song.name,
         item.album || 'Unknown Album',
         item.date
@@ -192,7 +192,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
 
   const handleShowPdf = async (filePath) => {
     try {
-      const url = `http://localhost:5000/file/${filePath}`;
+      const url = `/file/${filePath}`;
       setPdfUrl(url);
     } catch (err) {
       alert("Failed to load PDF.");
@@ -201,7 +201,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
 
   const handleShowLyrics = async (filePath) => {
     try {
-      const url = `http://localhost:5000/file/${filePath}`;
+      const url = `/file/${filePath}`;
       setLyricsUrl(url);
     } catch (err) {
       alert("Failed to load lyrics.");

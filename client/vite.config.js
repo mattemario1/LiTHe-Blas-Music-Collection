@@ -4,17 +4,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 3000,  // Different from production port
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5000',  // For development
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        // Add these headers:
-        headers: {
-          Connection: 'keep-alive'
-        }
+        secure: false
       },
       '/uploads': {
         target: 'http://localhost:5000',
@@ -29,4 +24,4 @@ export default defineConfig({
   build: {
     outDir: 'dist'
   }
-});
+})
