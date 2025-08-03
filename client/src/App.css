@@ -1,6 +1,7 @@
 body {
   margin: 0;
-  overflow: auto; /* Allow scrolling if needed */
+  overflow: auto;
+  background-color: #fff9e6;
 }
 
 .App {
@@ -8,11 +9,13 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #fff9e6;
 }
 
 .search-filter-container {
   padding: 10px 20px;
-  background-color: #f0f0f0;
+  background-color: #1c4386;
+  color: white;
   z-index: 1;
 }
 
@@ -20,8 +23,9 @@ body {
   display: flex;
   flex: 1;
   flex-direction: row;
-  height: calc(100vh - 60px); /* Adjust if you have a header */
+  height: calc(100vh - 60px);
   overflow: hidden;
+  background-color: #fffef2;
 }
 
 .main-content.with-player {
@@ -32,9 +36,10 @@ body {
   width: 30%;
   height: 100%;
   overflow-y: auto;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid #e6d883;
   padding: 20px;
   box-sizing: border-box;
+  background-color: #fffef2;
 }
 
 .song-details {
@@ -45,29 +50,29 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  background-color: #fffef2;
 }
 
-/* --- Updated back button styles --- */
 .back-button-mobile {
   display: none;
-  position: fixed; /* Fixed position */
+  position: fixed;
   top: 15px;
-  left: 15px; /* Position in top-left corner */
-  z-index: 1000; /* Ensure it stays on top */
+  left: 15px;
+  z-index: 1000;
   padding: 10px 15px;
   font-size: 16px;
-  background-color: #007bff;
+  background-color: #1c4386;
   color: white;
   border: none;
-  border-radius: 25px; /* Rounded corners */
+  border-radius: 25px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
 .back-button-mobile:hover {
-  background-color: #0056b3;
-  transform: translateY(-2px); /* Lift effect */
+  background-color: #153066;
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -79,34 +84,29 @@ body {
   margin-right: 8px;
 }
 
-/* --- MOBILE RESPONSIVE STYLES --- */
 @media (max-width: 768px) {
-  /* On mobile, the main view is the list. Hide details by default. */
   .song-details {
     display: none;
   }
   
   .song-list {
-    width: 100%; /* The list takes up the full screen */
-    border-right: none; /* No need for a border when it's full width */
+    width: 100%;
+    border-right: none;
   }
 
-  /* When a song is selected, the .details-view-active class is added to .App */
-  /* This block flips the visibility */
   .App.details-view-active .search-filter-container,
   .App.details-view-active .song-list,
   .App.details-view-active .action-buttons {
-    display: none; /* Hide the search, list, and footer buttons */
+    display: none;
   }
 
   .App.details-view-active .song-details {
-    display: flex; /* Show the details view */
-    width: 100%;   /* Make it take the full screen width */
-    height: 100%;  /* And full height */
-    padding-top: 60px; /* Added padding to avoid button overlap */
+    display: flex;
+    width: 100%;
+    height: 100%;
+    padding-top: 60px;
   }
 
-  /* Show the mobile back button only when the details view is active on mobile */
   .App.details-view-active .back-button-mobile {
     display: inline-block;
   }
