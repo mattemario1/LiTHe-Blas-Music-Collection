@@ -21,7 +21,8 @@ export const getAudioDuration = (file) => {
 const sanitizeName = (name) => {
   if (!name) return '';
   return name
-    .replace(/[/\\?%*:|"<>]/g, '_') // Replace illegal characters
+    .replace(/[/\\?%*:|"<>]/g, '_')   // Replace illegal characters
+    .replace(/\s+/g, '_')              // Replace spaces with underscores
     .normalize('NFC'); // Normalize characters
 };
 
@@ -50,11 +51,10 @@ export const constructFileName = (fileObj, assetType, songName, originalFileName
       fileNameDetail = fileObj.name || 'File';
   }
 
-  // Extract year from date if available
-  let year = '';
+  // Use full date if available
+  let datePart = '';
   if (fileObj.date) {
-    const yearMatch = fileObj.date.match(/\b\d{4}\b/);
-    if (yearMatch) year = ` -- ${yearMatch[0]}`;
+    datePart = `--${sanitizeName(fileObj.date)}`;
   }
 
   // Get file extension safely
@@ -63,7 +63,7 @@ export const constructFileName = (fileObj, assetType, songName, originalFileName
     : '';
 
   // Construct safe filename
-  return `${sanitizeName(songName)} - ${sanitizeName(fileNameDetail)}${year}${ext}`;
+  return `${sanitizeName(songName)}-${sanitizeName(fileNameDetail)}${datePart}${ext}`;
 };
 
 export const getAllFiles = (songData) => {

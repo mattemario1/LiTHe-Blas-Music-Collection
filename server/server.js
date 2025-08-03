@@ -279,7 +279,8 @@ app.post('/api/songs', async (req, res) => {
 const preserveSpecialChars = (filename) => {
   if (!filename) return '';
   return filename
-    .replace(/[/\\?%*:|"<>]/g, '_')
+    .replace(/[/\\?%*:|"<>]/g, '_')   // replace illegal file characters
+    .replace(/\s+/g, '_')              // replace spaces with underscores
     .normalize('NFC');
 };
 
@@ -761,11 +762,10 @@ function generateFileName(songName, file) {
       fileNameDetail = file.name || 'File';
   }
   
-  // Extract year from date if available
-  let year = '';
+  // Use full date if available
+  let datePart = '';
   if (file.date) {
-    const yearMatch = file.date.match(/\b\d{4}\b/);
-    if (yearMatch) year = ` -- ${yearMatch[0]}`;
+    datePart = `--${preserveSpecialChars(file.date)}`;
   }
   
   // Get file extension from current path
@@ -774,7 +774,7 @@ function generateFileName(songName, file) {
     '';
   
   // Construct safe filename with preserved special characters
-  return `${preserveSpecialChars(songName)} - ${preserveSpecialChars(fileNameDetail)}${year}${ext}`;
+  return `${preserveSpecialChars(songName)}-${preserveSpecialChars(fileNameDetail)}${datePart}${ext}`;
 }
 
 // Update file metadata endpoint (FIXED to handle collection_id)
