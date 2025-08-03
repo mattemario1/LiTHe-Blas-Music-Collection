@@ -134,12 +134,14 @@ function PdfModal({ pdfUrl, onClose }) {
         ) : (
           <>
             <div className="pdf-pages-container">
-              {Array.from({ length: numPages }, (_, i) => (
-                <div key={i} className="pdf-page-wrapper">
-                  <canvas ref={el => canvasRefs.current[i] = el} />
-                  <div className="page-number">Page {i + 1}</div>
-                </div>
-              ))}
+              <div className="pdf-pages-inner">
+                {Array.from({ length: numPages }, (_, i) => (
+                  <div key={i} className="pdf-page-wrapper">
+                    <canvas ref={el => canvasRefs.current[i] = el} />
+                    <div className="page-number">Page {i + 1}</div>
+                  </div>
+                ))}
+              </div>
             </div>
             
             <div className="pdf-controls">

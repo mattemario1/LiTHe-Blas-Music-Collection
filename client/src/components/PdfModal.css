@@ -53,21 +53,26 @@
 
 .pdf-pages-container {
   flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+  overflow: auto;
+  width: 100%;
+  padding: 20px 0; /* Remove horizontal padding */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 30px;
+  min-width: min-content;
+  margin: 0 auto;
+  padding: 0 20px; /* Add horizontal padding here instead */
 }
 
 .pdf-page-wrapper {
   position: relative;
   background: white;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 5px;
+  /* Ensure canvas is horizontally centered within wrapper */
   display: flex;
   justify-content: center;
-  margin-bottom: 5px;
 }
 
 .page-number {
