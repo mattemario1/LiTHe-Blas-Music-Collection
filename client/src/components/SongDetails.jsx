@@ -39,7 +39,7 @@ function ExpandableBoxList({
       alert(errorMsg);
       return;
     }
-    action(item);  // Pass the entire item
+    action(item);
   };
 
   const renderActions = (item) => {
@@ -136,13 +136,26 @@ function ExpandableBoxList({
     </div>
   );
 
-  const collectionItems = items.filter(item => Array.isArray(item.parts));
-  const ungroupedItems = items.filter(item => !Array.isArray(item.parts));
+  // Sort collections alphabetically by name
+  const sortedCollections = [...items.filter(item => Array.isArray(item.parts))]
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  // Sort ungrouped items alphabetically by their labelKey value
+  const sortedUngrouped = [...items.filter(item => !Array.isArray(item.parts))]
+    .sort((a, b) => (a[labelKey] || '').localeCompare(b[labelKey] || ''));
+
+  // Sort items within each collection alphabetically by their labelKey value
+  const collectionsWithSortedParts = sortedCollections.map(collection => ({
+    ...collection,
+    parts: [...collection.parts].sort((a, b) => 
+      (a[labelKey] || '').localeCompare(b[labelKey] || '')
+    )
+  }));
 
   return (
     <div className="section">
       <h3>{title}</h3>
-      {collectionItems.map((collection, collectionIndex) => (
+      {collectionsWithSortedParts.map((collection, collectionIndex) => (
         <div key={`collection-${collectionIndex}`} className="collection-block">
           <div className="collection-header" onClick={() => toggleCollection(collectionIndex)}>
             <strong>{collection.name ?? 'Collection'}</strong>
@@ -158,10 +171,10 @@ function ExpandableBoxList({
           )}
         </div>
       ))}
-      {ungroupedItems.length > 0 && (
+      {sortedUngrouped.length > 0 && (
         <div className="collection-block">
           <div className="box-list">
-            {ungroupedItems.map((item, itemIndex) => {
+            {sortedUngrouped.map((item, itemIndex) => {
               const key = `u-${itemIndex}`;
               return renderItem(item, key, expandedItems[key]);
             })}

@@ -139,6 +139,17 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
 }
 
 function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, songs }) {
+  // Sort parts alphabetically
+  const sortedParts = [...collection.parts].sort((a, b) => {
+    const aValue = type === 'recording' ? a.album : 
+                  type === 'sheet' ? a.instrument : 
+                  a.name || '';
+    const bValue = type === 'recording' ? b.album : 
+                  type === 'sheet' ? b.instrument : 
+                  b.name || '';
+    return aValue.localeCompare(bValue);
+  });
+
   const updatePart = (index, updatedFile) => {
     const updatedParts = [...collection.parts];
     updatedParts[index] = updatedFile;
@@ -163,11 +174,18 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
         <button className="remove-collection-button" onClick={onRemove}>Remove Collection</button>
       </div>
 
-      {collection.parts.map((file, i) => (
+      {sortedParts.map((file, i) => (
         <div key={file.id || i}>
           <FileEditor
             file={file}
-            onChange={updated => updatePart(i, updated)}
+            onChange={updated => {
+              const updatedParts = [...collection.parts];
+              const originalIndex = collection.parts.findIndex(f => f.id === file.id);
+              if (originalIndex !== -1) {
+                updatedParts[originalIndex] = updated;
+                onUpdate({ ...collection, parts: updatedParts });
+              }
+            }}
             onRemove={() => onRemoveFile(file, collection.id)}
             type={type}
             collections={[]}
@@ -187,13 +205,29 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
 }
 
 function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection, songs }) {
-  return files.map((file, index) => (
+  // Sort ungrouped files alphabetically by name/album/instrument based on type
+  const sortedFiles = [...files].sort((a, b) => {
+    const aValue = type === 'recording' ? a.album : 
+                  type === 'sheet' ? a.instrument : 
+                  a.name || '';
+    const bValue = type === 'recording' ? b.album : 
+                  type === 'sheet' ? b.instrument : 
+                  b.name || '';
+    return aValue.localeCompare(bValue);
+  });
+
+  return sortedFiles.map((file, index) => (
     <FileEditor
       key={file.id || index}
       file={file}
       type={type}
       collections={collections}
-      onChange={updated => onUpdateFile(index, updated)}
+      onChange={updated => {
+        const originalIndex = files.findIndex(f => f.id === file.id);
+        if (originalIndex !== -1) {
+          onUpdateFile(originalIndex, updated);
+        }
+      }}
       onRemove={() => onRemoveFile(file)}
       onAddToCollection={onAddToCollection}
       songs={songs}
@@ -295,25 +329,25 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
   };
 
   // Add a new collection
-const addNewCollection = () => {
-  // Map titles to asset types
-  const titleToType = {
-    '🎧 Recordings': 'Recordings',
-    '🎼 Sheet Music': 'Sheet Music',
-    '📝 Lyrics': 'Lyrics',
-    '📁 Other Files': 'Other Files'
+  const addNewCollection = () => {
+    // Map titles to asset types
+    const titleToType = {
+      '🎧 Recordings': 'Recordings',
+      '🎼 Sheet Music': 'Sheet Music',
+      '📝 Lyrics': 'Lyrics',
+      '📁 Other Files': 'Other Files'
+    };
+    
+    const newCollection = {
+      id: `temp-${getId()}`,
+      name: '',
+      description: '',
+      parts: [],
+      asset_type: titleToType[title] || 'Other Files'
+    };
+    
+    onChange([...files, newCollection]);
   };
-  
-  const newCollection = {
-    id: `temp-${getId()}`,
-    name: '',
-    description: '',
-    parts: [],
-    asset_type: titleToType[title] || 'Other Files'
-  };
-  
-  onChange([...files, newCollection]);
-};
 
   // Add a new ungrouped file
   const addNewFile = () => {
