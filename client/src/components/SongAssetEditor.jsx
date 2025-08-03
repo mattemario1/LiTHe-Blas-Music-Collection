@@ -139,16 +139,46 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
 }
 
 function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, songs }) {
-  // Sort parts alphabetically
-  const sortedParts = [...collection.parts].sort((a, b) => {
-    const aValue = type === 'recording' ? a.album : 
-                  type === 'sheet' ? a.instrument : 
-                  a.name || '';
-    const bValue = type === 'recording' ? b.album : 
-                  type === 'sheet' ? b.instrument : 
-                  b.name || '';
-    return aValue.localeCompare(bValue);
-  });
+  // Use state to store the sorted list, which will not change on every keystroke.
+  // The sorting function now runs only once when the component is initialized.
+  const [sortedParts, setSortedParts] = React.useState(() =>
+    [...collection.parts].sort((a, b) => {
+      const aValue = type === 'recording' ? a.album : 
+                    type === 'sheet' ? a.instrument : 
+                    a.name || '';
+      const bValue = type === 'recording' ? b.album : 
+                    type === 'sheet' ? b.instrument : 
+                    b.name || '';
+      return aValue.localeCompare(bValue);
+    })
+  );
+
+  // This effect will re-sync and re-sort the list ONLY if a file is added or removed.
+  React.useEffect(() => {
+    // Find any new parts that aren't in the current sorted list
+    const currentIds = new Set(sortedParts.map(p => p.id));
+    const newParts = collection.parts.filter(p => !currentIds.has(p.id));
+
+    // If there are new parts, or if parts have been removed, re-sort.
+    if (newParts.length > 0 || collection.parts.length !== sortedParts.length) {
+      setSortedParts([...collection.parts].sort((a, b) => {
+        const aValue = type === 'recording' ? a.album : 
+                      type === 'sheet' ? a.instrument : 
+                      a.name || '';
+        const bValue = type === 'recording' ? b.album : 
+                      type === 'sheet' ? b.instrument : 
+                      b.name || '';
+        return aValue.localeCompare(bValue);
+      }));
+    } else {
+      // Otherwise, just update the data in the existing sorted list
+      setSortedParts(prevSortedParts => {
+        const partsById = Object.fromEntries(collection.parts.map(p => [p.id, p]));
+        return prevSortedParts.map(sortedPart => partsById[sortedPart.id] || sortedPart);
+      });
+    }
+  }, [collection.parts]);
+
 
   const updatePart = (index, updatedFile) => {
     const updatedParts = [...collection.parts];
@@ -205,17 +235,44 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
 }
 
 function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection, songs }) {
-  // Sort ungrouped files alphabetically by name/album/instrument based on type
-  const sortedFiles = [...files].sort((a, b) => {
-    const aValue = type === 'recording' ? a.album : 
-                  type === 'sheet' ? a.instrument : 
-                  a.name || '';
-    const bValue = type === 'recording' ? b.album : 
-                  type === 'sheet' ? b.instrument : 
-                  b.name || '';
-    return aValue.localeCompare(bValue);
-  });
+  // Use state to hold the sorted list. Sorting runs once on initialization.
+  const [sortedFiles, setSortedFiles] = React.useState(() => 
+    [...files].sort((a, b) => {
+      const aValue = type === 'recording' ? a.album : 
+                    type === 'sheet' ? a.instrument : 
+                    a.name || '';
+      const bValue = type === 'recording' ? b.album : 
+                    type === 'sheet' ? b.instrument : 
+                    b.name || '';
+      return aValue.localeCompare(bValue);
+    })
+  );
 
+  // This effect will re-sync and re-sort the list ONLY if a file is added or removed.
+  React.useEffect(() => {
+    const currentIds = new Set(sortedFiles.map(f => f.id));
+    const newFiles = files.filter(f => !currentIds.has(f.id));
+
+    if (newFiles.length > 0 || files.length !== sortedFiles.length) {
+      setSortedFiles([...files].sort((a, b) => {
+        const aValue = type === 'recording' ? a.album : 
+                      type === 'sheet' ? a.instrument : 
+                      a.name || '';
+        const bValue = type === 'recording' ? b.album : 
+                      type === 'sheet' ? b.instrument : 
+                      b.name || '';
+        return aValue.localeCompare(bValue);
+      }));
+    } else {
+      // Otherwise, just update the data in the existing sorted list
+      setSortedFiles(prevSortedFiles => {
+        const filesById = Object.fromEntries(files.map(f => [f.id, f]));
+        return prevSortedFiles.map(sortedFile => filesById[sortedFile.id] || sortedFile);
+      });
+    }
+  }, [files]);
+  
+  // Render the stable, stateful list
   return sortedFiles.map((file, index) => (
     <FileEditor
       key={file.id || index}
