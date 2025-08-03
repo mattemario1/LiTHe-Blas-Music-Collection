@@ -13,7 +13,13 @@ function PdfModal({ pdfUrl, onClose }) {
   const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef(null);
   const canvasRefs = useRef([]);
+  const touchState = useRef({
+    initialDistance: 0,
+    initialScale: 1,
+    lastScale: 1
+  });
 
+  // Load PDF document
   useEffect(() => {
     if (!pdfUrl) return;
 
@@ -49,11 +55,17 @@ function PdfModal({ pdfUrl, onClose }) {
     };
 
     updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-    return () => window.removeEventListener('resize', updateContainerWidth);
+    const resizeObserver = new ResizeObserver(updateContainerWidth);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, []);
 
-  // Render all pages when PDF doc or dimensions change
+  // Render PDF pages
   useEffect(() => {
     if (!pdfDoc || !containerWidth || containerWidth <= 0) return;
 
@@ -82,14 +94,80 @@ function PdfModal({ pdfUrl, onClose }) {
     renderPages();
   }, [pdfDoc, scale, containerWidth]);
 
-  // Calculate optimal scale for page width
+  // Handle touch events for pinch-to-zoom
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const distance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        touchState.current = {
+          initialDistance: distance,
+          initialScale: scale,
+          lastScale: scale
+        };
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        
+        if (touchState.current.initialDistance > 0) {
+          // Calculate scale based on distance change
+          const scaleChange = currentDistance / touchState.current.initialDistance;
+          let newScale = touchState.current.initialScale * scaleChange;
+          
+          // Apply smoothing to reduce jitter
+          newScale = 0.7 * newScale + 0.3 * touchState.current.lastScale;
+          
+          // Constrain scale to reasonable values
+          newScale = Math.max(0.5, Math.min(newScale, 3));
+          
+          setScale(newScale);
+          touchState.current.lastScale = newScale;
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchState.current.initialDistance = 0;
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchcancel', handleTouchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [scale]);
+
+  // Zoom functions
   const zoomToPageWidth = async () => {
     if (!pdfDoc || !containerWidth || containerWidth <= 0) return;
     
     try {
       const page = await pdfDoc.getPage(1);
       const viewport = page.getViewport({ scale: 1 });
-      const newScale = (containerWidth - 40) / viewport.width; // 40px padding
+      const newScale = (containerWidth - 40) / viewport.width;
       setScale(Math.max(0.5, Math.min(newScale, 3)));
     } catch (err) {
       console.error('Zoom error:', err);
@@ -106,7 +184,7 @@ function PdfModal({ pdfUrl, onClose }) {
       const containerHeight = containerRef.current.clientHeight;
       
       const widthScale = (containerWidth - 40) / viewport.width;
-      const heightScale = (containerHeight - 100) / viewport.height; // 100px for controls
+      const heightScale = (containerHeight - 100) / viewport.height;
       
       setScale(Math.max(0.5, Math.min(Math.min(widthScale, heightScale), 3)));
     } catch (err) {
