@@ -155,8 +155,18 @@ function App() {
       const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
       const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
+      
+      // Fixed album matching - checks both top-level and nested recordings
       const matchesAlbum = !selectedFilters.album || 
-        song.recordings?.some(r => r.album === selectedFilters.album);
+        song.recordings?.some(recording => {
+          if (recording.parts) {
+            // Check if any part in collection matches
+            return recording.parts.some(part => part.album === selectedFilters.album);
+          }
+          // Check standalone recording
+          return recording.album === selectedFilters.album;
+        });
+      
       return matchesSearch && matchesType && matchesStatus && matchesAlbum;
     })
     .sort((a, b) => a.name.localeCompare(b.name));

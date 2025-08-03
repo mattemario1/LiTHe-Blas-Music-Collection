@@ -4,7 +4,17 @@ import './SearchAndFilter.css';
 function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs }) {
   const [focused, setFocused] = useState(false);
 
-  const albums = Array.from(new Set(songs.flatMap(song => song.recordings.map(r => r.album))));
+  const albums = Array.from(
+      new Set(
+        songs.flatMap(song => 
+          song.recordings.flatMap(recording => 
+            recording.parts 
+              ? recording.parts.map(part => part.album)  // Get albums from collection parts
+              : recording.album  // Get album from standalone recording
+          )
+        )
+      )
+    ).filter(album => album); // Remove empty values
   const songNames = songs.map(song => song.name);
   const filteredSuggestions = songNames.filter(name =>
     name.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery
@@ -57,6 +67,7 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
             <option value="">-- Select --</option>
             <option value="Orkesterlåt">Orkesterlåt</option>
             <option value="Balettlåt">Balettlåt</option>
+            <option value="Övrigt">Övrigt</option>
           </select>
         </div>
         <div className="filter-group">
@@ -65,6 +76,7 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
             <option value="">-- Select --</option>
             <option value="Aktiv">Aktiv</option>
             <option value="Gammal">Gammal</option>
+            <option value="Övrigt">Övrigt</option>
           </select>
         </div>
         <div className="filter-group">
