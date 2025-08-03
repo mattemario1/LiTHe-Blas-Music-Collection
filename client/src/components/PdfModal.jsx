@@ -13,6 +13,7 @@ function PdfModal({ pdfUrl, onClose }) {
   const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef(null);
   const canvasRefs = useRef([]);
+  const renderTasks = useRef([]);
   const touchState = useRef({
     initialDistance: 0,
     initialScale: 1,
@@ -46,6 +47,18 @@ function PdfModal({ pdfUrl, onClose }) {
     };
   }, [pdfUrl]);
 
+  // Clean up render tasks when PDF doc changes
+  useEffect(() => {
+    return () => {
+      if (renderTasks.current) {
+        renderTasks.current.forEach(task => {
+          if (task && !task.done) task.cancel();
+        });
+        renderTasks.current = [];
+      }
+    };
+  }, [pdfDoc]);
+
   // Measure container width on mount and resize
   useEffect(() => {
     const updateContainerWidth = () => {
@@ -69,30 +82,63 @@ function PdfModal({ pdfUrl, onClose }) {
   useEffect(() => {
     if (!pdfDoc || !containerWidth || containerWidth <= 0) return;
 
+    let mounted = true;
+    const currentTasks = [];
+
     const renderPages = async () => {
       try {
         for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-          const page = await pdfDoc.getPage(pageNum);
-          const viewport = page.getViewport({ scale });
-          const canvas = canvasRefs.current[pageNum - 1];
-          if (!canvas) continue;
+          if (!mounted) break;
           
+          const pageIndex = pageNum - 1;
+          const page = await pdfDoc.getPage(pageNum);
+          if (!mounted) return;
+
+          const viewport = page.getViewport({ scale });
+          const canvas = canvasRefs.current[pageIndex];
+          if (!canvas) continue;
+
           const context = canvas.getContext('2d');
           canvas.height = viewport.height;
           canvas.width = viewport.width;
-          
-          await page.render({
+
+          // Cancel previous task if exists
+          if (renderTasks.current[pageIndex]) {
+            renderTasks.current[pageIndex].cancel();
+          }
+
+          const task = page.render({
             canvasContext: context,
             viewport: viewport
-          }).promise;
+          });
+          
+          // Store task references
+          renderTasks.current[pageIndex] = task;
+          currentTasks.push(task);
+
+          try {
+            await task.promise;
+          } catch (err) {
+            if (err.name !== 'RenderingCancelledException') {
+              throw err;
+            }
+          }
         }
       } catch (err) {
-        console.error('Page render error:', err);
+        if (mounted) console.error('Page render error:', err);
       }
     };
 
     renderPages();
-  }, [pdfDoc, scale, containerWidth]);
+
+    return () => {
+      mounted = false;
+      // Cancel ongoing tasks
+      currentTasks.forEach(task => {
+        if (!task.done) task.cancel();
+      });
+    };
+  }, [pdfDoc, scale, containerWidth, numPages]);
 
   // Handle touch events for pinch-to-zoom
   useEffect(() => {
@@ -174,7 +220,6 @@ function PdfModal({ pdfUrl, onClose }) {
     }
   };
 
-  // Calculate optimal scale for page fit
   const zoomToPageFit = async () => {
     if (!pdfDoc || !containerRef.current) return;
     
