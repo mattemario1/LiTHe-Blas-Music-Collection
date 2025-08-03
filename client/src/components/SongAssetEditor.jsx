@@ -1,7 +1,7 @@
 // SongAssetEditor.jsx
 import React from 'react';
 
-const getId = () => Date.now().toString();
+const getId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection, songs }) {
   const [focusedField, setFocusedField] = React.useState(null);
@@ -352,6 +352,37 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
       onChange([...collections, ...updatedUngrouped]);
     }
   };
+  
+  // Add multiple files handler
+  const addMultipleFiles = (selectedFiles) => {
+    const newFiles = Array.from(selectedFiles).map(file => {
+      // Extract base name without extension
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      
+      return {
+        id: getId(),  // Ensure unique ID for each file
+        file_path: '',
+        description: '',
+        date: '',
+        localFile: file,
+        ...(type === 'recording' ? { album: baseName } : {}),
+        ...(type === 'sheet' ? { instrument: baseName } : {}),
+        ...(type === 'lyrics' || type === 'other' ? { name: baseName } : {})
+      };
+    });
+
+    onChange([...files, ...newFiles]);
+  };
+
+  // Handle multiple file selection
+  const handleMultipleFileSelect = (e) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles.length > 0) {
+      addMultipleFiles(selectedFiles);
+    }
+    // Reset input to allow selecting same files again
+    e.target.value = null;
+  };
 
   // Add a file to a collection
   const addToCollection = (file, collectionId) => {
@@ -449,6 +480,15 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
       <div className="section-actions">
         <button onClick={addNewCollection}>Create New Collection</button>
         <button onClick={addNewFile}>Add New File</button>
+        <label className="upload-multiple-button">
+          Upload multiple files
+          <input
+            type="file"
+            multiple
+            onChange={handleMultipleFileSelect}
+            style={{ display: 'none' }}
+          />
+        </label>
       </div>
     </div>
   );
