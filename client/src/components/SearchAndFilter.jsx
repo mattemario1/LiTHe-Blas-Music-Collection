@@ -62,7 +62,7 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
 
       <div className="filter-panel">
         <div className="filter-group">
-          <label>Sort</label>
+          <label>Typ</label>
           <select onChange={(e) => handleChange('type', e.target.value)} defaultValue="">
             <option value="">-- Välj --</option>
             <option value="Orkesterlåt">Orkesterlåt</option>

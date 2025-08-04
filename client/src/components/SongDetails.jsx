@@ -245,7 +245,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       <h2>{song.name}</h2>
       <p className="description">{song.description}</p>
       <div className="meta">
-        <span><strong>Sort:</strong> {song.type}</span>
+        <span><strong>Typ:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
       </div>
       <button onClick={() => setIsEditing(true)}>Edit</button>
