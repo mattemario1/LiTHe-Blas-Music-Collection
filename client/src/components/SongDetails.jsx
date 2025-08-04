@@ -124,8 +124,11 @@ function ExpandableBoxList({
   const renderItem = (item, key, isExpanded) => (
     <div key={key} className="info-box" onClick={() => toggleItem(key)}>
       <div className="info-main">
-        <strong>{item.name || item[labelKey]}</strong>
-        <div>{item[dateKey]}</div>
+        <strong className="asset-name">{item.name || item[labelKey]}</strong>
+        {!isExpanded && item.description && (
+          <div className="truncated-description">{item.description}</div>
+        )}
+        <div className="asset-date">{item[dateKey]}</div>
       </div>
       {renderActions(item)}
       {isExpanded && (

@@ -71,6 +71,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.asset-name {
+  flex: 1 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.asset-date {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+.truncated-description {
+  flex: 2 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #555;
+  font-size: 0.9em;
+  padding: 0 8px;
 }
 
 .details-inline {
