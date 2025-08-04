@@ -11,7 +11,7 @@ function SongList({ songs, setSelectedSong }) {
 
   return (
     <div className="song-list">
-      <h3>Song List</h3>
+      <h3>Låtar</h3>
       <div className="song-boxes">
         {songs.map(song => (
           <div

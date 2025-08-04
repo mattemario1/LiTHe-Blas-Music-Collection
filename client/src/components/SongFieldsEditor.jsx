@@ -30,7 +30,7 @@ function SongFieldsEditor({ song, onChange }) {
       >
         <option value="">Select Status</option>
         <option value="Aktiv">Aktiv</option>
-        <option value="Gammal">Gammal</option>
+        <option value="Inaktiv">Inaktiv</option>
         <option value="Övrigt">Övrigt</option>
       </select>
     </>

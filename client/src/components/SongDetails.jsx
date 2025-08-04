@@ -59,7 +59,7 @@ function ExpandableBoxList({
             }
           }}
         >
-          <i className="fas fa-download"></i> Download
+          <i className="fas fa-download"></i> Ladda ner
         </a>
 
         {type === 'recording' && (
@@ -76,7 +76,7 @@ function ExpandableBoxList({
                 )
               }
             >
-              <i className="fas fa-play"></i> Play Music
+              <i className="fas fa-play"></i> Spela Musik
             </button>
             {duration && (
               <span className="duration-badge">{duration}</span>
@@ -97,7 +97,7 @@ function ExpandableBoxList({
               )
             }
           >
-            <i className="fas fa-file-pdf"></i> Show PDF
+            <i className="fas fa-file-pdf"></i> Visa PDF
           </button>
         )}
 
@@ -114,7 +114,7 @@ function ExpandableBoxList({
               )
             }
           >
-            <i className="fas fa-file-alt"></i> Show Lyrics
+            <i className="fas fa-file-alt"></i> Visa Text
           </button>
         )}
       </div>
@@ -245,13 +245,13 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       <h2>{song.name}</h2>
       <p className="description">{song.description}</p>
       <div className="meta">
-        <span><strong>Type:</strong> {song.type}</span>
+        <span><strong>Sort:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
       </div>
       <button onClick={() => setIsEditing(true)}>Edit</button>
 
       <ExpandableBoxList
-        title="🎧 Recordings"
+        title="🎧 Inspelningar"
         items={song.recordings}
         labelKey="album"
         dateKey="date"
@@ -260,7 +260,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
-        title="🎼 Sheet Music"
+        title="🎼 Noter"
         items={song.sheetMusic}
         labelKey="instrument"
         dateKey="date"
@@ -269,7 +269,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
-        title="📝 Lyrics"
+        title="📝 Text"
         items={song.lyrics}
         labelKey="name"
         dateKey="date"
@@ -278,7 +278,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
-        title="📁 Other Files"
+        title="📁 Andra Filer"
         items={song.otherFiles || []}
         labelKey="name"
         dateKey="date"

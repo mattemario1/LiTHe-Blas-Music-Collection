@@ -30,7 +30,7 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
         <input
           type="text"
           className="search-box"
-          placeholder="🔍 Search songs..."
+          placeholder="🔍 Sök låtar..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setFocused(true)}
@@ -62,9 +62,9 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
 
       <div className="filter-panel">
         <div className="filter-group">
-          <label>Type</label>
+          <label>Sort</label>
           <select onChange={(e) => handleChange('type', e.target.value)} defaultValue="">
-            <option value="">-- Select --</option>
+            <option value="">-- Välj --</option>
             <option value="Orkesterlåt">Orkesterlåt</option>
             <option value="Balettlåt">Balettlåt</option>
             <option value="Övrigt">Övrigt</option>
@@ -73,16 +73,16 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
         <div className="filter-group">
           <label>Status</label>
           <select onChange={(e) => handleChange('status', e.target.value)} defaultValue="">
-            <option value="">-- Select --</option>
+            <option value="">-- Välj --</option>
             <option value="Aktiv">Aktiv</option>
-            <option value="Gammal">Gammal</option>
+            <option value="Inaktiv">Inaktiv</option>
             <option value="Övrigt">Övrigt</option>
           </select>
         </div>
         <div className="filter-group">
           <label>Album</label>
           <select onChange={(e) => handleChange('album', e.target.value)} defaultValue="">
-            <option value="">-- Select --</option>
+            <option value="">-- Välj --</option>
             {albums.map((album, index) => (
               <option key={index} value={album}>{album}</option>
             ))}
