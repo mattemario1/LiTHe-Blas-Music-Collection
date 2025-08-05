@@ -57,7 +57,7 @@ const get = promisify(db.get).bind(db);
 async function initDB() {
   try {
     console.log('[DB INIT] Initializing database tables...');
-    await run(`CREATE TABLE IF NOT EXISTS songs (
+     await run(`CREATE TABLE IF NOT EXISTS songs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       description TEXT,
@@ -65,6 +65,7 @@ async function initDB() {
       status TEXT
     )`);
 
+    // Create collections table without folder_path first
     await run(`CREATE TABLE IF NOT EXISTS collections (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       song_id INTEGER REFERENCES songs(id),
@@ -86,11 +87,55 @@ async function initDB() {
       file_path TEXT NOT NULL,
       asset_type TEXT NOT NULL
     )`);
+    
+    // Add folder_path column if it doesn't exist
+    try {
+      await run('ALTER TABLE collections ADD COLUMN folder_path TEXT');
+      console.log('[DB MIGRATION] Added folder_path column to collections');
+    } catch (alterErr) {
+      if (!alterErr.message.includes('duplicate column name')) {
+        throw alterErr;
+      }
+    }
+
     console.log('[DB INIT] Database tables initialized successfully');
   } catch (err) {
     console.error('[DB INIT ERROR] Database initialization error:', err);
     throw err;
   }
+
+  try {
+    // Migration: Add folder_path to existing collections
+    const collections = await query('SELECT * FROM collections WHERE folder_path IS NULL');
+    if (collections.length > 0) {
+      console.log(`[DB MIGRATION] Adding folder_path to ${collections.length} collections`);
+      
+      for (const coll of collections) {
+        const song = await get('SELECT name FROM songs WHERE id = ?', [coll.song_id]);
+        const songName = song?.name ? preserveSpecialChars(song.name) : `song_${coll.song_id}`;
+        const songFolder = preserveSpecialChars(songName);
+        const assetFolder = preserveSpecialChars(coll.asset_type);
+        const collectionFolder = preserveSpecialChars(coll.name);
+        
+        const fullPath = path.join(
+          UPLOADS_DIR,
+          songFolder,
+          assetFolder,
+          collectionFolder
+        );
+        
+        const folder_path = path.relative(UPLOADS_DIR, fullPath);
+        
+        await run(
+          'UPDATE collections SET folder_path = ? WHERE id = ?',
+          [folder_path, coll.id]
+        );
+      }
+    }
+  } catch (err) {
+    console.error('[DB INIT ERROR] Migration failed:', err);
+  }
+  
 }
 
 // Get all songs with nested data
@@ -344,7 +389,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       fs.mkdirSync(songDir, { recursive: true });
     }
 
-    const assetDir = path.join(songDir, assetType);
+    const sanitizedAssetType = preserveSpecialChars(assetType);
+    const assetDir = path.join(songDir, sanitizedAssetType);
     const finalDir = collectionName 
       ? path.join(assetDir, preserveSpecialChars(collectionName)) 
       : assetDir;
@@ -484,12 +530,29 @@ app.post('/api/collections', async (req, res) => {
     console.log('[COLLECTION CREATE] Creating new collection', 
       { song_id, name, asset_type });
     
+    const song = await get('SELECT name FROM songs WHERE id = ?', [song_id]);
+    const songName = song?.name ? preserveSpecialChars(song.name) : `song_${song_id}`;
+    const songFolder = preserveSpecialChars(songName);
+    const assetFolder = preserveSpecialChars(asset_type);
+    const collectionFolder = preserveSpecialChars(name);
+    
+    // Calculate full folder path
+    const fullPath = path.join(
+      UPLOADS_DIR,
+      songFolder,
+      assetFolder,
+      collectionFolder
+    );
+    
+    // Store relative path in database
+    const folder_path = path.relative(UPLOADS_DIR, fullPath);
+
     const result = await new Promise((resolve, reject) => {
       db.run(
         `INSERT INTO collections 
-        (song_id, name, asset_type, description) 
-        VALUES (?, ?, ?, ?)`,
-        [song_id, name, asset_type, description],
+        (song_id, name, asset_type, description, folder_path) 
+        VALUES (?, ?, ?, ?, ?)`,
+        [song_id, name, asset_type, description, folder_path || ''],
         function(err) {
           if (err) reject(err);
           else resolve(this.lastID);
@@ -499,20 +562,9 @@ app.post('/api/collections', async (req, res) => {
     
     console.log(`[COLLECTION CREATE] Created collection ${result}`);
     
-    // CREATE COLLECTION FOLDER IMMEDIATELY
-    try {
-      const song = await get('SELECT name FROM songs WHERE id = ?', [song_id]);
-      const songName = song?.name ? preserveSpecialChars(song.name) : `song_${song_id}`;
-      const folderName = getSongFolderName(songName, song_id);
-      const songDir = path.join(UPLOADS_DIR, folderName);
-      const assetDir = path.join(songDir, asset_type);
-      const collectionDir = path.join(assetDir, preserveSpecialChars(name));
-      
-      console.log(`[FILESYSTEM] Creating collection folder: ${collectionDir}`);
-      fs.mkdirSync(collectionDir, { recursive: true });
-    } catch (folderErr) {
-      console.error('[FOLDER CREATE ERROR] Could not create collection folder:', folderErr);
-    }
+    // Create physical folder
+    console.log(`[FILESYSTEM] Creating collection folder: ${fullPath}`);
+    fs.mkdirSync(fullPath, { recursive: true });
     
     res.json({ id: result });
   } catch (err) {
@@ -527,14 +579,30 @@ app.delete('/api/collections/:id', async (req, res) => {
     const collectionId = req.params.id;
     console.log(`[COLLECTION DELETE] Deleting collection ${collectionId}`);
     
-    // Move files to ungrouped FIRST
+    // Get collection with folder_path
+    const collection = await get('SELECT * FROM collections WHERE id = ?', [collectionId]);
+    if (!collection) {
+      console.log(`[COLLECTION DELETE] Collection not found: ${collectionId}`);
+      return res.status(404).json({ error: 'Collection not found' });
+    }
+    
+    // Move files to ungrouped
     await run(
       'UPDATE files SET collection_id = NULL WHERE collection_id = ?',
       [collectionId]
     );
     
-    // Now delete the collection
+    // Delete the collection
     await run('DELETE FROM collections WHERE id = ?', [collectionId]);
+    
+    // Delete the folder using stored path
+    const fullPath = path.join(UPLOADS_DIR, collection.folder_path);
+    if (fs.existsSync(fullPath)) {
+      console.log(`[FOLDER DELETE] Removing collection directory: ${fullPath}`);
+      fs.rmSync(fullPath, { recursive: true, force: true });
+    } else {
+      console.log(`[FOLDER DELETE] Directory not found: ${fullPath}`);
+    }
     
     console.log(`[COLLECTION DELETE] Successfully deleted collection ${collectionId}`);
     res.json({ success: true });
@@ -646,6 +714,28 @@ app.put('/api/songs/:id', async (req, res) => {
       // If there were any errors, throw them
       if (renameErrors.length > 0) {
         throw new Error(`File rename errors occurred:\n${renameErrors.join('\n')}`);
+      }
+
+      // Update collection folder paths
+      const collections = await query('SELECT * FROM collections WHERE song_id = ?', [req.params.id]);
+      for (const coll of collections) {
+        const newSongFolder = preserveSpecialChars(name);
+        const assetFolder = preserveSpecialChars(coll.asset_type);
+        const collectionFolder = preserveSpecialChars(coll.name);
+        
+        const newFullPath = path.join(
+          UPLOADS_DIR,
+          newSongFolder,
+          assetFolder,
+          collectionFolder
+        );
+        
+        const newFolderPath = path.relative(UPLOADS_DIR, newFullPath);
+        
+        await run(
+          'UPDATE collections SET folder_path = ? WHERE id = ?',
+          [newFolderPath, coll.id]
+        );
       }
     }
     
@@ -816,7 +906,7 @@ app.put('/api/files/:id', async (req, res) => {
     
     // Build NEW path based on collection (if any)
     const songFolder = getSongFolderName(songName, file.song_id);
-    const baseDir = path.join(UPLOADS_DIR, songFolder, updatedFile.asset_type);
+    const baseDir = path.join(UPLOADS_DIR, songFolder, preserveSpecialChars(updatedFile.asset_type));
     
     let collectionName = null;
     if (updatedFile.collection_id) {
@@ -829,7 +919,7 @@ app.put('/api/files/:id', async (req, res) => {
       : baseDir;
     
     // Ensure new directory exists
-    fs.mkdirSync(newDir, { recursive: true });
+    fs.mkdirSync(preserveSpecialChars(newDir), { recursive: true });
     
     // Build full new path
     newPath = path.join(newDir, newFileName);
@@ -968,8 +1058,26 @@ app.put('/api/collections/:id', async (req, res) => {
           }
         }
       }
-    }
-    
+      // Update folder_path in database
+      const songName = song?.name ? preserveSpecialChars(song.name) : `song_${oldCollection.song_id}`;
+      const songFolder = preserveSpecialChars(songName);
+      const assetFolder = preserveSpecialChars(oldCollection.asset_type);
+      const collectionFolder = preserveSpecialChars(name);
+      
+      const newFullPath = path.join(
+        UPLOADS_DIR,
+        songFolder,
+        assetFolder,
+        collectionFolder
+      );
+      
+      const newFolderPath = path.relative(UPLOADS_DIR, newFullPath);
+      
+      await run(
+        'UPDATE collections SET folder_path = ? WHERE id = ?',
+        [newFolderPath, req.params.id]
+      );
+    }    
     console.log(`[COLLECTION UPDATE] Successfully updated collection ${req.params.id}`);
     res.json({ success: true });
   } catch (err) {

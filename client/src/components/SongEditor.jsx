@@ -7,7 +7,8 @@ import {
   getAllFiles,
   deleteRemovedFiles,
   updateFileMetadata,
-  preserveCollectionInfo
+  preserveCollectionInfo,
+  deleteRemovedCollections
 } from './uploadUtils';
 
 const updateFileInSong = (song, updatedFile) => {
@@ -250,6 +251,10 @@ function SongEditor({ song, onSave, onCancel, songs, setSongs }) {
       
       const songWithCollections = preserveCollectionInfo(finalSong, allCollections);
 
+      setProgressMessage('Deleting removed collections...');
+      await deleteRemovedCollections(song, updatedSong);
+
+      setProgressMessage('Deleting removed files...');
       // Handle file deletions
       const newFileIds = new Set(
         getAllFiles(songWithCollections)

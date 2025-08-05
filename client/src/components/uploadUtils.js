@@ -305,3 +305,36 @@ export const preserveCollectionInfo = (song, collections) => {
   return updatedSong;
 };
 
+
+export const deleteRemovedCollections = async (originalSong, updatedSong) => {
+  const getCollections = (song) => {
+    const collections = [];
+    ['recordings', 'sheetMusic', 'lyrics', 'otherFiles'].forEach(key => {
+      (song[key] || []).forEach(item => {
+        if (Array.isArray(item.parts) && typeof item.id === 'number') {
+          collections.push(item);
+        }
+      });
+    });
+    return collections;
+  };
+
+  const originalCollections = getCollections(originalSong);
+  const updatedCollections = getCollections(updatedSong);
+  
+  const toDelete = originalCollections.filter(oc => 
+    !updatedCollections.some(uc => uc.id === oc.id)
+  );
+
+  if (toDelete.length === 0) return;
+
+  for (const collection of toDelete) {
+    try {
+      await fetch(`/api/collections/${collection.id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error(`Failed to delete collection ${collection.id}:`, err);
+    }
+  }
+};
