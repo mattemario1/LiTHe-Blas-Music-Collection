@@ -138,7 +138,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
   );
 }
 
-function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, songs, onUploadMultiple }) {
+function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, onRemoveFromCollection, songs, onUploadMultiple }) {
   // Use state to store the sorted list, which will not change on every keystroke.
   // The sorting function now runs only once when the component is initialized.
   const [sortedParts, setSortedParts] = React.useState(() =>
@@ -237,7 +237,7 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
           />
           <button
             className="remove-from-collection"
-            onClick={() => onRemoveFile(file, collection.id)}
+            onClick={() => onRemoveFromCollection(file, collection.id)}
           >
             Remove from Collection
           </button>
@@ -515,7 +515,8 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
           type={type}
           onUpdate={updated => updateCollection(null, updated)}
           onRemove={() => removeCollection(collection)}
-          onRemoveFile={removeFromCollection}
+          onRemoveFromCollection={removeFromCollection}
+          onRemoveFile={removeFile}
           songs={songs}
           onUploadMultiple={handleUploadMultipleToCollection}
         />
