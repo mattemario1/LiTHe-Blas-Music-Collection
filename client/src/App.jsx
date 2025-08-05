@@ -150,6 +150,63 @@ function App() {
     }
   };
 
+  const handlePlayRandom = () => {
+    // Get all available recordings
+    const allRecordings = [];
+    
+    songs.forEach(song => {
+      if (Array.isArray(song.recordings)) {
+        song.recordings.forEach(recording => {
+          // Handle collections
+          if (recording.parts) {
+            recording.parts.forEach(part => {
+              if (part.file_path) {
+                allRecordings.push({
+                  ...part,
+                  songName: song.name,
+                  songId: song.id
+                });
+              }
+            });
+          } 
+          // Handle standalone recordings
+          else if (recording.file_path) {
+            allRecordings.push({
+              ...recording,
+              songName: song.name,
+              songId: song.id
+            });
+          }
+        });
+      }
+    });
+
+    if (allRecordings.length === 0) {
+      alert("Inga inspelningar tillgängliga");
+      return;
+    }
+
+    // Select random recording
+    const randomRecording = allRecordings[Math.floor(Math.random() * allRecordings.length)];
+    
+    // Play the recording
+    handlePlayAudio(
+      `/file/${randomRecording.file_path}`,
+      randomRecording.songName,
+      randomRecording.album || 'Okänt album',
+      randomRecording.date
+    );
+    
+    // Highlight the song in the list by setting selectedSong
+    const randomSong = songs.find(s => s.id === randomRecording.songId);
+    if (randomSong) {
+      setSelectedSong(randomSong);
+    } else {
+      setSelectedSong(null); // Clear selection if song not found
+    }
+  };
+
+
   const filteredSongs = songs
     .filter(song => {
       const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -192,7 +249,12 @@ function App() {
       />
       
       <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
-        <SongList songs={filteredSongs} setSelectedSong={setSelectedSong} />
+        <SongList 
+          songs={filteredSongs} 
+          setSelectedSong={setSelectedSong}
+          selectedSongId={selectedSong?.id || null}
+          onPlayRandom={handlePlayRandom}
+        />
         {selectedSong && (
           <SongDetails
             song={selectedSong}

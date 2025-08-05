@@ -1,22 +1,28 @@
 import React from 'react';
 import './SongList.css';
 
-function SongList({ songs, setSelectedSong }) {
-  const [activeId, setActiveId] = React.useState(null);
-
+function SongList({ songs, setSelectedSong, selectedSongId, onPlayRandom }) {
   const handleClick = (song) => {
     setSelectedSong(song);
-    setActiveId(song.id);
   };
 
   return (
     <div className="song-list">
-      <h3>Låtar</h3>
+      <div className="song-list-header">
+        <h3>Låtar</h3>
+        <button 
+          className="play-random-button" 
+          onClick={onPlayRandom}
+          title="Spela en slumpmässig inspelning"
+        >
+          <i className="fas fa-random"></i>
+        </button>
+      </div>
       <div className="song-boxes">
         {songs.map(song => (
           <div
             key={song.id}
-            className={`song-box ${activeId === song.id ? 'selected' : ''}`}
+            className={`song-box ${selectedSongId === song.id ? 'selected' : ''}`}
             onClick={() => handleClick(song)}
           >
             {song.name}

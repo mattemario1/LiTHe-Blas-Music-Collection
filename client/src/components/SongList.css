@@ -28,3 +28,24 @@
   color: white;
   border-color: #153066;
 }
+
+.song-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.play-random-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #1c4386;
+  transition: transform 0.2s;
+}
+
+.play-random-button:hover {
+  transform: scale(1.1);
+  color: #153066;
+}
