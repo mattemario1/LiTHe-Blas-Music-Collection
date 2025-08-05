@@ -138,7 +138,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
   );
 }
 
-function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, songs }) {
+function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, songs, onUploadMultiple }) {
   // Use state to store the sorted list, which will not change on every keystroke.
   // The sorting function now runs only once when the component is initialized.
   const [sortedParts, setSortedParts] = React.useState(() =>
@@ -179,14 +179,13 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
     }
   }, [collection.parts]);
 
-
   const updatePart = (index, updatedFile) => {
     const updatedParts = [...collection.parts];
     updatedParts[index] = updatedFile;
     onUpdate({ ...collection, parts: updatedParts });
   };
 
-  return (
+    return (
     <div className="collection-box">
       <div className="collection-header-edit">
         <input
@@ -201,7 +200,21 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
           placeholder="Collection Description"
           onChange={e => onUpdate({ ...collection, description: e.target.value })}
         />
-        <button className="remove-collection-button" onClick={onRemove}>Remove Collection</button>
+      </div>
+      
+      <div className="collection-actions">
+        <button className="remove-collection-button" onClick={onRemove}>
+          Remove Collection
+        </button>
+        <label className="upload-multiple-button">
+          Upload multiple files
+          <input
+            type="file"
+            multiple
+            onChange={(e) => onUploadMultiple(e, collection.id)}
+            style={{ display: 'none' }}
+          />
+        </label>
       </div>
 
       {sortedParts.map((file, i) => (
@@ -298,7 +311,13 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
   // Ungrouped files are items without parts
   const ungrouped = files.filter(f => !Array.isArray(f.parts));
   
-  // Ensure all files have IDs
+  const typeToAssetType = {
+    'recording': 'Recordings',
+    'sheet': 'Sheet Music',
+    'lyrics': 'Lyrics',
+    'other': 'Other Files'
+  };
+
   const ensureIds = (arr) => arr.map(f => f.id ? f : { ...f, id: getId() });
   
   // Update a collection
@@ -323,7 +342,7 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
   // Remove a file from a collection and move it to ungrouped
   const removeFromCollection = (file, collectionId) => {
     const updatedCollections = collections.map(c => 
-      c.id == collectionId  // Loose equality
+      c.id == collectionId
         ? { ...c, parts: c.parts.filter(f => f.id !== file.id) }
         : c
     );
@@ -332,7 +351,7 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
     onChange([
       ...updatedCollections, 
       ...ungrouped, 
-      { ...file, collection_id: null }  // Ensure collection_id is cleared
+      { ...file, collection_id: null }
     ]);
   };
 
@@ -353,14 +372,49 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
     }
   };
   
-  // Add multiple files handler
+  const handleUploadMultipleToCollection = (e, collectionId) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+    
+    const collection = collections.find(c => c.id === collectionId);
+    if (!collection) return;
+    
+    const newFiles = Array.from(selectedFiles).map(file => {
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      return {
+        id: getId(),
+        file_path: '',
+        description: '',
+        date: '',
+        localFile: file,
+        collection_id: collectionId,
+        ...(type === 'recording' ? { album: baseName } : {}),
+        ...(type === 'sheet' ? { instrument: baseName } : {}),
+        ...(type === 'lyrics' || type === 'other' ? { name: baseName } : {}),
+        asset_type: typeToAssetType[type] || 'Other Files'
+      };
+    });
+
+    const updatedCollection = {
+      ...collection,
+      parts: [...collection.parts, ...newFiles]
+    };
+
+    const updatedCollections = collections.map(c => 
+      c.id === collectionId ? updatedCollection : c
+    );
+    
+    onChange([...updatedCollections, ...ungrouped]);
+    e.target.value = null;
+  };
+
   const addMultipleFiles = (selectedFiles) => {
     const newFiles = Array.from(selectedFiles).map(file => {
       // Extract base name without extension
       const baseName = file.name.replace(/\.[^/.]+$/, "");
       
       return {
-        id: getId(),  // Ensure unique ID for each file
+        id: getId(),
         file_path: '',
         description: '',
         date: '',
@@ -386,10 +440,9 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
 
   // Add a file to a collection
   const addToCollection = (file, collectionId) => {
-    const targetCollection = collections.find(c => c.id == collectionId); // Use loose equality
+    const targetCollection = collections.find(c => c.id == collectionId);
     
     if (targetCollection) {
-      // Clear collection_id if moving from another collection
       const fileToAdd = file.id 
         ? {...file, collection_id: collectionId} 
         : {...file, id: getId(), collection_id: collectionId};
@@ -464,6 +517,7 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
           onRemove={() => removeCollection(collection)}
           onRemoveFile={removeFromCollection}
           songs={songs}
+          onUploadMultiple={handleUploadMultipleToCollection}
         />
       ))}
 

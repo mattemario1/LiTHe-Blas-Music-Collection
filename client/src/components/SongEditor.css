@@ -58,8 +58,7 @@
 
 .file-edit-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
   margin-top: 8px;
 }
 
@@ -97,12 +96,10 @@
 }
 
 .collection-header-edit {
-  margin-bottom: 12px;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
+  margin-bottom: 12px;
 }
 
 .collection-header-edit input[type="text"] {
@@ -110,7 +107,13 @@
   font-size: 14px;
   border: 1px solid #bbb;
   border-radius: 4px;
-  flex: 1;
+  width: 100%;
+}
+
+.collection-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .section-actions {
@@ -135,7 +138,6 @@
 .upload-multiple-button:hover {
   background-color: #138496;
 }
-
 
 .section-actions button {
   background-color: #007bff;
@@ -196,7 +198,6 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: auto;
 }
 
 .loading-overlay {
@@ -267,7 +268,6 @@
   background-color: #f0f8ff;
 }
 
-/* Updated sticky button container */
 .editor-actions-sticky {
   position: sticky;
   bottom: 0;
@@ -277,10 +277,9 @@
   display: flex;
   gap: 10px;
   z-index: 100;
-  margin-top: 20px; /* Add top margin for separation */
+  margin-top: 20px;
 }
 
-/* Restore original button styles */
 .editor-actions-sticky .editor-actions {
   display: flex;
   gap: 10px;
@@ -293,7 +292,7 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  flex: 1; /* Make buttons equal width */
+  flex: 1;
 }
 
 .editor-actions-sticky .editor-actions button:first-child {
@@ -306,7 +305,6 @@
   color: white;
 }
 
-/* Update or add these styles */
 .file-input-group {
   display: flex;
   align-items: center;
@@ -326,7 +324,7 @@
   padding: 4px 8px;
   border: 1px solid #e0e0e0;
   flex: 1;
-  min-width: 0; /* Allows text overflow */
+  min-width: 0;
 }
 
 .file-path-label {
@@ -343,7 +341,6 @@
   flex: 1;
 }
 
-/* Adjust file input width */
 .file-edit-box input[type="file"] {
   min-width: 150px;
   max-width: 200px;
@@ -366,11 +363,13 @@
     width: 100%;
     box-sizing: border-box;
   }
-}
 
-/* Keep remove button in bottom right */
-.file-edit-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
+  .collection-actions {
+    flex-direction: column;
+  }
+  
+  .remove-collection-button,
+  .upload-multiple-button {
+    width: 100%;
+  }
 }
