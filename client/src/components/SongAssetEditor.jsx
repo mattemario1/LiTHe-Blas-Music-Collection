@@ -206,15 +206,16 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
         <button className="remove-collection-button" onClick={onRemove}>
           Remove Collection
         </button>
-        <label className="upload-multiple-button">
-          Upload multiple files
+        <button className="upload-multiple-button" onClick={() => document.getElementById(`upload-multiple-${collection.id}`).click()}>
+          Upload multiple files to collection
           <input
+            id={`upload-multiple-${collection.id}`}
             type="file"
             multiple
             onChange={(e) => onUploadMultiple(e, collection.id)}
             style={{ display: 'none' }}
           />
-        </label>
+        </button>
       </div>
 
       {sortedParts.map((file, i) => (
