@@ -150,36 +150,49 @@ function App() {
     }
   };
 
-  const handlePlayRandom = () => {
-    // Get all available recordings
-    const allRecordings = [];
-    
-    songs.forEach(song => {
-      if (Array.isArray(song.recordings)) {
-        song.recordings.forEach(recording => {
-          // Handle collections
-          if (recording.parts) {
-            recording.parts.forEach(part => {
-              if (part.file_path) {
-                allRecordings.push({
-                  ...part,
-                  songName: song.name,
-                  songId: song.id
-                });
-              }
-            });
-          } 
-          // Handle standalone recordings
-          else if (recording.file_path) {
-            allRecordings.push({
-              ...recording,
-              songName: song.name,
-              songId: song.id
-            });
-          }
-        });
+  const getRecordingsFromSong = (song) => {
+    return song.recordings?.flatMap(recording => {
+      if (recording.parts) {
+        return recording.parts.map(part => ({
+          ...part,
+          songName: song.name,
+          songId: song.id
+        }));
       }
-    });
+      return {
+        ...recording,
+        songName: song.name,
+        songId: song.id
+      };
+    }) || [];
+  };
+
+  const getFilteredSongs = () => {
+    return songs
+      .filter(song => {
+        const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
+        const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
+        const matchesAlbum = !selectedFilters.album || 
+          song.recordings?.some(recording => {
+            if (recording.parts) {
+              return recording.parts.some(part => part.album === selectedFilters.album);
+            }
+            return recording.album === selectedFilters.album;
+          });
+        
+        return matchesSearch && matchesType && matchesStatus && matchesAlbum;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const handlePlayRandom = () => {
+    const filteredSongs = getFilteredSongs();
+    
+    // Get all recordings from filtered songs
+    const allRecordings = filteredSongs.flatMap(song => 
+      getRecordingsFromSong(song).filter(rec => rec.file_path)
+    );
 
     if (allRecordings.length === 0) {
       alert("Inga inspelningar tillgängliga");
@@ -197,36 +210,13 @@ function App() {
       randomRecording.date
     );
     
-    // Highlight the song in the list by setting selectedSong
+    // Highlight the song in the list
     const randomSong = songs.find(s => s.id === randomRecording.songId);
-    if (randomSong) {
-      setSelectedSong(randomSong);
-    } else {
-      setSelectedSong(null); // Clear selection if song not found
-    }
+    if (randomSong) setSelectedSong(randomSong);
   };
 
-
-  const filteredSongs = songs
-    .filter(song => {
-      const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
-      const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
-      
-      // Fixed album matching - checks both top-level and nested recordings
-      const matchesAlbum = !selectedFilters.album || 
-        song.recordings?.some(recording => {
-          if (recording.parts) {
-            // Check if any part in collection matches
-            return recording.parts.some(part => part.album === selectedFilters.album);
-          }
-          // Check standalone recording
-          return recording.album === selectedFilters.album;
-        });
-      
-      return matchesSearch && matchesType && matchesStatus && matchesAlbum;
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Use helper function for rendering
+  const filteredSongs = getFilteredSongs();
 
   return (
     <div className={`App ${selectedSong ? 'details-view-active' : ''}`}>
