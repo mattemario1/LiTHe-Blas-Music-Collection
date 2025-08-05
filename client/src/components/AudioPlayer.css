@@ -29,9 +29,38 @@
   position: absolute;
   top: 8px;
   left: 12px;
+  right: 40px; /* Space for close button */
   color: white;
   font-size: 14px;
   z-index: 2;
+  height: 18px; /* Fixed height */
+  overflow: hidden;
+}
+
+.status-text-container {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  height: 100%;
+}
+
+.status-text {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap;
+  animation: none; /* Initially no animation */
+}
+
+/* Scrolling animation */
+.status-message.scrolling .status-text {
+  animation: scrollText 10s linear infinite;
+}
+
+@keyframes scrollText {
+  0%, 10% { transform: translateX(0); }
+  45% { transform: translateX(calc(-100% + var(--scroll-container-width))); }
+  55% { transform: translateX(calc(-100% + var(--scroll-container-width))); }
+  100% { transform: translateX(0); }
 }
 
 .loading-bar {
