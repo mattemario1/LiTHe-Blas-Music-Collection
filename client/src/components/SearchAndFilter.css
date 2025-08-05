@@ -109,7 +109,25 @@ select:focus {
   }
 
   .filter-panel {
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    padding: 15px;
+    overflow: visible;
+  }
+
+  .filter-group {
+    min-width: 0;
+  }
+
+  /* Specific styling for the album dropdown */
+  .filter-group:nth-child(3) {
+    grid-column: 1 / -1; /* Make album dropdown span full width */
+  }
+
+  .filter-group:nth-child(3) select {
+    max-height: 150px;
+    overflow-y: auto;
   }
 }
 

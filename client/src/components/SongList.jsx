@@ -13,7 +13,7 @@ function SongList({ songs, setSelectedSong, selectedSongId, onPlayRandom }) {
         <button 
           className="play-random-button" 
           onClick={onPlayRandom}
-          title="Spela en slumpmässig inspelning"
+          title="Spela slumpmässig låt"
         >
           <i className="fas fa-random"></i>
         </button>
