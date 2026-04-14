@@ -1,7 +1,8 @@
 body {
   margin: 0;
   overflow: auto;
-  background-color: #fff9e6;
+  background: linear-gradient(160deg, #fff5a4 0%, #f7df61 100%);
+  min-height: 100vh;
 }
 
 /* This stays full width for the header background */
@@ -10,7 +11,7 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #ececec; /* The color of the "empty" space on the sides */
+  background: linear-gradient(160deg, #fff5a4 0%, #f7df61 100%);
 }
 
 /* This is the magic wrapper that centers the content */
