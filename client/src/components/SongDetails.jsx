@@ -121,23 +121,37 @@ function ExpandableBoxList({
     );
   };
 
-  const renderItem = (item, key, isExpanded) => (
-    <div key={key} className="info-box" onClick={() => toggleItem(key)}>
-      <div className="info-main">
-        <strong className="asset-name">{item.name || item[labelKey]}</strong>
-        {!isExpanded && item.description && (
-          <div className="truncated-description">{item.description}</div>
-        )}
-        <div className="asset-date">{item[dateKey]}</div>
-      </div>
-      {renderActions(item)}
-      {isExpanded && (
-        <div className="details-inline">
-          <p>{item.description}</p>
+  const renderItem = (item, key, isExpanded) => {
+    // Check if there is actual content to expand
+    const hasDescription = item.description && item.description.trim().length > 0;
+
+    return (
+      <div 
+        key={key} 
+        className={`info-box ${isExpanded ? 'selected' : ''} ${!hasDescription ? 'no-expand' : ''}`} 
+        onClick={() => hasDescription && toggleItem(key)} // Only toggle if content exists
+        style={{ cursor: hasDescription ? 'pointer' : 'default' }} // Visual hint
+      >
+        <div className="info-main">
+          <strong className="asset-name">{item.name || item[labelKey]}</strong>
+          {/* Only show truncated preview if it's not expanded AND it has a description */}
+          {!isExpanded && hasDescription && (
+            <div className="truncated-description">{item.description}</div>
+          )}
+          <div className="asset-date">{item[dateKey]}</div>
         </div>
-      )}
-    </div>
-  );
+        
+        {renderActions(item)}
+
+        {/* Only render the expanded div if it's expanded AND has content */}
+        {isExpanded && hasDescription && (
+          <div className="details-inline">
+            <p>{item.description}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Sort collections alphabetically by name
   const sortedCollections = [...items.filter(item => Array.isArray(item.parts))]

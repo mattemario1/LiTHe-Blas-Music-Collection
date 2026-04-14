@@ -67,6 +67,23 @@
   border-left: 4px solid #1c4386;
 }
 
+/* Disable hover effects for boxes with no description */
+.info-box.no-expand {
+  cursor: default;
+}
+
+.info-box.no-expand:hover {
+  transform: none;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Match the non-hover state */
+}
+
+/* Ensure the selected border only appears when actually expanded */
+.info-box.selected {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1c4386;
+}
+
 .info-main {
   display: flex;
   justify-content: space-between;
