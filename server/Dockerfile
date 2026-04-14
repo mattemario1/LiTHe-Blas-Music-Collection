@@ -1,15 +1,18 @@
-FROM node:18-alpine
+FROM node:18
 WORKDIR /app
 
-# Install dependencies
+# node:18 (Debian) already has Python, make, and g++ available
+# and node-gyp can find the Node headers without downloading them
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+
+# Copy package files and install
 COPY server/package*.json ./
 RUN npm install --production
 
-# Copy app source
+# Copy server source
 COPY server .
 
-# Create uploads directory (will be overridden by volume mount)
 RUN mkdir -p ./uploads
 
 EXPOSE 5000
-CMD ["node", "server.js"]
+CMD ["node", "index.js"]

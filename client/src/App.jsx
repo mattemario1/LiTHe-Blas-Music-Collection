@@ -11,112 +11,51 @@ function App() {
   const [selectedFilters, setSelectedFilters] = useState({ type: '', status: '', album: '' });
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
-  const [audioInfo, setAudioInfo] = useState({ 
-    url: null, 
-    songName: '', 
-    album: '', 
+  const [audioInfo, setAudioInfo] = useState({
+    url: null,
+    songName: '',
+    album: '',
     date: null
   });
 
+  // Load all songs on startup
   useEffect(() => {
     fetch('/api/songs')
-      .then(async (res) => {
-        const text = await res.text();
-        console.log("Raw response:", text);
-        try {
-          const data = JSON.parse(text);
-          if (Array.isArray(data)) {
-            setSongs(data);
-          } else {
-            console.error("Expected array but got:", data);
-          }
-        } catch (err) {
-          console.error("Failed to parse JSON:", err, "from text:", text);
-          throw err;
-        }
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setSongs(data);
+        else console.error('Expected array from /api/songs:', data);
       })
       .catch(err => {
-        console.error('Fetch error:', err);
+        console.error('Failed to load songs:', err);
         alert('Failed to load songs');
       });
   }, []);
 
   const handlePlayAudio = (fileUrl, songName, album, date) => {
-    setAudioInfo({ 
-      url: fileUrl, 
-      songName, 
-      album, 
-      date 
-    });
+    setAudioInfo({ url: fileUrl, songName, album, date });
   };
 
-  // Replace the existing handleUpdateSong function with this:
-  const handleUpdateSong = async (updatedSong) => {
-    try {
-      const response = await fetch(`/api/songs/${updatedSong.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: updatedSong.name,
-          description: updatedSong.description,
-          type: updatedSong.type,
-          status: updatedSong.status
-        })
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update song on server: ${errorText}`);
-      }
-
-      const updatedSongFromServer = await response.json();
-      
-      // Update local state with the fresh data
-      const updatedSongs = songs.map(song =>
-        song.id === updatedSongFromServer.id ? updatedSongFromServer : song
-      );
-      
-      setSongs(updatedSongs);
-      setSelectedSong(updatedSongFromServer);
-      
-    } catch (err) {
-      console.error('Error updating song:', err);
-      alert("Failed to update song. Please check console for details.");
-    }
+  // Called by SongDetails after a successful save
+  // The server returns the full updated song so we just replace it in state
+  const handleUpdateSong = (updatedSong) => {
+    setSongs(prev => prev.map(s => s.id === updatedSong.id ? updatedSong : s));
+    setSelectedSong(updatedSong);
   };
 
   const handleAddNewSong = async () => {
-    const newSong = {
-      name: '',
-      description: '',
-      type: '',
-      status: '',
-      recordings: [],
-      sheetMusic: [],
-      lyrics: [],
-      otherFiles: []
-    };
-
     try {
       const response = await fetch('/api/songs', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(newSong)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: '', description: '', type: '', status: '' })
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server responded with ${response.status}: ${errorText}`);
-      }
+      if (!response.ok) throw new Error(await response.text());
 
-      const data = await response.json();
-      const createdSong = { ...newSong, id: data.id };
-      
-      setSongs(prev => [...prev, createdSong]);
-      setSelectedSong(createdSong);
+      const newSong = await response.json();
+      setSongs(prev => [...prev, newSong]);
+      setSelectedSong(newSong);
     } catch (err) {
       console.error('Error creating song:', err);
       alert(`Failed to create song: ${err.message}`);
@@ -125,46 +64,39 @@ function App() {
 
   const handleDeleteSelectedSong = async () => {
     if (!selectedSong) return;
-    
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete the song "${selectedSong.name || 'Untitled'}"?`
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${selectedSong.name || 'Untitled'}"?`
     );
-    
-    if (confirmDelete) {
-      try {
-        const response = await fetch(`/api/songs/${selectedSong.id}`, {
-          method: 'DELETE'
-        });
-        
-        if (response.ok) {
-          const updatedSongs = songs.filter(song => song.id !== selectedSong.id);
-          setSongs(updatedSongs);
-          setSelectedSong(null);
-        } else {
-          throw new Error('Failed to delete song on server');
-        }
-      } catch (err) {
-        console.error('Error deleting song:', err);
-        alert("Failed to delete song.");
-      }
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`/api/songs/${selectedSong.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete song');
+
+      setSongs(prev => prev.filter(s => s.id !== selectedSong.id));
+      setSelectedSong(null);
+    } catch (err) {
+      console.error('Error deleting song:', err);
+      alert('Failed to delete song.');
     }
   };
 
+  // Get all recordings (flattened) from a song, for the random play feature
   const getRecordingsFromSong = (song) => {
-    return song.recordings?.flatMap(recording => {
-      if (recording.parts) {
-        return recording.parts.map(part => ({
+    return (song.recordings || []).flatMap(item => {
+      if (Array.isArray(item.parts)) {
+        return item.parts.map(part => ({
           ...part,
           songName: song.name,
           songId: song.id
         }));
       }
-      return {
-        ...recording,
-        songName: song.name,
-        songId: song.id
-      };
-    }) || [];
+      return [{ ...item, songName: song.name, songId: song.id }];
+    });
   };
 
   const getFilteredSongs = () => {
@@ -173,14 +105,8 @@ function App() {
         const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
         const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
-        const matchesAlbum = !selectedFilters.album || 
-          song.recordings?.some(recording => {
-            if (recording.parts) {
-              return recording.parts.some(part => part.album === selectedFilters.album);
-            }
-            return recording.album === selectedFilters.album;
-          });
-        
+        const matchesAlbum = !selectedFilters.album ||
+          getRecordingsFromSong(song).some(r => r.album === selectedFilters.album);
         return matchesSearch && matchesType && matchesStatus && matchesAlbum;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -188,48 +114,40 @@ function App() {
 
   const handlePlayRandom = () => {
     const filteredSongs = getFilteredSongs();
-    
-    // Get all recordings from filtered songs
-    const allRecordings = filteredSongs.flatMap(song => 
-      getRecordingsFromSong(song).filter(rec => rec.file_path)
-    );
+    const allRecordings = filteredSongs.flatMap(getRecordingsFromSong)
+      .filter(r => r.file_path);
 
     if (allRecordings.length === 0) {
-      alert("Inga inspelningar tillgängliga");
+      alert('Inga inspelningar tillgängliga');
       return;
     }
 
-    // Select random recording
-    const randomRecording = allRecordings[Math.floor(Math.random() * allRecordings.length)];
-    
-    // Play the recording
+    const random = allRecordings[Math.floor(Math.random() * allRecordings.length)];
     handlePlayAudio(
-      `/file/${randomRecording.file_path}`,
-      randomRecording.songName,
-      randomRecording.album || 'Okänt album',
-      randomRecording.date
+      `/file/${random.file_path}`,
+      random.songName,
+      random.album || 'Okänt album',
+      random.date
     );
-    
-    // Highlight the song in the list
-    const randomSong = songs.find(s => s.id === randomRecording.songId);
+
+    const randomSong = songs.find(s => s.id === random.songId);
     if (randomSong) setSelectedSong(randomSong);
   };
 
-  // Use helper function for rendering
   const filteredSongs = getFilteredSongs();
 
   return (
     <div className={`App ${selectedSong ? 'details-view-active' : ''}`}>
       {selectedSong && (
-        <button 
-          className="back-button-mobile" 
+        <button
+          className="back-button-mobile"
           onClick={() => setSelectedSong(null)}
           aria-label="Back to song list"
         >
           <i className="fas fa-arrow-left"></i> Back
         </button>
       )}
-      
+
       <SearchAndFilter
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -237,10 +155,10 @@ function App() {
         setSelectedFilters={setSelectedFilters}
         songs={songs}
       />
-      
+
       <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
-        <SongList 
-          songs={filteredSongs} 
+        <SongList
+          songs={filteredSongs}
           setSelectedSong={setSelectedSong}
           selectedSongId={selectedSong?.id || null}
           onPlayRandom={handlePlayRandom}
@@ -256,23 +174,20 @@ function App() {
           />
         )}
       </div>
-      
-      <AudioPlayer 
-        audioUrl={audioInfo.url} 
+
+      <AudioPlayer
+        audioUrl={audioInfo.url}
         songName={audioInfo.songName}
         songAlbum={audioInfo.album}
         songDate={audioInfo.date}
-        onClose={() => setAudioInfo({ 
-          url: null, 
-          songName: '', 
-          album: '', 
-          date: null 
-        })} 
+        onClose={() => setAudioInfo({ url: null, songName: '', album: '', date: null })}
       />
-      
+
       <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button onClick={handleAddNewSong}>➕ New Song</button>
-        <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>🗑️ Delete Selected Song</button>
+        <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>
+          🗑️ Delete Selected Song
+        </button>
       </div>
     </div>
   );

@@ -1,9 +1,16 @@
 # Build stage
-FROM node:18-alpine as builder
+FROM node:18 AS builder
 WORKDIR /app
 COPY client/package*.json ./
-RUN npm install
+COPY client/.npmrc ./
+
+# 1. Install everything (including Rollup binaries) 
+# 2. But tell npm to ignore the specific 'canvas' scripts that cause the hang
+RUN npm install --ignore-scripts
+
 COPY client .
+
+# Now the native Rollup binary exists, so Vite can run
 RUN npm run build
 
 # Production stage

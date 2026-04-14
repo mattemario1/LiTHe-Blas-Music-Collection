@@ -1,20 +1,18 @@
 {
-  "name": "song-manager-backend",
+  "name": "music-library-server",
   "version": "1.0.0",
-  "description": "Express server with SQLite for song management",
-  "main": "server.js",
+  "description": "Backend for the orchestra music library",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
-    "sqlite3": "^5.1.6",
-    "uuid": "^9.0.0"
+    "multer": "^2.0.0",
+    "better-sqlite3": "^9.4.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.1.0"
   }
 }
