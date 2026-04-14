@@ -4,28 +4,41 @@ body {
   background-color: #fff9e6;
 }
 
+/* This stays full width for the header background */
 .App {
   font-family: Arial, sans-serif;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #fff9e6;
+  background-color: #ececec; /* The color of the "empty" space on the sides */
 }
 
+/* This is the magic wrapper that centers the content */
+.app-body-wrapper {
+  max-width: 1400px; /* Limits how wide the app gets */
+  width: 100%;
+  margin: 0 auto;    /* Centers the box */
+  display: flex;
+  flex-direction: column;
+  flex: 1;           /* Takes up the remaining height */
+  background-color: #fffef2; /* Your app's actual background color */
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1); /* Adds definition to the center box */
+}
 .search-filter-container {
-  padding: 10px 20px;
+  width: 100%;
+  padding: 10px 40px;
   background-color: #1c4386;
   color: white;
-  z-index: 1;
+  box-sizing: border-box;
 }
 
+/* Main content now just fills its parent (the wrapper) */
 .main-content {
   display: flex;
   flex: 1;
   flex-direction: row;
-  height: calc(100vh - 60px);
   overflow: hidden;
-  background-color: #fffef2;
 }
 
 .main-content.with-player {

@@ -16,6 +16,7 @@
   transition: border-color 0.3s;
   background-color: #fffef2;
   color: #333;
+  max-width: 800px;
 }
 
 .search-box:focus {

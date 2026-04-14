@@ -148,49 +148,53 @@ function App() {
         </button>
       )}
 
-      <SearchAndFilter
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedFilters={selectedFilters}
-        setSelectedFilters={setSelectedFilters}
-        songs={songs}
-      />
-
-      <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
-        <SongList
-          songs={filteredSongs}
-          setSelectedSong={setSelectedSong}
-          selectedSongId={selectedSong?.id || null}
-          onPlayRandom={handlePlayRandom}
+        <SearchAndFilter
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedFilters={selectedFilters}
+          setSelectedFilters={setSelectedFilters}
+          songs={songs}
         />
-        {selectedSong && (
-          <SongDetails
-            song={selectedSong}
-            onPlayAudio={handlePlayAudio}
-            onUpdateSong={handleUpdateSong}
-            songs={songs}
-            setSongs={setSongs}
-            onBack={() => setSelectedSong(null)}
-          />
-        )}
-      </div>
 
-      <AudioPlayer
-        audioUrl={audioInfo.url}
-        songName={audioInfo.songName}
-        songAlbum={audioInfo.album}
-        songDate={audioInfo.date}
-        onClose={() => setAudioInfo({ url: null, songName: '', album: '', date: null })}
-      />
+        {/* NEW WRAPPER STARTS HERE */}
+        <div className="app-body-wrapper">
+          <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
+            <SongList
+              songs={filteredSongs}
+              setSelectedSong={setSelectedSong}
+              selectedSongId={selectedSong?.id || null}
+              onPlayRandom={handlePlayRandom}
+            />
+            {selectedSong && (
+              <SongDetails
+                song={selectedSong}
+                onPlayAudio={handlePlayAudio}
+                onUpdateSong={handleUpdateSong}
+                songs={songs}
+                setSongs={setSongs}
+                onBack={() => setSelectedSong(null)}
+              />
+            )}
+          </div>
 
-      <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
-        <button onClick={handleAddNewSong}>➕ New Song</button>
-        <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>
-          🗑️ Delete Selected Song
-        </button>
+          <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <button onClick={handleAddNewSong}>➕ New Song</button>
+            <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>
+              🗑️ Delete Selected Song
+            </button>
+          </div>
+        </div>
+        {/* NEW WRAPPER ENDS HERE */}
+
+        <AudioPlayer
+          audioUrl={audioInfo.url}
+          songName={audioInfo.songName}
+          songAlbum={audioInfo.album}
+          songDate={audioInfo.date}
+          onClose={() => setAudioInfo({ url: null, songName: '', album: '', date: null })}
+        />
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 export default App;
