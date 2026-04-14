@@ -1,7 +1,7 @@
 .search-filter-container {
   display: flex;
   flex-direction: row;
-  gap: 40px;
+  gap: 16px;
   align-items: center;
 }
 
@@ -24,25 +24,11 @@
   box-shadow: 0 0 0 2px rgba(255, 241, 131, 0.3);
 }
 
-.filter-toggle {
-  cursor: pointer;
-  background-color: #fff5a4;
-  padding: 8px 12px;
-  border-radius: 6px;
-  width: fit-content;
-  transition: background-color 0.2s;
-  color: #333;
-}
-
-.filter-toggle:hover {
-  background-color: #fff183;
-}
-
 .filter-panel {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 10px;
+  padding: 8px 12px;
   background-color: #fff5a4;
   border: 1px solid #e6d883;
   border-radius: 8px;
@@ -53,7 +39,51 @@
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.toggle-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-toggle-btn {
+  padding: 5px 14px;
+  border: 1.5px solid #d9c962;
+  border-radius: 999px;
+  background-color: transparent;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.filter-toggle-btn:hover {
+  background-color: #fff183;
+  border-color: #c9b840;
+  color: #333;
+}
+
+.filter-toggle-btn.active {
+  background-color: #1c4386;
+  border-color: #1c4386;
+  color: white;
+}
+
+.filter-toggle-btn.active:hover {
+  background-color: #153066;
+  border-color: #153066;
 }
 
 .searchbox-wrapper {
@@ -87,51 +117,6 @@
   background-color: #fff5a4;
 }
 
-select {
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid #e6d883;
-  border-radius: 6px;
-  background-color: #fffef2;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  color: #333;
-}
-
-select:focus {
-  border-color: #fff183;
-  box-shadow: 0 0 0 2px rgba(255, 241, 131, 0.3);
-}
-
-@media (max-width: 768px) {
-  .search-filter-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 20px;
-  }
-
-  .filter-panel {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 15px;
-    padding: 15px;
-    overflow: visible;
-  }
-
-  .filter-group {
-    min-width: 0;
-  }
-
-  /* Specific styling for the album dropdown */
-  .filter-group:nth-child(3) {
-    grid-column: 1 / -1; /* Make album dropdown span full width */
-  }
-
-  .filter-group:nth-child(3) select {
-    max-height: 150px;
-    overflow-y: auto;
-  }
-}
-
 .clear-button {
   position: absolute;
   right: 10px;
@@ -146,4 +131,28 @@ select:focus {
 
 .clear-button:hover {
   color: #333;
+}
+
+@media (max-width: 768px) {
+  .search-filter-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .search-box {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .filter-panel {
+    gap: 10px;
+    padding: 8px 10px;
+  }
+
+  .filter-toggle-btn {
+    padding: 4px 10px;
+    font-size: 13px;
+  }
 }

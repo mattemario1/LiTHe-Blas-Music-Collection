@@ -99,6 +99,10 @@ body {
 }
 
 @media (max-width: 768px) {
+  .search-filter-container {
+    padding: 0; /* handled by SearchAndFilter.css on mobile */
+  }
+
   .song-details {
     display: none;
   }

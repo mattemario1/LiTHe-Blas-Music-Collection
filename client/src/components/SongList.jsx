@@ -1,5 +1,6 @@
-import React from 'react';
+import { useState } from 'react';
 import './SongList.css';
+import AlbumView from './AlbumView';
 
 const getRecordingsFromSong = (song) => {
   return (song.recordings || []).flatMap(item => {
@@ -10,10 +11,8 @@ const getRecordingsFromSong = (song) => {
   });
 };
 
-function SongList({ songs, setSelectedSong, selectedSongId, onPlayAudio }) {
-  const handleClick = (song) => {
-    setSelectedSong(song);
-  };
+function SongList({ songs, allSongs, setSelectedSong, selectedSongId, onPlayAudio }) {
+  const [view, setView] = useState('songs');
 
   const handlePlayRandom = () => {
     const allRecordings = songs.flatMap(getRecordingsFromSong).filter(r => r.file_path);
@@ -33,26 +32,50 @@ function SongList({ songs, setSelectedSong, selectedSongId, onPlayAudio }) {
   return (
     <div className="song-list">
       <div className="song-list-header">
-        <h3>Låtar</h3>
-        <button
-          className="play-random-button"
-          onClick={handlePlayRandom}
-          title="Spela slumpmässig låt"
-        >
-          <i className="fas fa-random"></i>
-        </button>
-      </div>
-      <div className="song-boxes">
-        {songs.map(song => (
-          <div
-            key={song.id}
-            className={`song-box ${selectedSongId === song.id ? 'selected' : ''}`}
-            onClick={() => handleClick(song)}
+        <div className="song-list-tabs">
+          <button
+            className={`song-list-tab ${view === 'songs' ? 'active' : ''}`}
+            onClick={() => setView('songs')}
           >
-            {song.name}
-          </div>
-        ))}
+            Låtar
+          </button>
+          <button
+            className={`song-list-tab ${view === 'albums' ? 'active' : ''}`}
+            onClick={() => setView('albums')}
+          >
+            Album
+          </button>
+        </div>
+        {view === 'songs' && (
+          <button
+            className="play-random-button"
+            onClick={handlePlayRandom}
+            title="Spela slumpmässig låt"
+          >
+            <i className="fas fa-random"></i>
+          </button>
+        )}
       </div>
+
+      {view === 'songs' ? (
+        <div className="song-boxes">
+          {songs.map(song => (
+            <div
+              key={song.id}
+              className={`song-box ${selectedSongId === song.id ? 'selected' : ''}`}
+              onClick={() => setSelectedSong(song)}
+            >
+              {song.name}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <AlbumView
+          allSongs={allSongs}
+          setSelectedSong={setSelectedSong}
+          onPlayAudio={onPlayAudio}
+        />
+      )}
     </div>
   );
 }

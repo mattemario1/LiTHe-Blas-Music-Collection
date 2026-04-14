@@ -17,6 +17,14 @@ db.pragma('foreign_keys = ON');
 
 // Create all tables if they don't exist yet
 db.exec(`
+  CREATE TABLE IF NOT EXISTS albums (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    cover_path TEXT DEFAULT '',
+    description TEXT DEFAULT '',
+    year TEXT DEFAULT ''
+  );
+
   CREATE TABLE IF NOT EXISTS songs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL DEFAULT '',

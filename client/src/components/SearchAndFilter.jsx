@@ -1,27 +1,25 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './SearchAndFilter.css';
+
+const TYPE_OPTIONS = ['Orkesterlåt', 'Balettlåt', 'Övrigt'];
+const STATUS_OPTIONS = ['Aktiv', 'Inaktiv', 'Övrigt'];
 
 function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs }) {
   const [focused, setFocused] = useState(false);
 
-  const albums = Array.from(
-      new Set(
-        songs.flatMap(song => 
-          song.recordings.flatMap(recording => 
-            recording.parts 
-              ? recording.parts.map(part => part.album)  // Get albums from collection parts
-              : recording.album  // Get album from standalone recording
-          )
-        )
-      )
-    ).filter(album => album); // Remove empty values
   const songNames = songs.map(song => song.name);
   const filteredSuggestions = songNames.filter(name =>
     name.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery
   );
 
-  const handleChange = (field, value) => {
-    setSelectedFilters(prev => ({ ...prev, [field]: value }));
+  const toggleOption = (field, value) => {
+    setSelectedFilters(prev => {
+      const current = prev[field];
+      const updated = current.includes(value)
+        ? current.filter(v => v !== value)
+        : [...current, value];
+      return { ...prev, [field]: updated };
+    });
   };
 
   return (
@@ -62,31 +60,33 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
 
       <div className="filter-panel">
         <div className="filter-group">
-          <label>Typ</label>
-          <select onChange={(e) => handleChange('type', e.target.value)} defaultValue="">
-            <option value="">-- Välj --</option>
-            <option value="Orkesterlåt">Orkesterlåt</option>
-            <option value="Balettlåt">Balettlåt</option>
-            <option value="Övrigt">Övrigt</option>
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Status</label>
-          <select onChange={(e) => handleChange('status', e.target.value)} defaultValue="">
-            <option value="">-- Välj --</option>
-            <option value="Aktiv">Aktiv</option>
-            <option value="Inaktiv">Inaktiv</option>
-            <option value="Övrigt">Övrigt</option>
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Album</label>
-          <select onChange={(e) => handleChange('album', e.target.value)} defaultValue="">
-            <option value="">-- Välj --</option>
-            {albums.map((album, index) => (
-              <option key={index} value={album}>{album}</option>
+          <span className="filter-label">Typ</span>
+          <div className="toggle-group">
+            {TYPE_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                className={`filter-toggle-btn ${selectedFilters.shownTypes.includes(opt) ? 'active' : ''}`}
+                onClick={() => toggleOption('shownTypes', opt)}
+              >
+                {opt}
+              </button>
             ))}
-          </select>
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <span className="filter-label">Status</span>
+          <div className="toggle-group">
+            {STATUS_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                className={`filter-toggle-btn ${selectedFilters.shownStatuses.includes(opt) ? 'active' : ''}`}
+                onClick={() => toggleOption('shownStatuses', opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

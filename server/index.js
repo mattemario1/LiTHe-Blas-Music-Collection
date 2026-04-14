@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const songsRouter = require('./routes/songs');
 const uploadRouter = require('./routes/upload');
+const albumsRouter = require('./routes/albums');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,7 @@ app.use(express.json());
 // API routes
 app.use('/api/songs', songsRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/albums', albumsRouter);
 
 // Serve uploaded files
 // e.g. GET /file/songs/42/recordings/foo.mp3

@@ -8,7 +8,10 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState({ type: '', status: '', album: '' });
+  const [selectedFilters, setSelectedFilters] = useState({
+    shownTypes: ['Orkesterlåt', 'Balettlåt', 'Övrigt'],
+    shownStatuses: ['Aktiv', 'Inaktiv', 'Övrigt']
+  });
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
   const [audioInfo, setAudioInfo] = useState({
@@ -85,17 +88,20 @@ function App() {
     }
   };
 
+  const TYPE_OPTIONS = ['Orkesterlåt', 'Balettlåt'];
+  const STATUS_OPTIONS = ['Aktiv', 'Inaktiv'];
+
   const getFilteredSongs = () => {
     return songs
       .filter(song => {
         const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
-        const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
-        const matchesAlbum = !selectedFilters.album ||
-          (song.recordings || []).flatMap(item =>
-            Array.isArray(item.parts) ? item.parts : [item]
-          ).some(r => r.album === selectedFilters.album);
-        return matchesSearch && matchesType && matchesStatus && matchesAlbum;
+        const matchesType = TYPE_OPTIONS.includes(song.type)
+          ? selectedFilters.shownTypes.includes(song.type)
+          : selectedFilters.shownTypes.includes('Övrigt');
+        const matchesStatus = STATUS_OPTIONS.includes(song.status)
+          ? selectedFilters.shownStatuses.includes(song.status)
+          : selectedFilters.shownStatuses.includes('Övrigt');
+        return matchesSearch && matchesType && matchesStatus;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   };
@@ -127,6 +133,7 @@ function App() {
           <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
             <SongList
               songs={filteredSongs}
+              allSongs={songs}
               setSelectedSong={setSelectedSong}
               selectedSongId={selectedSong?.id || null}
               onPlayAudio={handlePlayAudio}
