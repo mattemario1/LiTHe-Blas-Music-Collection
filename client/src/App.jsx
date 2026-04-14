@@ -85,20 +85,6 @@ function App() {
     }
   };
 
-  // Get all recordings (flattened) from a song, for the random play feature
-  const getRecordingsFromSong = (song) => {
-    return (song.recordings || []).flatMap(item => {
-      if (Array.isArray(item.parts)) {
-        return item.parts.map(part => ({
-          ...part,
-          songName: song.name,
-          songId: song.id
-        }));
-      }
-      return [{ ...item, songName: song.name, songId: song.id }];
-    });
-  };
-
   const getFilteredSongs = () => {
     return songs
       .filter(song => {
@@ -106,32 +92,12 @@ function App() {
         const matchesType = !selectedFilters.type || song.type === selectedFilters.type;
         const matchesStatus = !selectedFilters.status || song.status === selectedFilters.status;
         const matchesAlbum = !selectedFilters.album ||
-          getRecordingsFromSong(song).some(r => r.album === selectedFilters.album);
+          (song.recordings || []).flatMap(item =>
+            Array.isArray(item.parts) ? item.parts : [item]
+          ).some(r => r.album === selectedFilters.album);
         return matchesSearch && matchesType && matchesStatus && matchesAlbum;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const handlePlayRandom = () => {
-    const filteredSongs = getFilteredSongs();
-    const allRecordings = filteredSongs.flatMap(getRecordingsFromSong)
-      .filter(r => r.file_path);
-
-    if (allRecordings.length === 0) {
-      alert('Inga inspelningar tillgängliga');
-      return;
-    }
-
-    const random = allRecordings[Math.floor(Math.random() * allRecordings.length)];
-    handlePlayAudio(
-      `/file/${random.file_path}`,
-      random.songName,
-      random.album || 'Okänt album',
-      random.date
-    );
-
-    const randomSong = songs.find(s => s.id === random.songId);
-    if (randomSong) setSelectedSong(randomSong);
   };
 
   const filteredSongs = getFilteredSongs();
@@ -163,7 +129,7 @@ function App() {
               songs={filteredSongs}
               setSelectedSong={setSelectedSong}
               selectedSongId={selectedSong?.id || null}
-              onPlayRandom={handlePlayRandom}
+              onPlayAudio={handlePlayAudio}
             />
             {selectedSong && (
               <SongDetails
