@@ -144,7 +144,7 @@ function App() {
           onClick={() => setSelectedSong(null)}
           aria-label="Back to song list"
         >
-          <i className="fas fa-arrow-left"></i> Back
+          <i className="fas fa-arrow-left"></i> Back to List
         </button>
       )}
 

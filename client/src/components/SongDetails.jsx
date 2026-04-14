@@ -255,9 +255,6 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
 
   return (
     <div className="song-details">
-      <button onClick={onBack} className="back-button-mobile">
-        <i className="fas fa-arrow-left"></i> Back to List
-      </button>
 
       <h2>{song.name}</h2>
       <p className="description">{song.description}</p>
