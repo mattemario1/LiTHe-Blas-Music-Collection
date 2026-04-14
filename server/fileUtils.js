@@ -23,11 +23,13 @@ const sanitize = (str) => {
 
 /**
  * Construct a human-readable filename from song and file metadata.
- * Pattern: {song_name}-{key_metadata}--{date}.{ext}
+ * Pattern: {song_name}-{collection_name}-{key_metadata}--{date}.{ext}
+ * collection_name is omitted when the file is not part of a collection.
  * Falls back gracefully if fields are missing.
  */
-const constructFileName = (songName, fileObj, assetType, originalExt) => {
+const constructFileName = (songName, fileObj, assetType, originalExt, collectionName) => {
   const base = sanitize(songName) || 'Song';
+  const collPart = collectionName ? `-${sanitize(collectionName)}` : '';
 
   let detail = '';
   switch (assetType) {
@@ -50,7 +52,7 @@ const constructFileName = (songName, fileObj, assetType, originalExt) => {
   const datePart = fileObj.date ? `--${sanitize(fileObj.date)}` : '';
   const ext = originalExt.startsWith('.') ? originalExt : `.${originalExt}`;
 
-  return `${base}-${detail}${datePart}${ext}`;
+  return `${base}${collPart}-${detail}${datePart}${ext}`;
 };
 
 /**
@@ -76,14 +78,56 @@ const resolveUniqueFilePath = (targetPath) => {
 /**
  * Get the full directory path for a song's asset type.
  * Creates the directory if it doesn't exist.
+ * songName is sanitized and used as the folder name under songs/.
  */
-const getSongAssetDir = (songId, assetType) => {
+const getSongAssetDir = (songName, assetType) => {
   const folder = ASSET_FOLDERS[assetType] || 'other';
-  const dir = path.join(getUploadsBase(), 'songs', String(songId), folder);
+  const safeName = sanitize(songName) || 'Song';
+  const dir = path.join(getUploadsBase(), 'songs', safeName, folder);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
   return dir;
+};
+
+/**
+ * Rename the top-level song directory from oldDirName to newDirName
+ * (both are plain directory names, not full paths).
+ * Handles migrations from the old numeric ID format to a name-based format.
+ *
+ * Returns an object mapping every affected old relative path to its new
+ * relative path, or an empty object when no rename happened.
+ */
+const renameSongDir = (oldDirName, newDirName) => {
+  if (!oldDirName || !newDirName || oldDirName === newDirName) return {};
+
+  const oldAbsDir = path.join(getUploadsBase(), 'songs', oldDirName);
+  const newAbsDir = path.join(getUploadsBase(), 'songs', newDirName);
+
+  if (!fs.existsSync(oldAbsDir)) return {};
+  // If the target already exists we can't rename cleanly — leave everything in place.
+  if (fs.existsSync(newAbsDir)) return {};
+
+  fs.renameSync(oldAbsDir, newAbsDir);
+
+  // Walk the moved directory and build { oldRelPath: newRelPath } for every file.
+  const updates = {};
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else {
+        const newRel = toRelativePath(fullPath);
+        // Replace the new dir name segment with the old one to reconstruct the old path.
+        const oldRel = 'songs/' + oldDirName + '/' + newRel.slice(('songs/' + newDirName + '/').length);
+        updates[oldRel] = newRel;
+      }
+    }
+  };
+  walk(newAbsDir);
+
+  return updates;
 };
 
 /**
@@ -102,17 +146,11 @@ const toAbsolutePath = (relativePath) => {
 };
 
 /**
- * Rename the song's folder on disk when the song name changes.
- * Since files are stored in songs/{id}/..., the song name is only part of
- * individual filenames — but this renames all files within the song folder
- * to reflect the new song name.
- * 
- * This is called from the save route after updating song fields but before
- * reinserting files, so we return updated file_paths for the DB.
+ * Rename all individual files within a song folder to reflect a new song name.
+ * Called after updating song fields but before re-inserting files in the DB.
+ * Returns the array of files with updated file_paths.
  */
-const renameSongFiles = (songId, newSongName, allFiles) => {
-  // Go through every file, reconstruct what its name should be now,
-  // and rename on disk if different
+const renameSongFiles = (newSongName, allFiles) => {
   return allFiles.map(file => {
     if (!file.file_path) return file;
 
@@ -125,7 +163,7 @@ const renameSongFiles = (songId, newSongName, allFiles) => {
  * Rename a file on disk if the constructed name differs from the current name.
  * Returns the new relative file_path (or the old one if no rename was needed).
  */
-const renameFileIfNeeded = (currentRelativePath, songName, fileObj, assetType) => {
+const renameFileIfNeeded = (currentRelativePath, songName, fileObj, assetType, collectionName) => {
   if (!currentRelativePath) return currentRelativePath;
 
   const currentAbsolute = toAbsolutePath(currentRelativePath);
@@ -134,7 +172,7 @@ const renameFileIfNeeded = (currentRelativePath, songName, fileObj, assetType) =
   const ext = path.extname(currentRelativePath);
   const dir = path.dirname(currentAbsolute);
 
-  const newFileName = constructFileName(songName, fileObj, assetType, ext);
+  const newFileName = constructFileName(songName, fileObj, assetType, ext, collectionName);
   const newAbsolute = path.join(dir, newFileName);
 
   // If the name is already correct, do nothing
@@ -149,9 +187,11 @@ const renameFileIfNeeded = (currentRelativePath, songName, fileObj, assetType) =
 };
 
 module.exports = {
+  sanitize,
   constructFileName,
   resolveUniqueFilePath,
   getSongAssetDir,
+  renameSongDir,
   toRelativePath,
   toAbsolutePath,
   renameFileIfNeeded,

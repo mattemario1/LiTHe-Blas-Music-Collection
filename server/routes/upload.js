@@ -28,11 +28,11 @@ router.post('/', upload.single('file'), (req, res) => {
     }
 
     // Get the directory to save this file in (creates it if needed)
-    const dir = getSongAssetDir(songId, assetType);
+    const dir = getSongAssetDir(songName || 'Song', assetType);
 
     // Construct a meaningful filename from the metadata
     const ext = path.extname(req.file.originalname);
-    const fileName = constructFileName(songName || 'Song', metadata, assetType, ext);
+    const fileName = constructFileName(songName || 'Song', metadata, assetType, ext, metadata.collectionName);
 
     // Make sure we don't overwrite an existing file
     const targetPath = resolveUniqueFilePath(path.join(dir, fileName));

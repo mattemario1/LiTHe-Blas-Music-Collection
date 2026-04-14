@@ -86,11 +86,11 @@ export const uploadNewFiles = async (items, assetType, songId, songName, onProgr
 
   for (const item of items) {
     if (Array.isArray(item.parts)) {
-      // It's a collection - process each part
+      // It's a collection - process each part, passing the collection name for filename construction
       const uploadedParts = [];
       for (const part of item.parts) {
         uploadedParts.push(
-          await uploadSingleItem(part, assetType, songId, songName, onProgress)
+          await uploadSingleItem(part, assetType, songId, songName, onProgress, item.name)
         );
       }
       result.push({ ...item, parts: uploadedParts });
@@ -107,8 +107,9 @@ export const uploadNewFiles = async (items, assetType, songId, songName, onProgr
 
 /**
  * Upload a single item if it has a localFile, otherwise return as-is.
+ * collectionName is passed when the item belongs to a collection.
  */
-const uploadSingleItem = async (item, assetType, songId, songName, onProgress) => {
+const uploadSingleItem = async (item, assetType, songId, songName, onProgress, collectionName) => {
   if (!item.localFile) return item;
 
   const { filePath, duration } = await uploadFile(
@@ -121,7 +122,8 @@ const uploadSingleItem = async (item, assetType, songId, songName, onProgress) =
       album: item.album,
       instrument: item.instrument,
       date: item.date,
-      description: item.description
+      description: item.description,
+      collectionName: collectionName
     },
     onProgress
   );

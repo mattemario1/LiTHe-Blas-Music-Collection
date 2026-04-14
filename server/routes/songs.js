@@ -1,7 +1,27 @@
 const express = require('express');
+const fs = require('fs');
 const router = express.Router();
 const db = require('../database');
-const { renameFileIfNeeded, renameSongFiles } = require('../fileUtils');
+const { sanitize, renameFileIfNeeded, renameSongDir, toAbsolutePath } = require('../fileUtils');
+
+/**
+ * Apply a { oldPath: newPath } dict to every file_path in an assetMap.
+ * Returns a new assetMap; entries with no match are left unchanged.
+ */
+const applyPathUpdates = (assetMap, updates) => {
+  if (Object.keys(updates).length === 0) return assetMap;
+  const upd = (fp) => (fp && updates[fp]) ? updates[fp] : fp;
+  const result = {};
+  for (const [assetType, items] of Object.entries(assetMap)) {
+    result[assetType] = items.map(item => {
+      if (Array.isArray(item.parts)) {
+        return { ...item, parts: item.parts.map(p => ({ ...p, file_path: upd(p.file_path) })) };
+      }
+      return { ...item, file_path: upd(item.file_path) };
+    });
+  }
+  return result;
+};
 
 /**
  * Helper: read a full song from the database including all its
@@ -76,59 +96,89 @@ router.post('/', (req, res) => {
 });
 
 // PUT save a complete song
-// Renames files on disk if metadata changed, then replaces all DB rows for this song
+// Renames files on disk if metadata changed, deletes removed files, then replaces all DB rows
 router.put('/:id', (req, res) => {
   const songId = parseInt(req.params.id);
   const { name, description, type, status, recordings, sheetMusic, lyrics, otherFiles } = req.body;
 
+  const assetMap = {
+    recordings: recordings || [],
+    sheetMusic: sheetMusic || [],
+    lyrics: lyrics || [],
+    otherFiles: otherFiles || []
+  };
+
   const saveTransaction = db.transaction(() => {
-    // 1. Update basic song fields
+    // 1. Snapshot current DB file paths before any changes (needed for deletion detection)
+    const existingFiles = db.prepare('SELECT file_path FROM files WHERE song_id = ?').all(songId);
+    const existingDbPaths = new Set(existingFiles.map(f => f.file_path).filter(Boolean));
+
+    // 2. Update basic song fields
     db.prepare(
       'UPDATE songs SET name = ?, description = ?, type = ?, status = ? WHERE id = ?'
     ).run(name || '', description || '', type || '', status || '', songId);
 
-    // 2. Rename files on disk to reflect any metadata changes (including song name change)
-    //    We do this BEFORE deleting DB rows so we still have asset_type info
-    const allAssets = [
-      ...(recordings || []),
-      ...(sheetMusic || []),
-      ...(lyrics || []),
-      ...(otherFiles || [])
-    ];
+    // 3. Rename the song's top-level directory if the name changed (or migrate from old ID-based dir).
+    //    We detect the current dir name from an existing file path (works for both formats).
+    const newDirName = sanitize(name || '') || 'Song';
+    const firstExisting = existingFiles.find(f => f.file_path);
+    let workingAssetMap = assetMap;
+    let workingExistingPaths = existingDbPaths;
 
-    // Flatten to individual file objects with their asset_type attached
-    const allFiles = allAssets.flatMap(item => {
-      if (Array.isArray(item.parts)) {
-        return item.parts.map(p => ({ ...p, asset_type: item.asset_type || p.asset_type }));
-      }
-      return [item];
-    });
-
-    // Rename each file on disk, collect updated paths
-    const renamedPaths = {};
-    for (const file of allFiles) {
-      if (file.file_path) {
-        const newPath = renameFileIfNeeded(file.file_path, name, file, file.asset_type);
-        renamedPaths[file.file_path] = newPath;
+    if (firstExisting) {
+      const currentDirName = firstExisting.file_path.split('/')[1];
+      if (currentDirName !== newDirName) {
+        const dirUpdates = renameSongDir(currentDirName, newDirName);
+        if (Object.keys(dirUpdates).length > 0) {
+          // Remap file paths in both the incoming request and the existing-path snapshot
+          workingAssetMap = applyPathUpdates(assetMap, dirUpdates);
+          workingExistingPaths = new Set(
+            [...existingDbPaths].map(p => dirUpdates[p] || p)
+          );
+        }
       }
     }
 
-    // 3. Delete all existing collections and files for this song
+    // 4. Rename individual files on disk to reflect metadata changes.
+    //    Iterate over workingAssetMap directly so each file has the correct assetType —
+    //    file objects from the frontend may not carry an asset_type field.
+    const renamedPaths = {};
+    for (const [assetType, items] of Object.entries(workingAssetMap)) {
+      for (const item of items) {
+        if (Array.isArray(item.parts)) {
+          for (const part of item.parts) {
+            if (part.file_path) {
+              const newPath = renameFileIfNeeded(part.file_path, name, part, assetType, item.name);
+              renamedPaths[part.file_path] = newPath;
+            }
+          }
+        } else {
+          if (item.file_path) {
+            const newPath = renameFileIfNeeded(item.file_path, name, item, assetType);
+            renamedPaths[item.file_path] = newPath;
+          }
+        }
+      }
+    }
+
+    // 5. Delete physical files that are no longer in the new request
+    for (const existingPath of workingExistingPaths) {
+      if (!Object.prototype.hasOwnProperty.call(renamedPaths, existingPath)) {
+        const absPath = toAbsolutePath(existingPath);
+        if (fs.existsSync(absPath)) {
+          try { fs.unlinkSync(absPath); } catch (_) { /* ignore */ }
+        }
+      }
+    }
+
+    // 6. Delete all existing collections and files for this song (DB rows)
     db.prepare('DELETE FROM collections WHERE song_id = ?').run(songId);
     db.prepare('DELETE FROM files WHERE song_id = ?').run(songId);
 
-    // 4. Re-insert everything with updated paths
-    const assetMap = {
-      recordings: recordings || [],
-      sheetMusic: sheetMusic || [],
-      lyrics: lyrics || [],
-      otherFiles: otherFiles || []
-    };
-
-    for (const [assetType, items] of Object.entries(assetMap)) {
+    // 7. Re-insert everything with updated paths
+    for (const [assetType, items] of Object.entries(workingAssetMap)) {
       for (const item of items) {
         if (Array.isArray(item.parts)) {
-          // Insert collection row
           const collResult = db.prepare(
             'INSERT INTO collections (song_id, asset_type, name) VALUES (?, ?, ?)'
           ).run(songId, assetType, item.name || '');
@@ -173,10 +223,21 @@ router.put('/:id', (req, res) => {
   }
 });
 
-// DELETE a song (DB cascades to collections and files rows)
+// DELETE a song — removes DB rows and all physical files on disk
 router.delete('/:id', (req, res) => {
   try {
+    const files = db.prepare('SELECT file_path FROM files WHERE song_id = ?').all(req.params.id);
     db.prepare('DELETE FROM songs WHERE id = ?').run(req.params.id);
+
+    for (const file of files) {
+      if (file.file_path) {
+        const absPath = toAbsolutePath(file.file_path);
+        if (fs.existsSync(absPath)) {
+          try { fs.unlinkSync(absPath); } catch (_) { /* ignore */ }
+        }
+      }
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /songs/:id error:', err);
