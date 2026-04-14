@@ -106,6 +106,7 @@ function SongEditor({ song, onSave, onCancel, songs }) {
         onChange={(files) => handleChange('recordings', files)}
         type="recording"
         songs={songs}
+        songName={editedSong.name}
       />
 
       <SongAssetEditor
@@ -114,6 +115,7 @@ function SongEditor({ song, onSave, onCancel, songs }) {
         onChange={(files) => handleChange('sheetMusic', files)}
         type="sheet"
         songs={songs}
+        songName={editedSong.name}
       />
 
       <SongAssetEditor
@@ -122,6 +124,7 @@ function SongEditor({ song, onSave, onCancel, songs }) {
         onChange={(files) => handleChange('lyrics', files)}
         type="lyrics"
         songs={songs}
+        songName={editedSong.name}
       />
 
       <SongAssetEditor
@@ -130,6 +133,7 @@ function SongEditor({ song, onSave, onCancel, songs }) {
         onChange={(files) => handleChange('otherFiles', files)}
         type="other"
         songs={songs}
+        songName={editedSong.name}
       />
 
       <div className="editor-actions-sticky">

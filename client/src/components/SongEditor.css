@@ -340,6 +340,15 @@
   text-overflow: clip; /* Changed from ellipsis */
 }
 
+.file-name-preview {
+  background-color: #f0f4ff;
+  border-color: #b8c9f0;
+}
+
+.file-name-preview .file-path-label {
+  color: #4a6bbf;
+}
+
 .file-edit-box input[type="file"] {
   min-width: 150px;
   max-width: 200px;

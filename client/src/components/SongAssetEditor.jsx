@@ -3,9 +3,49 @@ import React from 'react';
 
 const getId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection, songs }) {
+const sanitizeForName = (str) => {
+  if (!str) return '';
+  return str.replace(/[/\\?%*:|"<>]/g, '_').replace(/\s+/g, '_');
+};
+
+function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollection, songs, songName, collectionName }) {
   const [focusedField, setFocusedField] = React.useState(null);
   const handleChange = (field, value) => onChange({ ...file, [field]: value });
+
+  const previewFileName = () => {
+    const hasFile = file.localFile || file.file_path;
+    if (!hasFile) return null;
+
+    let ext = '';
+    if (file.localFile) {
+      const parts = file.localFile.name.split('.');
+      ext = parts.length > 1 ? '.' + parts.pop() : '';
+    } else {
+      const parts = file.file_path.split('.');
+      ext = parts.length > 1 ? '.' + parts.pop() : '';
+    }
+
+    const base = sanitizeForName(songName) || 'Song';
+    const collPart = collectionName ? `-${sanitizeForName(collectionName)}` : '';
+
+    let detail = '';
+    switch (type) {
+      case 'recording':
+        detail = sanitizeForName(file.album) || sanitizeForName(file.name) || 'Recording';
+        break;
+      case 'sheet':
+        detail = sanitizeForName(file.instrument) || sanitizeForName(file.name) || 'Sheet';
+        break;
+      case 'lyrics':
+        detail = sanitizeForName(file.name) || 'Lyrics';
+        break;
+      default:
+        detail = sanitizeForName(file.name) || 'File';
+    }
+
+    const datePart = file.date ? `--${sanitizeForName(file.date)}` : '';
+    return `${base}${collPart}-${detail}${datePart}${ext}`;
+  };
 
   const handleFileInput = (e) => {
     const uploaded = e.target.files[0];
@@ -114,10 +154,22 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
       <input type="text" placeholder="Date" value={file.date || ''} onChange={e => handleChange('date', e.target.value)} />
       <div className="file-input-group">
         <input type="file" onChange={handleFileInput} />
-        {file.file_path && (
+        {file.localFile && (
+          <div className="file-path-info">
+            <span className="file-path-label">Added file:</span>
+            <span className="file-path-value">{file.localFile.name}</span>
+          </div>
+        )}
+        {!file.localFile && file.file_path && (
           <div className="file-path-info">
             <span className="file-path-label">Current file:</span>
             <span className="file-path-value">{file.file_path}</span>
+          </div>
+        )}
+        {previewFileName() && (
+          <div className="file-path-info file-name-preview">
+            <span className="file-path-label">Will be saved as:</span>
+            <span className="file-path-value">{previewFileName()}</span>
           </div>
         )}
       </div>
@@ -138,7 +190,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
   );
 }
 
-function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, onRemoveFromCollection, songs, onUploadMultiple }) {
+function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, onRemoveFromCollection, songs, onUploadMultiple, songName }) {
   // Use state to store the sorted list, which will not change on every keystroke.
   // The sorting function now runs only once when the component is initialized.
   const [sortedParts, setSortedParts] = React.useState(() =>
@@ -235,6 +287,8 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
             collections={[]}
             onAddToCollection={() => { }}
             songs={songs}
+            songName={songName}
+            collectionName={collection.name}
           />
           <button
             className="remove-from-collection"
@@ -248,7 +302,7 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
   );
 }
 
-function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection, songs }) {
+function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddToCollection, songs, songName }) {
   // Use state to hold the sorted list. Sorting runs once on initialization.
   const [sortedFiles, setSortedFiles] = React.useState(() => 
     [...files].sort((a, b) => {
@@ -302,11 +356,12 @@ function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddT
       onRemove={() => onRemoveFile(file)}
       onAddToCollection={onAddToCollection}
       songs={songs}
+      songName={songName}
     />
   ));
 }
 
-function SongAssetEditor({ title, files, onChange, type, songs }) {
+function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
   // Collections are items with parts array
   const collections = files.filter(f => Array.isArray(f.parts));
   // Ungrouped files are items without parts
@@ -520,6 +575,7 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
           onRemoveFile={removeFile}
           songs={songs}
           onUploadMultiple={handleUploadMultipleToCollection}
+          songName={songName}
         />
       ))}
 
@@ -531,6 +587,7 @@ function SongAssetEditor({ title, files, onChange, type, songs }) {
         onRemoveFile={removeFile}
         onAddToCollection={addToCollection}
         songs={songs}
+        songName={songName}
       />
 
       <div className="section-actions">
