@@ -73,48 +73,41 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
           </div>
         </div>
       )}
-      <div className="searchbox-wrapper">
-        <input
-          type="text"
-          className="search-box"
-          placeholder="🔍 Sök låtar..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-        />
-        {searchQuery && (
-          <button
-            className="clear-button"
-            onClick={() => setSearchQuery('')}
-            aria-label="Clear search"
-          >
-            ✕
-          </button>
-        )}
-        {focused && filteredSuggestions.length > 0 && (
-          <div className="autocomplete-list">
-            {filteredSuggestions.map((name, index) => (
-              <div
-                key={index}
-                className="autocomplete-item"
-                onClick={() => setSearchQuery(name)}
-              >
-                {name}
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="search-row">
+        <div className="searchbox-wrapper">
+          <input
+            type="text"
+            className="search-box"
+            placeholder="🔍 Sök låtar..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 200)}
+          />
+          {searchQuery && (
+            <button
+              className="clear-button"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+          {focused && filteredSuggestions.length > 0 && (
+            <div className="autocomplete-list">
+              {filteredSuggestions.map((name, index) => (
+                <div
+                  key={index}
+                  className="autocomplete-item"
+                  onClick={() => setSearchQuery(name)}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-
-      <button
-        className={`lock-btn ${isAdmin ? 'lock-btn-unlocked' : ''}`}
-        onClick={handleLockClick}
-        title={isAdmin ? 'Logga ut som admin' : 'Logga in som admin'}
-        aria-label={isAdmin ? 'Logga ut som admin' : 'Logga in som admin'}
-      >
-        <i className={`fas ${isAdmin ? 'fa-lock-open' : 'fa-lock'}`}></i>
-      </button>
 
       <div className="filter-panel">
         <div className="filter-group">
@@ -147,6 +140,15 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
           </div>
         </div>
       </div>
+
+      <button
+        className={`lock-btn ${isAdmin ? 'lock-btn-unlocked' : ''}`}
+        onClick={handleLockClick}
+        title={isAdmin ? 'Logga ut som admin' : 'Logga in som admin'}
+        aria-label={isAdmin ? 'Logga ut som admin' : 'Logga in som admin'}
+      >
+        <i className={`fas ${isAdmin ? 'fa-lock-open' : 'fa-lock'}`}></i>
+      </button>
     </div>
   );
 }
