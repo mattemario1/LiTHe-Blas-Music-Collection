@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import SearchAndFilter from './components/SearchAndFilter';
 import SongList from './components/SongList';
 import SongDetails from './components/SongDetails';
 import AudioPlayer from './components/AudioPlayer';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
-function App() {
+function AppInner() {
+  const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     shownTypes: ['Orkesterlåt', 'Balettlåt', 'Övrigt'],
@@ -150,12 +152,17 @@ function App() {
             )}
           </div>
 
-          <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <button onClick={handleAddNewSong}>➕ New Song</button>
-            <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>
-              🗑️ Delete Selected Song
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="action-buttons" style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <button onClick={handleAddNewSong}>➕ New Song</button>
+              <button onClick={handleDeleteSelectedSong} disabled={!selectedSong}>
+                🗑️ Delete Selected Song
+              </button>
+              <a href="/api/backup" download>
+                <button type="button">💾 Download Backup</button>
+              </a>
+            </div>
+          )}
         </div>
         {/* NEW WRAPPER ENDS HERE */}
 
@@ -169,5 +176,13 @@ function App() {
       </div>
     );
   }
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
+  );
+}
 
 export default App;

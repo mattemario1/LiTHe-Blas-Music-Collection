@@ -1,11 +1,38 @@
 import { useState } from 'react';
 import './SearchAndFilter.css';
+import { useAuth } from '../context/AuthContext';
 
 const TYPE_OPTIONS = ['Orkesterlåt', 'Balettlåt', 'Övrigt'];
 const STATUS_OPTIONS = ['Aktiv', 'Inaktiv', 'Övrigt'];
 
 function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs }) {
   const [focused, setFocused] = useState(false);
+  const [showLockModal, setShowLockModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [lockError, setLockError] = useState(false);
+  const { isAdmin, login, logout } = useAuth();
+
+  const handleLockClick = () => {
+    if (isAdmin) {
+      logout();
+    } else {
+      setPasswordInput('');
+      setLockError(false);
+      setShowLockModal(true);
+    }
+  };
+
+  const handleLockSubmit = async (e) => {
+    e.preventDefault();
+    const ok = await login(passwordInput);
+    if (ok) {
+      setShowLockModal(false);
+      setPasswordInput('');
+      setLockError(false);
+    } else {
+      setLockError(true);
+    }
+  };
 
   const songNames = songs.map(song => song.name);
   const filteredSuggestions = songNames.filter(name =>
@@ -24,6 +51,28 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
 
   return (
     <div className="search-filter-container">
+      {showLockModal && (
+        <div className="lock-modal-overlay" onClick={() => setShowLockModal(false)}>
+          <div className="lock-modal" onClick={e => e.stopPropagation()}>
+            <h3>Adminlösenord</h3>
+            <form onSubmit={handleLockSubmit}>
+              <input
+                type="password"
+                className="lock-modal-input"
+                placeholder="Lösenord"
+                value={passwordInput}
+                onChange={e => { setPasswordInput(e.target.value); setLockError(false); }}
+                autoFocus
+              />
+              {lockError && <div className="lock-modal-error">Fel lösenord</div>}
+              <div className="lock-modal-actions">
+                <button type="button" onClick={() => setShowLockModal(false)}>Avbryt</button>
+                <button type="submit">Lås upp</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="searchbox-wrapper">
         <input
           type="text"
@@ -57,6 +106,15 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
           </div>
         )}
       </div>
+
+      <button
+        className={`lock-btn ${isAdmin ? 'lock-btn-unlocked' : ''}`}
+        onClick={handleLockClick}
+        title={isAdmin ? 'Logga ut som admin' : 'Logga in som admin'}
+        aria-label={isAdmin ? 'Logga ut som admin' : 'Logga in som admin'}
+      >
+        <i className={`fas ${isAdmin ? 'fa-lock-open' : 'fa-lock'}`}></i>
+      </button>
 
       <div className="filter-panel">
         <div className="filter-group">

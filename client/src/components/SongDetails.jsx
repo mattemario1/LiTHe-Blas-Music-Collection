@@ -1,10 +1,11 @@
 // SongDetails.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './SongDetails.css';
 import PdfModal from './PdfModal';
 import LyricsModal from './LyricsModal';
 import ImageModal from './ImageModal';
 import SongEditor from './SongEditor';
+import { useAuth } from '../context/AuthContext';
 
 const formatDuration = (seconds) => {
   if (!seconds || seconds <= 0) return null;
@@ -241,6 +242,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const { isAdmin } = useAuth();
 
   const handlePlayAudio = async (item) => {
     try {
@@ -301,7 +303,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         <span><strong>Typ:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
       </div>
-      <button onClick={() => setIsEditing(true)}>Edit</button>
+      {isAdmin && <button onClick={() => setIsEditing(true)}>Edit</button>}
 
       <ExpandableBoxList
         title="🎧 Inspelningar"

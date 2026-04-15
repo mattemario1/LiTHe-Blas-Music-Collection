@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ImageModal from './ImageModal';
+import { useAuth } from '../context/AuthContext';
 
 // ── Album detail ─────────────────────────────────────────────────────────────
 
 function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, onRefresh }) {
   const [editing, setEditing] = useState(false);
+  const { isAdmin } = useAuth();
   const [year, setYear] = useState(album.year || '');
   const [description, setDescription] = useState(album.description || '');
   const [songOrder, setSongOrder] = useState(album.songs.map(s => s.song_id));
@@ -123,9 +125,11 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
             <>
               {album.year && <div className="album-meta-year">{album.year}</div>}
               {album.description && <div className="album-meta-desc">{album.description}</div>}
-              <button className="album-edit-btn" onClick={() => setEditing(true)}>
-                <i className="fas fa-pen"></i> Redigera
-              </button>
+              {isAdmin && (
+                <button className="album-edit-btn" onClick={() => setEditing(true)}>
+                  <i className="fas fa-pen"></i> Redigera
+                </button>
+              )}
             </>
           )}
         </div>
