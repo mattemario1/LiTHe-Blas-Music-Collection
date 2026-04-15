@@ -2,11 +2,33 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const ffmpeg = require('fluent-ffmpeg');
 const { constructFileName, getSongAssetDir, toRelativePath, resolveUniqueFilePath } = require('../fileUtils');
 
-// Use memory storage so we can inspect the file before saving it
-// (we need the song name and metadata to construct the filename)
-const upload = multer({ storage: multer.memoryStorage() });
+// Formats that need transcoding to MP4 before storing
+const TRANSCODE_EXTS = new Set(['.wmv', '.avi', '.mkv', '.mov', '.flv', '.m4v']);
+
+// Write uploaded files to a temp dir on disk to avoid loading large videos into memory
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, os.tmpdir()),
+    filename: (req, file, cb) => cb(null, `upload_${Date.now()}_${path.basename(file.originalname)}`),
+  }),
+});
+
+function transcodeToMp4(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .videoCodec('libx264')
+      .audioCodec('aac')
+      .output(outputPath)
+      .on('end', resolve)
+      .on('error', reject)
+      .run();
+  });
+}
 
 // POST /api/upload
 // Expects multipart/form-data with:
@@ -15,7 +37,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 //   - songName: used for filename construction
 //   - assetType: 'recordings' | 'sheetMusic' | 'lyrics' | 'otherFiles'
 //   - metadata: JSON string with name, album, instrument, date etc
-router.post('/', upload.single('file'), (req, res) => {
+router.post('/', upload.single('file'), async (req, res) => {
   try {
     const { songId, songName, assetType } = req.body;
     const metadata = JSON.parse(req.body.metadata || '{}');
@@ -27,23 +49,27 @@ router.post('/', upload.single('file'), (req, res) => {
       return res.status(400).json({ error: 'songId and assetType are required' });
     }
 
-    // Get the directory to save this file in (creates it if needed)
     const dir = getSongAssetDir(songName || 'Song', assetType);
+    const ext = path.extname(req.file.originalname).toLowerCase();
 
-    // Construct a meaningful filename from the metadata
-    const ext = path.extname(req.file.originalname);
-    const fileName = constructFileName(songName || 'Song', metadata, assetType, ext, metadata.collectionName);
+    const tempUploadPath = req.file.path;
 
-    // Make sure we don't overwrite an existing file
-    const targetPath = resolveUniqueFilePath(path.join(dir, fileName));
+    try {
+      if (TRANSCODE_EXTS.has(ext)) {
+        const mp4FileName = constructFileName(songName || 'Song', metadata, assetType, '.mp4', metadata.collectionName);
+        const mp4TargetPath = resolveUniqueFilePath(path.join(dir, mp4FileName));
+        await transcodeToMp4(tempUploadPath, mp4TargetPath);
+        return res.json({ filePath: toRelativePath(mp4TargetPath) });
+      }
 
-    // Write the file to disk
-    require('fs').writeFileSync(targetPath, req.file.buffer);
-
-    // Return the relative path (this is what gets stored in the DB later)
-    const relativePath = toRelativePath(targetPath);
-
-    res.json({ filePath: relativePath });
+      // Non-video or already-compatible format: move to final location
+      const fileName = constructFileName(songName || 'Song', metadata, assetType, ext, metadata.collectionName);
+      const targetPath = resolveUniqueFilePath(path.join(dir, fileName));
+      fs.copyFileSync(tempUploadPath, targetPath);
+      res.json({ filePath: toRelativePath(targetPath) });
+    } finally {
+      fs.unlink(tempUploadPath, () => {});
+    }
   } catch (err) {
     console.error('Upload error:', err);
     res.status(500).json({ error: err.message });

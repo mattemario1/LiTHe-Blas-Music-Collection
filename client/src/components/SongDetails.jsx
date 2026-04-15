@@ -4,6 +4,7 @@ import './SongDetails.css';
 import PdfModal from './PdfModal';
 import LyricsModal from './LyricsModal';
 import ImageModal from './ImageModal';
+import VideoModal from './VideoModal';
 import SongEditor from './SongEditor';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,7 +15,8 @@ const formatDuration = (seconds) => {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
-const AUDIO_EXTS = new Set(['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus', 'webm', 'wma']);
+const AUDIO_EXTS = new Set(['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus']);
+const VIDEO_EXTS = new Set(['mp4', 'webm', 'ogv', 'mov', 'mkv', 'avi', 'wmv', 'flv', 'm4v']);
 const PDF_EXTS = new Set(['pdf']);
 const TEXT_EXTS = new Set(['txt', 'md']);
 const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']);
@@ -33,7 +35,8 @@ function ExpandableBoxList({
   onPlayAudio,
   onShowPdf,
   onShowLyrics,
-  onShowImage
+  onShowImage,
+  onShowVideo
 }) {
   const [expandedCollections, setExpandedCollections] = useState({});
   const [expandedItems, setExpandedItems] = useState({});
@@ -59,6 +62,7 @@ function ExpandableBoxList({
     const duration = formatDuration(item.duration);
     const ext = getExt(item.file_path);
     const isAudio = AUDIO_EXTS.has(ext);
+    const isVideo = VIDEO_EXTS.has(ext);
     const isPdf = PDF_EXTS.has(ext);
     const isText = TEXT_EXTS.has(ext);
     const isImage = IMAGE_EXTS.has(ext);
@@ -152,6 +156,23 @@ function ExpandableBoxList({
             <i className="fas fa-image"></i> Visa Bild
           </button>
         )}
+
+        {isVideo && (
+          <button
+            className="action-button video"
+            onClick={(e) =>
+              handleActionClick(
+                e,
+                item.file_path,
+                f => typeof f === 'string',
+                onShowVideo,
+                "Invalid or missing video file."
+              )
+            }
+          >
+            <i className="fas fa-film"></i> Visa Video
+          </button>
+        )}
       </div>
     );
   };
@@ -241,6 +262,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   const [pdfUrl, setPdfUrl] = useState(null);
   const [lyricsUrl, setLyricsUrl] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const { isAdmin } = useAuth();
 
@@ -279,6 +301,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
     setImageUrl(`/file/${filePath}`);
   };
 
+  const handleShowVideo = (filePath) => {
+    setVideoUrl(`/file/${filePath}`);
+  };
+
   if (isEditing) {
     return (
       <SongEditor
@@ -314,6 +340,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         onShowPdf={handleShowPdf}
         onShowLyrics={handleShowLyrics}
         onShowImage={handleShowImage}
+        onShowVideo={handleShowVideo}
       />
 
       <ExpandableBoxList
@@ -325,6 +352,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         onShowPdf={handleShowPdf}
         onShowLyrics={handleShowLyrics}
         onShowImage={handleShowImage}
+        onShowVideo={handleShowVideo}
       />
 
       <ExpandableBoxList
@@ -336,6 +364,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         onShowPdf={handleShowPdf}
         onShowLyrics={handleShowLyrics}
         onShowImage={handleShowImage}
+        onShowVideo={handleShowVideo}
       />
 
       <ExpandableBoxList
@@ -347,6 +376,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         onShowPdf={handleShowPdf}
         onShowLyrics={handleShowLyrics}
         onShowImage={handleShowImage}
+        onShowVideo={handleShowVideo}
       />
 
       <ExpandableBoxList
@@ -358,11 +388,13 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         onShowPdf={handleShowPdf}
         onShowLyrics={handleShowLyrics}
         onShowImage={handleShowImage}
+        onShowVideo={handleShowVideo}
       />
 
       {pdfUrl && <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />}
       {lyricsUrl && <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />}
       {imageUrl && <ImageModal imageUrl={imageUrl} onClose={() => setImageUrl(null)} />}
+      {videoUrl && <VideoModal videoUrl={videoUrl} onClose={() => setVideoUrl(null)} />}
     </div>
   );
 }

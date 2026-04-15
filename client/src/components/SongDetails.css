@@ -193,6 +193,14 @@
   background-color: #303f9f;
 }
 
+.action-button.video {
+  background-color: #7b1fa2;
+}
+
+.action-button.video:hover {
+  background-color: #6a1990;
+}
+
 .collection-block {
   border-radius: 10px;
   margin-bottom: 20px;
