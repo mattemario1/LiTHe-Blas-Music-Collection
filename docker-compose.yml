@@ -17,8 +17,8 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ~/BARAKOD/song-app-uploads:/app/server/uploads
-      - ~/BARAKOD/song-app-data:/app/server/data
+      - ${UPLOADS_DIR}:/app/server/uploads
+      - ${DB_DIR}:/app/server/data
     environment:
       - BIND_ADDRESS=0.0.0.0
       - UPLOADS_DIR=/app/server/uploads
