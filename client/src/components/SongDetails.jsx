@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './SongDetails.css';
 import PdfModal from './PdfModal';
 import LyricsModal from './LyricsModal';
+import ImageModal from './ImageModal';
 import SongEditor from './SongEditor';
 
 const formatDuration = (seconds) => {
@@ -12,15 +13,26 @@ const formatDuration = (seconds) => {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
+const AUDIO_EXTS = new Set(['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus', 'webm', 'wma']);
+const PDF_EXTS = new Set(['pdf']);
+const TEXT_EXTS = new Set(['txt', 'md']);
+const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']);
+
+const getExt = (filePath) => {
+  if (!filePath) return '';
+  const parts = filePath.split('.');
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+};
+
 function ExpandableBoxList({
   title,
   items,
   labelKey,
   dateKey,
-  type,
   onPlayAudio,
   onShowPdf,
-  onShowLyrics
+  onShowLyrics,
+  onShowImage
 }) {
   const [expandedCollections, setExpandedCollections] = useState({});
   const [expandedItems, setExpandedItems] = useState({});
@@ -44,6 +56,11 @@ function ExpandableBoxList({
 
   const renderActions = (item) => {
     const duration = formatDuration(item.duration);
+    const ext = getExt(item.file_path);
+    const isAudio = AUDIO_EXTS.has(ext);
+    const isPdf = PDF_EXTS.has(ext);
+    const isText = TEXT_EXTS.has(ext);
+    const isImage = IMAGE_EXTS.has(ext);
 
     return (
       <div className="file-actions horizontal">
@@ -62,7 +79,7 @@ function ExpandableBoxList({
           <i className="fas fa-download"></i> Ladda ner
         </a>
 
-        {type === 'recording' && (
+        {isAudio && (
           <div className="play-action-container">
             <button
               className="action-button play"
@@ -84,7 +101,7 @@ function ExpandableBoxList({
           </div>
         )}
 
-        {type === 'sheet' && (
+        {isPdf && (
           <button
             className="action-button pdf"
             onClick={(e) =>
@@ -101,7 +118,7 @@ function ExpandableBoxList({
           </button>
         )}
 
-        {type === 'lyrics' && (
+        {isText && (
           <button
             className="action-button lyrics"
             onClick={(e) =>
@@ -115,6 +132,23 @@ function ExpandableBoxList({
             }
           >
             <i className="fas fa-file-alt"></i> Visa Text
+          </button>
+        )}
+
+        {isImage && (
+          <button
+            className="action-button image"
+            onClick={(e) =>
+              handleActionClick(
+                e,
+                item.file_path,
+                f => typeof f === 'string',
+                onShowImage,
+                "Invalid or missing image file."
+              )
+            }
+          >
+            <i className="fas fa-image"></i> Visa Bild
           </button>
         )}
       </div>
@@ -205,6 +239,7 @@ function ExpandableBoxList({
 function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack }) {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [lyricsUrl, setLyricsUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const handlePlayAudio = async (item) => {
@@ -238,6 +273,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
     }
   };
 
+  const handleShowImage = (filePath) => {
+    setImageUrl(`/file/${filePath}`);
+  };
+
   if (isEditing) {
     return (
       <SongEditor
@@ -269,8 +308,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         items={song.recordings}
         labelKey="album"
         dateKey="date"
-        type="recording"
         onPlayAudio={handlePlayAudio}
+        onShowPdf={handleShowPdf}
+        onShowLyrics={handleShowLyrics}
+        onShowImage={handleShowImage}
       />
 
       <ExpandableBoxList
@@ -278,8 +319,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         items={song.sheetMusic}
         labelKey="instrument"
         dateKey="date"
-        type="sheet"
+        onPlayAudio={handlePlayAudio}
         onShowPdf={handleShowPdf}
+        onShowLyrics={handleShowLyrics}
+        onShowImage={handleShowImage}
       />
 
       <ExpandableBoxList
@@ -287,8 +330,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         items={song.lyrics}
         labelKey="name"
         dateKey="date"
-        type="lyrics"
+        onPlayAudio={handlePlayAudio}
+        onShowPdf={handleShowPdf}
         onShowLyrics={handleShowLyrics}
+        onShowImage={handleShowImage}
       />
 
       <ExpandableBoxList
@@ -296,7 +341,10 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         items={song.danceFiles || []}
         labelKey="name"
         dateKey="date"
-        type="dance"
+        onPlayAudio={handlePlayAudio}
+        onShowPdf={handleShowPdf}
+        onShowLyrics={handleShowLyrics}
+        onShowImage={handleShowImage}
       />
 
       <ExpandableBoxList
@@ -304,11 +352,15 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         items={song.otherFiles || []}
         labelKey="name"
         dateKey="date"
-        type="other"
+        onPlayAudio={handlePlayAudio}
+        onShowPdf={handleShowPdf}
+        onShowLyrics={handleShowLyrics}
+        onShowImage={handleShowImage}
       />
 
       {pdfUrl && <PdfModal pdfUrl={pdfUrl} onClose={() => setPdfUrl(null)} />}
       {lyricsUrl && <LyricsModal lyricsUrl={lyricsUrl} onClose={() => setLyricsUrl(null)} />}
+      {imageUrl && <ImageModal imageUrl={imageUrl} onClose={() => setImageUrl(null)} />}
     </div>
   );
 }

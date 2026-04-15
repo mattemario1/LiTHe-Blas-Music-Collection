@@ -1,0 +1,42 @@
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1000;
+}
+
+.image-close-wrapper {
+  width: 95vw;
+  max-width: 1200px;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.image-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 95vw;
+  max-height: calc(95vh - 60px);
+  overflow: auto;
+}
+
+.image-content img {
+  max-width: 100%;
+  max-height: calc(95vh - 60px);
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .image-modal {
+    padding-top: 15px;
+  }
+}
