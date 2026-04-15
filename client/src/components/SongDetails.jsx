@@ -133,7 +133,7 @@ function ExpandableBoxList({
         style={{ cursor: hasDescription ? 'pointer' : 'default' }} // Visual hint
       >
         <div className="info-main">
-          <strong className="asset-name">{item.name || item[labelKey]}</strong>
+          <strong className="asset-name">{item[labelKey] || item.name}</strong>
           {/* Only show truncated preview if it's not expanded AND it has a description */}
           {!isExpanded && hasDescription && (
             <div className="truncated-description">{item.description}</div>
