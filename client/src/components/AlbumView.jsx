@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ImageModal from './ImageModal';
 
 // ── Album detail ─────────────────────────────────────────────────────────────
 
@@ -6,20 +7,30 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
   const [editing, setEditing] = useState(false);
   const [year, setYear] = useState(album.year || '');
   const [description, setDescription] = useState(album.description || '');
+  const [songOrder, setSongOrder] = useState(album.songs.map(s => s.song_id));
+  const [imageModalUrl, setImageModalUrl] = useState(null);
 
   useEffect(() => {
     setYear(album.year || '');
     setDescription(album.description || '');
+    setSongOrder(album.songs.map(s => s.song_id));
   }, [album]);
 
   const handleSaveEdit = async () => {
     await fetch(`/api/albums/${encodeURIComponent(album.name)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ year, description })
+      body: JSON.stringify({ year, description, song_order: songOrder })
     });
     setEditing(false);
     onRefresh();
+  };
+
+  const handleCancelEdit = () => {
+    setYear(album.year || '');
+    setDescription(album.description || '');
+    setSongOrder(album.songs.map(s => s.song_id));
+    setEditing(false);
   };
 
   const handleCoverUpload = async (e) => {
@@ -34,24 +45,56 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
     onRefresh();
   };
 
+  const moveSong = (index, direction) => {
+    const newOrder = [...songOrder];
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]];
+    setSongOrder(newOrder);
+  };
+
+  // Build an ordered list of song objects based on songOrder
+  const songById = Object.fromEntries(album.songs.map(s => [s.song_id, s]));
+  const orderedSongs = songOrder.map(id => songById[id]).filter(Boolean);
+
   return (
     <div className="album-detail">
+      {imageModalUrl && (
+        <ImageModal imageUrl={imageModalUrl} onClose={() => setImageModalUrl(null)} />
+      )}
+
       <button className="album-back-btn" onClick={onBack}>
         <i className="fas fa-arrow-left"></i> Tillbaka
       </button>
 
       <div className="album-detail-header">
-        <label className="album-cover-upload-label" title="Klicka för att byta omslag">
-          {album.cover_path ? (
-            <img src={`/file/${album.cover_path}`} alt={album.name} className="album-detail-img" />
-          ) : (
-            <div className="album-cover-placeholder-large">
-              <i className="fas fa-camera"></i>
-              <span>Ladda upp</span>
-            </div>
-          )}
-          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
-        </label>
+        {editing ? (
+          <label className="album-cover-upload-label" title="Klicka för att byta omslag">
+            {album.cover_path ? (
+              <img src={`/file/${album.cover_path}`} alt={album.name} className="album-detail-img" />
+            ) : (
+              <div className="album-cover-placeholder-large">
+                <i className="fas fa-camera"></i>
+                <span>Ladda upp</span>
+              </div>
+            )}
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+          </label>
+        ) : (
+          <div
+            className="album-cover-upload-label"
+            onClick={() => album.cover_path && setImageModalUrl(`/file/${album.cover_path}`)}
+            style={{ cursor: album.cover_path ? 'zoom-in' : 'default' }}
+          >
+            {album.cover_path ? (
+              <img src={`/file/${album.cover_path}`} alt={album.name} className="album-detail-img" />
+            ) : (
+              <div className="album-cover-placeholder-large">
+                <i className="fas fa-music"></i>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="album-detail-info">
           <div className="album-detail-name">{album.name}</div>
@@ -73,7 +116,7 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
               />
               <div className="album-edit-actions">
                 <button onClick={handleSaveEdit}>Spara</button>
-                <button onClick={() => setEditing(false)}>Avbryt</button>
+                <button onClick={handleCancelEdit}>Avbryt</button>
               </div>
             </div>
           ) : (
@@ -89,14 +132,35 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
       </div>
 
       <div className="album-song-list">
-        {album.songs.map(albumSong => {
+        {orderedSongs.map((albumSong, index) => {
           const fullSong = allSongs.find(s => s.id === albumSong.song_id);
           return (
             <div key={albumSong.song_id} className="album-song-item">
+              {editing && (
+                <div className="album-song-order-btns">
+                  <button
+                    className="album-order-btn"
+                    onClick={() => moveSong(index, -1)}
+                    disabled={index === 0}
+                    title="Flytta upp"
+                  >
+                    <i className="fas fa-chevron-up"></i>
+                  </button>
+                  <button
+                    className="album-order-btn"
+                    onClick={() => moveSong(index, 1)}
+                    disabled={index === orderedSongs.length - 1}
+                    title="Flytta ner"
+                  >
+                    <i className="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              )}
               <span
                 className="album-song-name"
-                onClick={() => fullSong && setSelectedSong(fullSong)}
-                title="Visa låt"
+                onClick={() => !editing && fullSong && setSelectedSong(fullSong)}
+                title={editing ? undefined : 'Visa låt'}
+                style={{ cursor: editing ? 'default' : 'pointer' }}
               >
                 {albumSong.song_name}
               </span>

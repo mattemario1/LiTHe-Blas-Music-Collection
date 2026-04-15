@@ -22,7 +22,8 @@ db.exec(`
     name TEXT NOT NULL UNIQUE,
     cover_path TEXT DEFAULT '',
     description TEXT DEFAULT '',
-    year TEXT DEFAULT ''
+    year TEXT DEFAULT '',
+    song_order TEXT DEFAULT ''
   );
 
   CREATE TABLE IF NOT EXISTS songs (

@@ -46,13 +46,33 @@ router.get('/', (req, res) => {
         });
       }
 
+      let songsArray = Array.from(songMap.values());
+
+      // Apply saved song order if present
+      if (meta.song_order) {
+        try {
+          const order = JSON.parse(meta.song_order);
+          const ordered = [];
+          for (const id of order) {
+            const s = songMap.get(id);
+            if (s) ordered.push(s);
+          }
+          // Append any songs not included in the saved order
+          for (const s of songsArray) {
+            if (!order.includes(s.song_id)) ordered.push(s);
+          }
+          songsArray = ordered;
+        } catch (_) { /* invalid JSON, keep default order */ }
+      }
+
       return {
         id: meta.id || null,
         name: albumName,
         cover_path: meta.cover_path || '',
         description: meta.description || '',
         year: meta.year || '',
-        songs: Array.from(songMap.values())
+        song_order: meta.song_order || '',
+        songs: songsArray
       };
     });
 
@@ -67,15 +87,21 @@ router.get('/', (req, res) => {
 router.put('/:name', (req, res) => {
   try {
     const albumName = decodeURIComponent(req.params.name);
-    const { description, year } = req.body;
+    const { description, year, song_order } = req.body;
+    const songOrderVal = song_order != null ? JSON.stringify(song_order) : null;
 
     const existing = db.prepare('SELECT * FROM albums WHERE name = ?').get(albumName);
     if (existing) {
-      db.prepare('UPDATE albums SET description = ?, year = ? WHERE name = ?')
-        .run(description || '', year || '', albumName);
+      if (songOrderVal !== null) {
+        db.prepare('UPDATE albums SET description = ?, year = ?, song_order = ? WHERE name = ?')
+          .run(description || '', year || '', songOrderVal, albumName);
+      } else {
+        db.prepare('UPDATE albums SET description = ?, year = ? WHERE name = ?')
+          .run(description || '', year || '', albumName);
+      }
     } else {
-      db.prepare('INSERT INTO albums (name, description, year) VALUES (?, ?, ?)')
-        .run(albumName, description || '', year || '');
+      db.prepare('INSERT INTO albums (name, description, year, song_order) VALUES (?, ?, ?, ?)')
+        .run(albumName, description || '', year || '', songOrderVal || '');
     }
 
     res.json(db.prepare('SELECT * FROM albums WHERE name = ?').get(albumName));
