@@ -2,7 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const router = express.Router();
 const db = require('../database');
-const { sanitize, renameFileIfNeeded, renameSongDir, toAbsolutePath } = require('../fileUtils');
+const path = require('path');
+const { sanitize, renameFileIfNeeded, renameSongDir, toAbsolutePath, getUploadsBase } = require('../fileUtils');
 
 /**
  * Apply a { oldPath: newPath } dict to every file_path in an assetMap.
@@ -227,16 +228,27 @@ router.put('/:id', (req, res) => {
 // DELETE a song — removes DB rows and all physical files on disk
 router.delete('/:id', (req, res) => {
   try {
+    const song = db.prepare('SELECT * FROM songs WHERE id = ?').get(req.params.id);
     const files = db.prepare('SELECT file_path FROM files WHERE song_id = ?').all(req.params.id);
     db.prepare('DELETE FROM songs WHERE id = ?').run(req.params.id);
 
-    for (const file of files) {
-      if (file.file_path) {
-        const absPath = toAbsolutePath(file.file_path);
-        if (fs.existsSync(absPath)) {
-          try { fs.unlinkSync(absPath); } catch (_) { /* ignore */ }
-        }
+    // Determine the song directory to delete.
+    // Prefer deriving it from an existing file path; fall back to the song name.
+    let songDirAbs = null;
+    const firstWithPath = files.find(f => f.file_path);
+    if (firstWithPath) {
+      // file_path is like "songs/{dir-name}/recordings/file.mp3" — take the first two segments
+      const parts = firstWithPath.file_path.split('/');
+      if (parts.length >= 2) {
+        songDirAbs = toAbsolutePath(parts.slice(0, 2).join('/'));
       }
+    } else if (song) {
+      const safeName = sanitize(song.name) || 'Song';
+      songDirAbs = path.join(getUploadsBase(), 'songs', safeName);
+    }
+
+    if (songDirAbs && fs.existsSync(songDirAbs)) {
+      try { fs.rmSync(songDirAbs, { recursive: true, force: true }); } catch (_) { /* ignore */ }
     }
 
     res.json({ success: true });
