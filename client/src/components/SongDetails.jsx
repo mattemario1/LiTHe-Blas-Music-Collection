@@ -292,6 +292,14 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
+        title="💃 Dans"
+        items={song.danceFiles || []}
+        labelKey="name"
+        dateKey="date"
+        type="dance"
+      />
+
+      <ExpandableBoxList
         title="📁 Andra Filer"
         items={song.otherFiles || []}
         labelKey="name"

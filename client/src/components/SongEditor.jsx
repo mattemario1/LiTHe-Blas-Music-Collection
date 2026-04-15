@@ -50,6 +50,14 @@ function SongEditor({ song, onSave, onCancel, songs }) {
         setProgressMessage
       );
 
+      const danceFiles = await uploadNewFiles(
+        editedSong.danceFiles || [],
+        'danceFiles',
+        editedSong.id,
+        editedSong.name,
+        setProgressMessage
+      );
+
       // Step 2: Send the complete song to the server
       // The server handles renaming existing files and replacing all DB rows
       setProgressMessage('Saving...');
@@ -65,7 +73,8 @@ function SongEditor({ song, onSave, onCancel, songs }) {
           recordings,
           sheetMusic,
           lyrics,
-          otherFiles
+          otherFiles,
+          danceFiles
         })
       });
 
@@ -101,7 +110,7 @@ function SongEditor({ song, onSave, onCancel, songs }) {
       <SongFieldsEditor song={editedSong} onChange={handleChange} />
 
       <SongAssetEditor
-        title="🎧 Recordings"
+        title="🎧 Inspelningar"
         files={editedSong.recordings || []}
         onChange={(files) => handleChange('recordings', files)}
         type="recording"
@@ -110,7 +119,7 @@ function SongEditor({ song, onSave, onCancel, songs }) {
       />
 
       <SongAssetEditor
-        title="🎼 Sheet Music"
+        title="🎼 Noter"
         files={editedSong.sheetMusic || []}
         onChange={(files) => handleChange('sheetMusic', files)}
         type="sheet"
@@ -119,16 +128,25 @@ function SongEditor({ song, onSave, onCancel, songs }) {
       />
 
       <SongAssetEditor
-        title="📝 Lyrics"
+        title="📝 Text"
         files={editedSong.lyrics || []}
         onChange={(files) => handleChange('lyrics', files)}
         type="lyrics"
         songs={songs}
         songName={editedSong.name}
       />
+      
+      <SongAssetEditor
+        title="💃 Dans"
+        files={editedSong.danceFiles || []}
+        onChange={(files) => handleChange('danceFiles', files)}
+        type="dance"
+        songs={songs}
+        songName={editedSong.name}
+      />
 
       <SongAssetEditor
-        title="📁 Other Files"
+        title="📁 Andra filer"
         files={editedSong.otherFiles || []}
         onChange={(files) => handleChange('otherFiles', files)}
         type="other"

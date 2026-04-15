@@ -9,7 +9,8 @@ const ASSET_FOLDERS = {
   recordings: 'recordings',
   sheetMusic: 'sheet_music',
   lyrics: 'lyrics',
-  otherFiles: 'other'
+  otherFiles: 'other',
+  danceFiles: 'dance'
 };
 
 // Replace characters that are unsafe in filenames

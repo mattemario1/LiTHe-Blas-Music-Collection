@@ -142,7 +142,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
           onChange={e => handleChange('name', e.target.value)}
         />
       )}
-      {type === 'other' && (
+      {(type === 'other' || type === 'dance') && (
         <input
           type="text"
           placeholder="Name"
@@ -335,7 +335,8 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
     'recording': 'Recordings',
     'sheet': 'Sheet Music',
     'lyrics': 'Lyrics',
-    'other': 'Other Files'
+    'other': 'Other Files',
+    'dance': 'Dans'
   };
 
   const ensureIds = (arr) => arr.map(f => f.id ? f : { ...f, id: getId() });
@@ -410,7 +411,7 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
         collection_id: collectionId,
         ...(type === 'recording' ? { album: baseName } : {}),
         ...(type === 'sheet' ? { instrument: baseName } : {}),
-        ...(type === 'lyrics' || type === 'other' ? { name: baseName } : {}),
+        ...(type === 'lyrics' || type === 'other' || type === 'dance' ? { name: baseName } : {}),
         asset_type: typeToAssetType[type] || 'Other Files'
       };
     });
@@ -441,7 +442,7 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
         localFile: file,
         ...(type === 'recording' ? { album: baseName } : {}),
         ...(type === 'sheet' ? { instrument: baseName } : {}),
-        ...(type === 'lyrics' || type === 'other' ? { name: baseName } : {})
+        ...(type === 'lyrics' || type === 'other' || type === 'dance' ? { name: baseName } : {})
       };
     });
 
@@ -496,7 +497,8 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
       '🎧 Recordings': 'Recordings',
       '🎼 Sheet Music': 'Sheet Music',
       '📝 Lyrics': 'Lyrics',
-      '📁 Other Files': 'Other Files'
+      '📁 Other Files': 'Other Files',
+      '💃 Dans': 'Dans'
     };
     
     const newCollection = {
@@ -519,7 +521,7 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
       date: '',
       ...(type === 'recording' ? { album: '' } : {}),
       ...(type === 'sheet' ? { instrument: '' } : {}),
-      ...(type === 'other' ? { name: '' } : {})
+      ...(type === 'other' || type === 'dance' ? { name: '' } : {})
     };
     onChange([...files, newFile]);
   };

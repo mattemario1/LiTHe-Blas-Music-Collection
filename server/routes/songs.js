@@ -34,7 +34,7 @@ const getSongById = (id) => {
   const collections = db.prepare('SELECT * FROM collections WHERE song_id = ?').all(id);
   const allFiles = db.prepare('SELECT * FROM files WHERE song_id = ?').all(id);
 
-  const assetTypes = ['recordings', 'sheetMusic', 'lyrics', 'otherFiles'];
+  const assetTypes = ['recordings', 'sheetMusic', 'lyrics', 'otherFiles', 'danceFiles'];
 
   for (const assetType of assetTypes) {
     const assetCollections = collections
@@ -99,13 +99,14 @@ router.post('/', (req, res) => {
 // Renames files on disk if metadata changed, deletes removed files, then replaces all DB rows
 router.put('/:id', (req, res) => {
   const songId = parseInt(req.params.id);
-  const { name, description, type, status, recordings, sheetMusic, lyrics, otherFiles } = req.body;
+  const { name, description, type, status, recordings, sheetMusic, lyrics, otherFiles, danceFiles } = req.body;
 
   const assetMap = {
     recordings: recordings || [],
     sheetMusic: sheetMusic || [],
     lyrics: lyrics || [],
-    otherFiles: otherFiles || []
+    otherFiles: otherFiles || [],
+    danceFiles: danceFiles || []
   };
 
   const saveTransaction = db.transaction(() => {

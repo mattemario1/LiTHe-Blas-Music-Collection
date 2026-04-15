@@ -422,7 +422,7 @@ function getOrCreateCollection(songId, assetType, collName) {
 
 // ─── Core import function ─────────────────────────────────────────────────────
 
-const ASSET_FOLDERS_MAP = { recordings: 'recordings', sheetMusic: 'sheet_music', lyrics: 'lyrics', otherFiles: 'other' };
+const ASSET_FOLDERS_MAP = { recordings: 'recordings', sheetMusic: 'sheet_music', lyrics: 'lyrics', otherFiles: 'other', danceFiles: 'dance' };
 
 const stats = { songs: 0, files: 0, skipped: 0, errors: 0 };
 
@@ -499,6 +499,11 @@ function doOther(srcPath, songName, songId, prefix) {
   importFile(srcPath, songName, songId, 'otherFiles', { name }, null);
 }
 
+function doDance(srcPath, songName, songId) {
+  const name = path.basename(srcPath, path.extname(srcPath)).replace(/[_]/g, ' ');
+  importFile(srcPath, songName, songId, 'danceFiles', { name }, null);
+}
+
 // ─── Directory walkers ────────────────────────────────────────────────────────
 
 /**
@@ -546,7 +551,7 @@ function walkDansDir(dir, songName, songId) {
     const fullPath = path.join(dir, entry.name);
     const ext = path.extname(entry.name);
     if (shouldSkip(ext)) continue;
-    doOther(fullPath, songName, songId, 'Dans: ');
+    doDance(fullPath, songName, songId);
   }
 }
 
