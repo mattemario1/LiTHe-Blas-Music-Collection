@@ -158,20 +158,25 @@ function ExpandableBoxList({
         )}
 
         {isVideo && (
-          <button
-            className="action-button video"
-            onClick={(e) =>
-              handleActionClick(
-                e,
-                item.file_path,
-                f => typeof f === 'string',
-                onShowVideo,
-                "Invalid or missing video file."
-              )
-            }
-          >
-            <i className="fas fa-film"></i> Visa Video
-          </button>
+          <div className="play-action-container">
+            <button
+              className="action-button video"
+              onClick={(e) =>
+                handleActionClick(
+                  e,
+                  item.file_path,
+                  f => typeof f === 'string',
+                  onShowVideo,
+                  "Invalid or missing video file."
+                )
+              }
+            >
+              <i className="fas fa-film"></i> Visa Video
+            </button>
+            {duration && (
+              <span className="duration-badge">{duration}</span>
+            )}
+          </div>
         )}
       </div>
     );

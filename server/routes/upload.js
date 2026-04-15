@@ -10,6 +10,18 @@ const { constructFileName, getSongAssetDir, toRelativePath, resolveUniqueFilePat
 // Formats that need transcoding to MP4 before storing
 const TRANSCODE_EXTS = new Set(['.wmv', '.avi', '.mkv', '.mov', '.flv', '.m4v']);
 
+// Extensions that carry audio/video duration we can probe
+const PROBEABLE_EXTS = new Set(['.mp3', '.mp4', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma', '.wmv', '.avi', '.mkv', '.mov', '.flv', '.m4v']);
+
+function probeDuration(filePath) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) return resolve(0);
+      resolve(metadata?.format?.duration || 0);
+    });
+  });
+}
+
 // Write uploaded files to a temp dir on disk to avoid loading large videos into memory
 const upload = multer({
   storage: multer.diskStorage({
@@ -59,14 +71,16 @@ router.post('/', upload.single('file'), async (req, res) => {
         const mp4FileName = constructFileName(songName || 'Song', metadata, assetType, '.mp4', metadata.collectionName);
         const mp4TargetPath = resolveUniqueFilePath(path.join(dir, mp4FileName));
         await transcodeToMp4(tempUploadPath, mp4TargetPath);
-        return res.json({ filePath: toRelativePath(mp4TargetPath) });
+        const duration = await probeDuration(mp4TargetPath);
+        return res.json({ filePath: toRelativePath(mp4TargetPath), duration });
       }
 
       // Non-video or already-compatible format: move to final location
       const fileName = constructFileName(songName || 'Song', metadata, assetType, ext, metadata.collectionName);
       const targetPath = resolveUniqueFilePath(path.join(dir, fileName));
       fs.copyFileSync(tempUploadPath, targetPath);
-      res.json({ filePath: toRelativePath(targetPath) });
+      const duration = PROBEABLE_EXTS.has(ext) ? await probeDuration(targetPath) : 0;
+      res.json({ filePath: toRelativePath(targetPath), duration });
     } finally {
       fs.unlink(tempUploadPath, () => {});
     }

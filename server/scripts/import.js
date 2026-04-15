@@ -21,7 +21,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const db = require('./database');
+const db = require('../database');
 const {
   sanitize,
   getSongAssetDir,
@@ -29,7 +29,7 @@ const {
   resolveUniqueFilePath,
   toRelativePath,
   getUploadsBase,
-} = require('./fileUtils');
+} = require('../fileUtils');
 
 // ─── CLI args ────────────────────────────────────────────────────────────────
 

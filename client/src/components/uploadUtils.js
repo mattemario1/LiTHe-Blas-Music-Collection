@@ -67,7 +67,8 @@ export const uploadFile = async (file, songId, songName, assetType, metadata, on
   }
 
   const data = await res.json();
-  return { filePath: data.filePath, duration };
+  // Prefer server-probed duration (covers video too); fall back to client-side value
+  return { filePath: data.filePath, duration: data.duration > 0 ? data.duration : duration };
 };
 
 /**
