@@ -52,7 +52,8 @@ function transcodeToMp4(inputPath, outputPath) {
 router.post('/', upload.single('file'), async (req, res) => {
   try {
     const { songId, songName, assetType } = req.body;
-    const metadata = JSON.parse(req.body.metadata || '{}');
+    let metadata = {};
+    try { metadata = JSON.parse(req.body.metadata || '{}'); } catch { /* use default {} */ }
 
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });

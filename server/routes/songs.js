@@ -99,7 +99,7 @@ router.post('/', (req, res) => {
 // PUT save a complete song
 // Renames files on disk if metadata changed, deletes removed files, then replaces all DB rows
 router.put('/:id', (req, res) => {
-  const songId = parseInt(req.params.id);
+  const songId = parseInt(req.params.id, 10);
   const { name, description, type, status, recordings, sheetMusic, lyrics, otherFiles, danceFiles } = req.body;
 
   const assetMap = {
@@ -168,7 +168,7 @@ router.put('/:id', (req, res) => {
       if (!Object.prototype.hasOwnProperty.call(renamedPaths, existingPath)) {
         const absPath = toAbsolutePath(existingPath);
         if (fs.existsSync(absPath)) {
-          try { fs.unlinkSync(absPath); } catch (_) { /* ignore */ }
+          try { fs.unlinkSync(absPath); } catch (err) { console.warn('Could not delete file:', absPath, err.message); }
         }
       }
     }
@@ -248,7 +248,7 @@ router.delete('/:id', (req, res) => {
     }
 
     if (songDirAbs && fs.existsSync(songDirAbs)) {
-      try { fs.rmSync(songDirAbs, { recursive: true, force: true }); } catch (_) { /* ignore */ }
+      try { fs.rmSync(songDirAbs, { recursive: true, force: true }); } catch (err) { console.warn('Could not delete song directory:', songDirAbs, err.message); }
     }
 
     res.json({ success: true });

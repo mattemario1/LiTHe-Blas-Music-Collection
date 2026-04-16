@@ -136,13 +136,13 @@ router.get('/restore-stream', async (_req, res) => {
     res.end();
 
     setTimeout(() => {
-      try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
+      try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (err) { console.warn('Could not clean up extract dir:', extractDir, err.message); }
       process.exit(0);
     }, 1000);
 
   } catch (err) {
     console.error('Restore error:', err);
-    try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
+    try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (cleanupErr) { console.warn('Could not clean up extract dir:', extractDir, cleanupErr.message); }
     send({ type: 'error', message: err.message });
     res.end();
   }

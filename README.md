@@ -86,7 +86,7 @@ mkdir -p /your/chosen/uploads /your/chosen/data
 docker-compose up -d --build
 ```
 
-The app is then available at [http://localhost:8080](http://localhost:8080).
+The app is then available at [http://localhost:8080](http://localhost:8080) (or whichever port you set via `FRONTEND_PORT`).
 
 ### Other commands
 
@@ -216,3 +216,5 @@ In production, `docker-compose.yml` reads from `.env` (copy from `.env.example` 
 | `RESTORE_DIR` | `server/restore/` | Directory where a backup `.zip` is placed for server-side restore |
 | `BIND_ADDRESS` | `127.0.0.1` | Address the Express server binds to (`0.0.0.0` in Docker) |
 | `NODE_ENV` | — | Set to `production` in Docker |
+| `FRONTEND_PORT` | `8080` | Host port for the Nginx frontend container |
+| `BACKEND_PORT` | `5000` | Host port for the Express backend container |

@@ -14,6 +14,7 @@ function PdfModal({ pdfUrl, onClose }) {
   const containerRef = useRef(null);
   const canvasRefs = useRef([]);
   const renderTasks = useRef([]);
+  const pdfDocRef = useRef(null);
   const touchState = useRef({
     initialDistance: 0,
     initialScale: 1,
@@ -29,6 +30,7 @@ function PdfModal({ pdfUrl, onClose }) {
       try {
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
+        pdfDocRef.current = pdf;
         setPdfDoc(pdf);
         setNumPages(pdf.numPages);
         setLoading(false);
@@ -41,8 +43,9 @@ function PdfModal({ pdfUrl, onClose }) {
     loadPdf();
 
     return () => {
-      if (pdfDoc) {
-        pdfDoc.destroy();
+      if (pdfDocRef.current) {
+        pdfDocRef.current.destroy();
+        pdfDocRef.current = null;
       }
     };
   }, [pdfUrl]);

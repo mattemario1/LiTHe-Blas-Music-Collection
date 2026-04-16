@@ -51,11 +51,6 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
     const uploaded = e.target.files[0];
     if (!uploaded) return;
     
-    if (uploaded.size > 50 * 1024 * 1024) {
-      alert('File size exceeds 50MB limit');
-      return;
-    }
-    
     handleChange('localFile', uploaded);
   };
 
@@ -362,8 +357,8 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
 
   // Remove a file from a collection and move it to ungrouped
   const removeFromCollection = (file, collectionId) => {
-    const updatedCollections = collections.map(c => 
-      c.id == collectionId
+    const updatedCollections = collections.map(c =>
+      c.id === collectionId
         ? { ...c, parts: c.parts.filter(f => f.id !== file.id) }
         : c
     );
@@ -461,7 +456,7 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
 
   // Add a file to a collection
   const addToCollection = (file, collectionId) => {
-    const targetCollection = collections.find(c => c.id == collectionId);
+    const targetCollection = collections.find(c => c.id === collectionId);
     
     if (targetCollection) {
       const fileToAdd = file.id 
@@ -474,7 +469,7 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
       };
       
       const updatedCollections = collections.map(c => 
-        c.id == collectionId ? updatedCollection : c  // Loose equality
+        c.id === collectionId ? updatedCollection : c
       );
       
       // Remove from ungrouped OR previous collection
