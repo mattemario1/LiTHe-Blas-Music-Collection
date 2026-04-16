@@ -218,3 +218,4 @@ In production, `docker-compose.yml` reads from `.env` (copy from `.env.example` 
 | `NODE_ENV` | — | Set to `production` in Docker |
 | `FRONTEND_PORT` | `8080` | Host port for the Nginx frontend container |
 | `BACKEND_PORT` | `5000` | Host port for the Express backend container |
+| `ADMIN_PASSWORD` | `admin` | Password required to log in as admin in the UI |

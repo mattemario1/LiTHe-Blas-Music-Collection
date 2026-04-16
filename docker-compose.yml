@@ -27,6 +27,7 @@ services:
       - DB_PATH=/app/server/data/songs.db
       - RESTORE_DIR=/app/server/restore
       - NODE_ENV=production
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
     networks:
       - webnet
 
