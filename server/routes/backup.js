@@ -76,11 +76,16 @@ router.get('/restore-stream', async (_req, res) => {
 
   const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
 
+  // Keep the SSE connection alive during long sync/async operations so Nginx
+  // proxy_read_timeout never fires. SSE comment lines are ignored by clients.
+  const heartbeat = setInterval(() => res.write(': ping\n\n'), 15000);
+
   const extractDir = path.join(os.tmpdir(), `restore_extract_${Date.now()}`);
 
   try {
     const zipPath = findRestoreZip();
     if (!zipPath) {
+      clearInterval(heartbeat);
       send({ type: 'error', message: 'Ingen ZIP-fil hittades i restore-mappen.' });
       res.end();
       return;
@@ -109,6 +114,7 @@ router.get('/restore-stream', async (_req, res) => {
 
     const extractedDb = path.join(extractDir, 'music.db');
     if (!fs.existsSync(extractedDb)) {
+      clearInterval(heartbeat);
       fs.rmSync(extractDir, { recursive: true, force: true });
       send({ type: 'error', message: 'Ogiltig backup: music.db saknas i ZIP-filen.' });
       res.end();
@@ -124,15 +130,17 @@ router.get('/restore-stream', async (_req, res) => {
     const extractedUploads = path.join(extractDir, 'uploads');
     if (fs.existsSync(extractedUploads)) {
       send({ type: 'status', message: 'Kopierar uppladdade filer...' });
-      // Can't rmdir the mount point itself — clear its contents instead
-      for (const entry of fs.readdirSync(uploadsDir)) {
-        fs.rmSync(path.join(uploadsDir, entry), { recursive: true, force: true });
+      // Can't rmdir the mount point itself — clear its contents instead.
+      // Use async fs.promises so the event loop stays free for SSE heartbeats.
+      for (const entry of await fs.promises.readdir(uploadsDir)) {
+        await fs.promises.rm(path.join(uploadsDir, entry), { recursive: true, force: true });
       }
-      fs.cpSync(extractedUploads, uploadsDir, { recursive: true });
+      await fs.promises.cp(extractedUploads, uploadsDir, { recursive: true });
     }
 
     try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (err) { console.warn('Could not clean up extract dir:', extractDir, err.message); }
 
+    clearInterval(heartbeat);
     send({ type: 'done' });
     res.end();
 
@@ -141,6 +149,7 @@ router.get('/restore-stream', async (_req, res) => {
     setImmediate(() => process.exit(0));
 
   } catch (err) {
+    clearInterval(heartbeat);
     console.error('Restore error:', err);
     try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (cleanupErr) { console.warn('Could not clean up extract dir:', extractDir, cleanupErr.message); }
     send({ type: 'error', message: err.message });
