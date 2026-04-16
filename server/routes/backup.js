@@ -4,9 +4,13 @@ const archiver = require('archiver');
 const unzipper = require('unzipper');
 const path = require('path');
 const fs = require('fs');
+const { pipeline } = require('stream');
+const { promisify } = require('util');
 const os = require('os');
 const { getUploadsBase } = require('../fileUtils');
 const db = require('../database');
+
+const pipelineAsync = promisify(pipeline);
 
 const getRestoreDir = () => process.env.RESTORE_DIR || path.join(__dirname, '..', 'restore');
 
@@ -97,12 +101,7 @@ router.get('/restore-stream', async (_req, res) => {
       const targetPath = path.join(extractDir, entry.path);
       fs.mkdirSync(path.dirname(targetPath), { recursive: true });
 
-      await new Promise((resolve, reject) => {
-        entry.stream()
-          .pipe(fs.createWriteStream(targetPath))
-          .on('finish', resolve)
-          .on('error', reject);
-      });
+      await pipelineAsync(entry.stream(), fs.createWriteStream(targetPath));
 
       fileCount++;
       send({ type: 'file', name: entry.path, count: fileCount, total });
@@ -132,13 +131,14 @@ router.get('/restore-stream', async (_req, res) => {
       fs.cpSync(extractedUploads, uploadsDir, { recursive: true });
     }
 
+    try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (err) { console.warn('Could not clean up extract dir:', extractDir, err.message); }
+
     send({ type: 'done' });
     res.end();
 
-    setTimeout(() => {
-      try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (err) { console.warn('Could not clean up extract dir:', extractDir, err.message); }
-      process.exit(0);
-    }, 1000);
+    // Exit immediately so Docker restarts the container with the new DB.
+    // No delay — any gap here causes "database connection is not open" errors.
+    setImmediate(() => process.exit(0));
 
   } catch (err) {
     console.error('Restore error:', err);

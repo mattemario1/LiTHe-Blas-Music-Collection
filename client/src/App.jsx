@@ -106,8 +106,15 @@ function AppInner() {
           files: [...prev.files.slice(-9), data.name],
         }));
       } else if (data.type === 'done') {
-        setRestoreState(prev => ({ ...prev, phase: 'Klar!', done: true }));
+        setRestoreState(prev => ({ ...prev, phase: 'Servern startar om...', done: true }));
         es.close();
+        // Poll until the server is back up, then reload automatically.
+        const poll = () => {
+          fetch('/api/songs')
+            .then(r => { if (r.ok) window.location.reload(); else setTimeout(poll, 1500); })
+            .catch(() => setTimeout(poll, 1500));
+        };
+        setTimeout(poll, 2000);
       } else if (data.type === 'error') {
         setRestoreState(prev => ({ ...prev, error: data.message }));
         es.close();
@@ -254,8 +261,8 @@ function AppInner() {
 
               {restoreState.done && (
                 <div className="restore-done">
-                  <p>Servern startar om. Ladda om sidan om några sekunder.</p>
-                  <button onClick={() => window.location.reload()}>Ladda om sidan</button>
+                  <p>Servern startar om, sidan laddas om automatiskt...</p>
+                  <button onClick={() => window.location.reload()}>Ladda om nu</button>
                 </div>
               )}
             </div>
