@@ -51,7 +51,7 @@ In production the app runs as two Docker containers:
     │   ├── albums.js           # Album metadata and cover image (GET/PUT /api/albums)
     │   ├── upload.js           # File upload handler: saves to disk, transcodes video, probes duration
     │   ├── auth.js             # Password check endpoint for write operations
-    │   └── backup.js           # DB backup download endpoint
+    │   └── backup.js           # Backup download and SSE-streamed restore endpoint
     └── scripts/                # One-off admin scripts (run inside the Docker container)
         ├── import.js                    # Bulk-import an existing folder of assets
         ├── transcode-existing-videos.js # Convert old videos to H.264 MP4
@@ -119,9 +119,69 @@ npm run dev   # proxies /api and /file to localhost:5000
 
 ---
 
-## Importing an existing music library
+## Backup and restore
 
-If you have an existing folder of assets to bulk-import, use the import script. The expected source layout is one subfolder per song, each containing:
+### Downloading a backup
+
+In the app, log in as admin and click **💾 Download Backup** at the bottom of the page. This downloads a ZIP file (named `backup-<timestamp>.zip`) containing:
+
+- `music.db` — the full SQLite database
+- `uploads/` — all uploaded files (recordings, sheet music, etc.)
+
+Store this file somewhere safe.
+
+### Restoring a backup
+
+Because backup files can be several gigabytes, restoring is done by copying the file directly to the server rather than uploading it through the browser.
+
+**1. Add `RESTORE_DIR` to your `.env`** (if not already set):
+
+```
+RESTORE_DIR=/your/chosen/restore-dir
+```
+
+Create that directory on the host and rebuild if this is the first time:
+
+```bash
+mkdir -p /your/chosen/restore-dir
+docker-compose up -d --build
+```
+
+**2. Copy the backup ZIP to the restore directory:**
+
+```bash
+scp backup-2025-04-16T12-30-00.zip user@yourserver:/your/chosen/restore-dir/
+```
+
+The file can have any name — the server picks the most recently modified `.zip` in that folder.
+
+**3. Click ⬆️ Restore Backup** in the admin UI.
+
+A fullscreen overlay appears showing each file being extracted. When it finishes, the server restarts automatically (Docker's `restart: unless-stopped` policy brings it back up). Click **Ladda om sidan** once the overlay shows "Klar!" to reload the app.
+
+> **Note:** Restore replaces all data — the database and all uploaded files. Make sure you have a current backup before restoring an older one.
+
+---
+
+## One-time migration scripts
+
+These are only needed when migrating existing data, not for normal operation.
+
+| Script | What it does |
+|--------|--------------|
+| `scripts/import.js <source_dir>` | Bulk-imports an existing folder of assets into the library |
+| `scripts/transcode-existing-videos.js` | Converts pre-existing videos in unsupported formats (wmv, avi, mkv, mov, flv, m4v) to H.264 MP4 and updates the DB paths |
+| `scripts/backfill-durations.js` | Probes audio/video duration via ffprobe for all DB files that have `duration = 0` |
+
+Run them inside the backend container:
+
+```bash
+docker exec -it lithe-blas-music-collection-backend-1 node scripts/<script-name>.js [--dry-run]
+```
+
+### Importing an existing music library
+
+The import script expects one subfolder per song, each containing:
 
 ```
 SongName/
@@ -145,23 +205,6 @@ docker exec lithe-blas-music-collection-backend-1 node scripts/import.js /tmp/in
 
 ---
 
-## One-time migration scripts
-
-These are only needed when migrating existing data, not for normal operation.
-
-| Script | What it does |
-|--------|--------------|
-| `scripts/transcode-existing-videos.js` | Converts pre-existing videos in unsupported formats (wmv, avi, mkv, mov, flv, m4v) to H.264 MP4 and updates the DB paths |
-| `scripts/backfill-durations.js` | Probes audio/video duration via ffprobe for all DB files that have `duration = 0` |
-
-Run them inside the backend container:
-
-```bash
-docker exec -it lithe-blas-music-collection-backend-1 node scripts/<script-name>.js [--dry-run]
-```
-
----
-
 ## Configuration
 
 In production, `docker-compose.yml` reads from `.env` (copy from `.env.example` and fill in your paths). The backend also accepts these environment variables directly:
@@ -170,5 +213,6 @@ In production, `docker-compose.yml` reads from `.env` (copy from `.env.example` 
 |----------|---------------------|-------------|
 | `UPLOADS_DIR` | `server/uploads/` | Where uploaded files are stored on disk |
 | `DB_PATH` | `server/data/songs.db` | Path to the SQLite database file |
+| `RESTORE_DIR` | `server/restore/` | Directory where a backup `.zip` is placed for server-side restore |
 | `BIND_ADDRESS` | `127.0.0.1` | Address the Express server binds to (`0.0.0.0` in Docker) |
 | `NODE_ENV` | — | Set to `production` in Docker |

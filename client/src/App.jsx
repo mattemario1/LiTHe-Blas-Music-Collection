@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppInner() {
   const { isAdmin } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     shownTypes: ['Orkesterlåt', 'Balettlåt', 'Övrigt'],
@@ -16,6 +17,8 @@ function AppInner() {
   });
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
+  const [restoreState, setRestoreState] = useState(null);
+  // restoreState: null | { phase, files, fileCount, done, error }
   const [audioInfo, setAudioInfo] = useState({
     url: null,
     songName: '',
@@ -65,6 +68,59 @@ function AppInner() {
       console.error('Error creating song:', err);
       alert(`Failed to create song: ${err.message}`);
     }
+  };
+
+  const handleRestoreBackup = async () => {
+    let filename = null;
+    try {
+      const statusRes = await fetch('/api/backup/restore-status');
+      const status = await statusRes.json();
+      if (!status.ready) {
+        alert('Ingen ZIP-fil hittades i restore-mappen. Lägg dit filen via scp och försök igen.');
+        return;
+      }
+      filename = status.filename;
+    } catch {
+      alert('Kunde inte kontrollera restore-mappen.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Hittade: ${filename}\n\nDetta kommer att ersätta all data med säkerhetskopian. Är du säker?`
+    );
+    if (!confirmed) return;
+
+    setRestoreState({ phase: 'Förbereder...', files: [], fileCount: 0, done: false, error: null });
+
+    const es = new EventSource('/api/backup/restore-stream');
+
+    es.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'status') {
+        setRestoreState(prev => ({ ...prev, phase: data.message }));
+      } else if (data.type === 'file') {
+        setRestoreState(prev => ({
+          ...prev,
+          phase: 'Extraherar filer...',
+          fileCount: data.count,
+          files: [...prev.files.slice(-9), data.name],
+        }));
+      } else if (data.type === 'done') {
+        setRestoreState(prev => ({ ...prev, phase: 'Klar!', done: true }));
+        es.close();
+      } else if (data.type === 'error') {
+        setRestoreState(prev => ({ ...prev, error: data.message }));
+        es.close();
+      }
+    };
+
+    es.onerror = () => {
+      setRestoreState(prev => {
+        if (prev?.done) return prev;
+        return { ...prev, error: 'Anslutningen till servern bröts.' };
+      });
+      es.close();
+    };
   };
 
   const handleDeleteSelectedSong = async () => {
@@ -161,10 +217,50 @@ function AppInner() {
               <a href="/api/backup" download>
                 <button type="button">💾 Download Backup</button>
               </a>
+              <button type="button" onClick={handleRestoreBackup} disabled={!!restoreState}>
+                ⬆️ Restore Backup
+              </button>
             </div>
           )}
         </div>
         {/* NEW WRAPPER ENDS HERE */}
+
+        {restoreState && (
+          <div className="restore-overlay">
+            <div className="restore-box">
+              <h2>Återställer backup</h2>
+              <p className="restore-phase">{restoreState.phase}</p>
+
+              {restoreState.fileCount > 0 && (
+                <p className="restore-count">
+                  {restoreState.fileCount.toLocaleString('sv-SE')} filer extraherade
+                </p>
+              )}
+
+              {restoreState.files.length > 0 && !restoreState.done && (
+                <div className="restore-filelist">
+                  {restoreState.files.map((f, i) => (
+                    <div key={i} className="restore-filename">{f}</div>
+                  ))}
+                </div>
+              )}
+
+              {restoreState.error && (
+                <div className="restore-error">
+                  <p>{restoreState.error}</p>
+                  <button onClick={() => setRestoreState(null)}>Stäng</button>
+                </div>
+              )}
+
+              {restoreState.done && (
+                <div className="restore-done">
+                  <p>Servern startar om. Ladda om sidan om några sekunder.</p>
+                  <button onClick={() => window.location.reload()}>Ladda om sidan</button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <AudioPlayer
           audioUrl={audioInfo.url}

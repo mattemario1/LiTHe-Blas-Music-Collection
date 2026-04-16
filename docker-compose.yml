@@ -14,15 +14,18 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+    restart: unless-stopped
     ports:
       - "5000:5000"
     volumes:
       - ${UPLOADS_DIR}:/app/server/uploads
       - ${DB_DIR}:/app/server/data
+      - ${RESTORE_DIR}:/app/server/restore
     environment:
       - BIND_ADDRESS=0.0.0.0
       - UPLOADS_DIR=/app/server/uploads
       - DB_PATH=/app/server/data/songs.db
+      - RESTORE_DIR=/app/server/restore
       - NODE_ENV=production
     networks:
       - webnet

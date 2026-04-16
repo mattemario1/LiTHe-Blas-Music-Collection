@@ -29,6 +29,20 @@ npm run build     # production build -> ../dist
 
 No test suite exists in this project.
 
+## Working Preferences
+
+- **Adding npm packages**: Always add packages directly to `package.json` — never run `npm install <package>`. The Docker build runs `npm install` from `package.json`, so editing the file is the correct way to add dependencies.
+
+## Docker Volume Gotchas
+
+- **Never `rmSync` a Docker volume mount point directory itself** — it is EBUSY/locked on Linux. To clear a mounted volume, delete its *contents* instead:
+  ```js
+  for (const entry of fs.readdirSync(dir)) {
+    fs.rmSync(path.join(dir, entry), { recursive: true, force: true });
+  }
+  ```
+  Affected paths: `UPLOADS_DIR` (`/app/server/uploads`) and `DB_DIR` (`/app/server/data`). The directory itself must stay.
+
 ## Architecture
 
 This is a music library app for the LiTHe Blas orchestra. It has two services:

@@ -129,3 +129,80 @@ body {
     display: inline-block;
   }
 }
+
+/* Restore overlay */
+.restore-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.restore-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  width: min(560px, 90vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.restore-box h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.restore-phase {
+  margin: 0;
+  font-weight: bold;
+  color: #555;
+}
+
+.restore-count {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.restore-filelist {
+  flex: 1;
+  overflow-y: auto;
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #333;
+  min-height: 120px;
+  max-height: 260px;
+}
+
+.restore-filename {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.6;
+}
+
+.restore-filename:last-child {
+  font-weight: bold;
+  color: #111;
+}
+
+.restore-error {
+  color: #c00;
+}
+
+.restore-error button,
+.restore-done button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
