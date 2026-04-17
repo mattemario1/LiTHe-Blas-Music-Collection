@@ -8,6 +8,19 @@ import VideoModal from './VideoModal';
 import SongEditor from './SongEditor';
 import { useAuth } from '../context/AuthContext';
 
+const URL_REGEX = /https?:\/\/[^\s]+/g;
+
+const linkify = (text) => {
+  if (!text) return null;
+  const parts = text.split(URL_REGEX);
+  const matches = text.match(URL_REGEX) || [];
+  return parts.flatMap((part, i) =>
+    i < matches.length
+      ? [part, <a key={i} href={matches[i]} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>{matches[i]}</a>]
+      : [part]
+  );
+};
+
 const formatDuration = (seconds) => {
   if (!seconds || seconds <= 0) return null;
   const minutes = Math.floor(seconds / 60);
@@ -197,7 +210,7 @@ function ExpandableBoxList({
           <strong className="asset-name">{item[labelKey] || item.name}</strong>
           {/* Only show truncated preview if it's not expanded AND it has a description */}
           {!isExpanded && hasDescription && (
-            <div className="truncated-description">{item.description}</div>
+            <div className="truncated-description">{linkify(item.description)}</div>
           )}
           <div className="asset-date">{item[dateKey]}</div>
         </div>
@@ -207,7 +220,7 @@ function ExpandableBoxList({
         {/* Only render the expanded div if it's expanded AND has content */}
         {isExpanded && hasDescription && (
           <div className="details-inline">
-            <p>{item.description}</p>
+            <p>{linkify(item.description)}</p>
           </div>
         )}
       </div>
@@ -244,7 +257,7 @@ function ExpandableBoxList({
             <div key={`collection-${collectionIndex}`} className="collection-block">
               <div className="collection-header" onClick={() => toggleCollection(collectionIndex)}>
                 <strong>{collection.name ?? 'Collection'}</strong>
-                <p>{collection.description}</p>
+                <p>{linkify(collection.description)}</p>
               </div>
               {expandedCollections[collectionIndex] && (
                 <div className="box-list">
@@ -338,7 +351,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
     <div className="song-details">
 
       <h2>{song.name}</h2>
-      <p className="description">{song.description}</p>
+      <p className="description">{linkify(song.description)}</p>
       <div className="meta">
         <span><strong>Typ:</strong> {song.type}</span>
         <span><strong>Status:</strong> {song.status}</span>
