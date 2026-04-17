@@ -321,6 +321,8 @@ function FileList({ files, type, collections, onUpdateFile, onRemoveFile, onAddT
 }
 
 function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
+  const [isOpen, setIsOpen] = React.useState(true);
+
   // Collections are items with parts array
   const collections = files.filter(f => Array.isArray(f.parts));
   // Ungrouped files are items without parts
@@ -522,48 +524,54 @@ function SongAssetEditor({ title, files, onChange, type, songs, songName }) {
   };
 
   return (
-    <div className="file-section">
-      <h4>{title}</h4>
+    <div className={`file-section${isOpen ? '' : ' file-section-collapsed'}`}>
+      <h4 className="file-section-header" onClick={() => setIsOpen(prev => !prev)}>
+        {title}
+        <span className="section-toggle">{isOpen ? '▲' : '▼'}</span>
+      </h4>
 
-      {collections.map((collection) => (
-        <CollectionEditor
-          key={collection.id}
-          collection={collection}
-          type={type}
-          onUpdate={updated => updateCollection(null, updated)}
-          onRemove={() => removeCollection(collection)}
-          onRemoveFromCollection={removeFromCollection}
-          onRemoveFile={removeFile}
-          songs={songs}
-          onUploadMultiple={handleUploadMultipleToCollection}
-          songName={songName}
-        />
-      ))}
+      {isOpen && (
+        <>
+          <div className="section-actions">
+            <button onClick={addNewCollection}>Create New Collection</button>
+            <label className="upload-multiple-button">
+              Upload Files
+              <input
+                type="file"
+                multiple
+                onChange={handleMultipleFileSelect}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
 
-      <FileList
-        files={ensureIds(ungrouped)}
-        type={type}
-        collections={collections}
-        onUpdateFile={updateUngroupedFile}
-        onRemoveFile={removeFile}
-        onAddToCollection={addToCollection}
-        songs={songs}
-        songName={songName}
-      />
+          {collections.map((collection) => (
+            <CollectionEditor
+              key={collection.id}
+              collection={collection}
+              type={type}
+              onUpdate={updated => updateCollection(null, updated)}
+              onRemove={() => removeCollection(collection)}
+              onRemoveFromCollection={removeFromCollection}
+              onRemoveFile={removeFile}
+              songs={songs}
+              onUploadMultiple={handleUploadMultipleToCollection}
+              songName={songName}
+            />
+          ))}
 
-      <div className="section-actions">
-        <button onClick={addNewCollection}>Create New Collection</button>
-        <button onClick={addNewFile}>Add New File</button>
-        <label className="upload-multiple-button">
-          Upload multiple files
-          <input
-            type="file"
-            multiple
-            onChange={handleMultipleFileSelect}
-            style={{ display: 'none' }}
+          <FileList
+            files={ensureIds(ungrouped)}
+            type={type}
+            collections={collections}
+            onUpdateFile={updateUngroupedFile}
+            onRemoveFile={removeFile}
+            onAddToCollection={addToCollection}
+            songs={songs}
+            songName={songName}
           />
-        </label>
-      </div>
+        </>
+      )}
     </div>
   );
 }

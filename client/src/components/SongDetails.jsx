@@ -230,33 +230,42 @@ function ExpandableBoxList({
     )
   }));
 
+  const [isSectionOpen, setIsSectionOpen] = useState(true);
+
   return (
-    <div className="section">
-      <h3>{title}</h3>
-      {collectionsWithSortedParts.map((collection, collectionIndex) => (
-        <div key={`collection-${collectionIndex}`} className="collection-block">
-          <div className="collection-header" onClick={() => toggleCollection(collectionIndex)}>
-            <strong>{collection.name ?? 'Collection'}</strong>
-            <p>{collection.description}</p>
-          </div>
-          {expandedCollections[collectionIndex] && (
-            <div className="box-list">
-              {collection.parts.map((item, itemIndex) => {
-                const key = `c-${collectionIndex}-${itemIndex}`;
-                return renderItem(item, key, expandedItems[key]);
-              })}
+    <div className={`section${isSectionOpen ? '' : ' section-collapsed'}`}>
+      <h3 className="section-header" onClick={() => setIsSectionOpen(prev => !prev)}>
+        {title}
+        <span className="section-toggle">{isSectionOpen ? '▲' : '▼'}</span>
+      </h3>
+      {isSectionOpen && (
+        <div className="section-content">
+          {collectionsWithSortedParts.map((collection, collectionIndex) => (
+            <div key={`collection-${collectionIndex}`} className="collection-block">
+              <div className="collection-header" onClick={() => toggleCollection(collectionIndex)}>
+                <strong>{collection.name ?? 'Collection'}</strong>
+                <p>{collection.description}</p>
+              </div>
+              {expandedCollections[collectionIndex] && (
+                <div className="box-list">
+                  {collection.parts.map((item, itemIndex) => {
+                    const key = `c-${collectionIndex}-${itemIndex}`;
+                    return renderItem(item, key, expandedItems[key]);
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+          {sortedUngrouped.length > 0 && (
+            <div className="collection-block">
+              <div className="box-list">
+                {sortedUngrouped.map((item, itemIndex) => {
+                  const key = `u-${itemIndex}`;
+                  return renderItem(item, key, expandedItems[key]);
+                })}
+              </div>
             </div>
           )}
-        </div>
-      ))}
-      {sortedUngrouped.length > 0 && (
-        <div className="collection-block">
-          <div className="box-list">
-            {sortedUngrouped.map((item, itemIndex) => {
-              const key = `u-${itemIndex}`;
-              return renderItem(item, key, expandedItems[key]);
-            })}
-          </div>
         </div>
       )}
     </div>
