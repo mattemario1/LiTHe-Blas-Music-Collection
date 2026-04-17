@@ -18,6 +18,7 @@
   margin-bottom: 10px;
   font-size: 1.1em;
   line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .meta {
@@ -89,67 +90,71 @@
 }
 
 .info-box {
-  background-color: white;
-  padding: 14px;
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
   color: #333;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 
-.info-box:hover {
+.info-clickable {
+  background-color: white;
+  padding: 14px;
+  transition: all 0.2s ease;
+}
+
+.info-clickable:hover {
   background-color: #fffef2;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .info-box.selected {
-  background-color: #e6f7ff;
   border-left: 4px solid #1c4386;
+}
+
+.info-box.selected .info-clickable {
+  background-color: #e6f7ff;
 }
 
 /* Disable hover effects for boxes with no description */
-.info-box.no-expand {
+.info-box.no-expand .info-clickable {
   cursor: default;
 }
 
-.info-box.no-expand:hover {
+.info-box.no-expand .info-clickable:hover {
   transform: none;
   background-color: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Match the non-hover state */
-}
-
-/* Ensure the selected border only appears when actually expanded */
-.info-box.selected {
-  background-color: #e6f7ff;
-  border-left: 4px solid #1c4386;
+  box-shadow: none;
 }
 
 .info-main {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-wrap: nowrap;
   gap: 10px;
 }
 
 .asset-name {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
 
+.info-box.selected .asset-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
 .asset-date {
   flex: 0 0 auto;
   white-space: nowrap;
-  margin-left: 10px;
 }
 
 .truncated-description {
-  flex: 2 1 auto;
+  flex: 0 1 35%;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -159,12 +164,21 @@
   padding: 0 8px;
 }
 
+.expand-hint {
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: #aaa;
+  font-size: 1em;
+}
+
 .details-inline {
-  margin-top: 10px;
+  margin-top: 0;
+  padding-top: 10px;
   padding-left: 12px;
   font-size: 0.9em;
   color: #555;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .file-actions.horizontal {

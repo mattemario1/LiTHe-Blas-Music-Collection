@@ -145,7 +145,7 @@ function FileEditor({ file, onChange, onRemove, type, collections, onAddToCollec
           onChange={e => handleChange('name', e.target.value)}
         />
       )}
-      <input type="text" placeholder="Description" value={file.description || ''} onChange={e => handleChange('description', e.target.value)} />
+      <textarea placeholder="Description" value={file.description || ''} onChange={e => handleChange('description', e.target.value)} />
       <input type="text" placeholder="Date" value={file.date || ''} onChange={e => handleChange('date', e.target.value)} />
       <div className="file-input-group">
         <input type="file" onChange={handleFileInput} />
@@ -222,8 +222,7 @@ function CollectionEditor({ collection, type, onUpdate, onRemove, onRemoveFile, 
           placeholder="Collection Name"
           onChange={e => onUpdate({ ...collection, name: e.target.value })}
         />
-        <input
-          type="text"
+        <textarea
           value={collection.description}
           placeholder="Collection Description"
           onChange={e => onUpdate({ ...collection, description: e.target.value })}

@@ -1,5 +1,5 @@
 // SongDetails.jsx
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './SongDetails.css';
 import PdfModal from './PdfModal';
 import LyricsModal from './LyricsModal';
@@ -39,6 +39,49 @@ const getExt = (filePath) => {
   const parts = filePath.split('.');
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
 };
+
+function ItemBox({ item, labelKey, dateKey, isExpanded, onToggle, renderActions }) {
+  const nameRef = useRef(null);
+  const [nameTruncated, setNameTruncated] = useState(false);
+
+  useEffect(() => {
+    if (!isExpanded) {
+      const el = nameRef.current;
+      if (el) setNameTruncated(el.scrollWidth > el.clientWidth);
+    }
+  });
+
+  const hasDescription = item.description && item.description.trim().length > 0;
+  const canExpand = hasDescription || nameTruncated;
+
+  return (
+    <div className={`info-box ${isExpanded ? 'selected' : ''} ${!canExpand ? 'no-expand' : ''}`}>
+      <div
+        className="info-clickable"
+        onClick={() => canExpand && onToggle()}
+        style={{ cursor: canExpand ? 'pointer' : 'default' }}
+      >
+        <div className="info-main">
+          <strong className="asset-name" ref={nameRef}>{item[labelKey] || item.name}</strong>
+          {!isExpanded && hasDescription && (
+            <div className="truncated-description">
+              {linkify(item.description)}
+            </div>
+          )}
+          {!isExpanded && canExpand && <span className="expand-hint">▾</span>}
+          {isExpanded && canExpand && <span className="expand-hint">▴</span>}
+          <div className="asset-date">{item[dateKey]}</div>
+        </div>
+        {renderActions(item)}
+      </div>
+      {isExpanded && hasDescription && (
+        <div className="details-inline">
+          <p>{linkify(item.description)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ExpandableBoxList({
   title,
@@ -195,37 +238,17 @@ function ExpandableBoxList({
     );
   };
 
-  const renderItem = (item, key, isExpanded) => {
-    // Check if there is actual content to expand
-    const hasDescription = item.description && item.description.trim().length > 0;
-
-    return (
-      <div 
-        key={key} 
-        className={`info-box ${isExpanded ? 'selected' : ''} ${!hasDescription ? 'no-expand' : ''}`} 
-        onClick={() => hasDescription && toggleItem(key)} // Only toggle if content exists
-        style={{ cursor: hasDescription ? 'pointer' : 'default' }} // Visual hint
-      >
-        <div className="info-main">
-          <strong className="asset-name">{item[labelKey] || item.name}</strong>
-          {/* Only show truncated preview if it's not expanded AND it has a description */}
-          {!isExpanded && hasDescription && (
-            <div className="truncated-description">{linkify(item.description)}</div>
-          )}
-          <div className="asset-date">{item[dateKey]}</div>
-        </div>
-        
-        {renderActions(item)}
-
-        {/* Only render the expanded div if it's expanded AND has content */}
-        {isExpanded && hasDescription && (
-          <div className="details-inline">
-            <p>{linkify(item.description)}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
+  const renderItem = (item, key, isExpanded) => (
+    <ItemBox
+      key={key}
+      item={item}
+      labelKey={labelKey}
+      dateKey={dateKey}
+      isExpanded={isExpanded}
+      onToggle={() => toggleItem(key)}
+      renderActions={renderActions}
+    />
+  );
 
   // Sort collections alphabetically by name
   const sortedCollections = [...items.filter(item => Array.isArray(item.parts))]
