@@ -35,6 +35,7 @@ function transcodeToMp4(inputPath, outputPath) {
     ffmpeg(inputPath)
       .videoCodec('libx264')
       .audioCodec('aac')
+      .outputOptions('-movflags +faststart')
       .output(outputPath)
       .on('end', resolve)
       .on('error', reject)

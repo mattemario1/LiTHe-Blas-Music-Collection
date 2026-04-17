@@ -54,8 +54,9 @@ In production the app runs as two Docker containers:
     │   └── backup.js           # Backup download and SSE-streamed restore endpoint
     └── scripts/                # One-off admin scripts (run inside the Docker container)
         ├── import.js                    # Bulk-import an existing folder of assets
-        ├── transcode-existing-videos.js # Convert old videos to H.264 MP4
-        └── backfill-durations.js        # Fill in missing duration values via ffprobe
+        ├── transcode-existing-videos.js  # Convert old videos to H.264 MP4
+        ├── backfill-durations.js         # Fill in missing duration values via ffprobe
+        └── faststart-existing-videos.js  # Add faststart to MP4s for instant browser playback
 ```
 
 ---
@@ -172,6 +173,7 @@ These are only needed when migrating existing data, not for normal operation.
 | `scripts/import.js <source_dir>` | Bulk-imports an existing folder of assets into the library |
 | `scripts/transcode-existing-videos.js` | Converts pre-existing videos in unsupported formats (wmv, avi, mkv, mov, flv, m4v) to H.264 MP4 and updates the DB paths |
 | `scripts/backfill-durations.js` | Probes audio/video duration via ffprobe for all DB files that have `duration = 0` |
+| `scripts/faststart-existing-videos.js` | Applies `-movflags +faststart` to all existing MP4 files so browsers can start playback immediately (uses `-c copy`, no re-encode) |
 
 Run them inside the backend container:
 

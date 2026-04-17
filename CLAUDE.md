@@ -150,3 +150,4 @@ docker exec -it <backend-container> node scripts/<script> [--dry-run]
 | `import.js <source_dir>` | Bulk-import an existing folder structure. Expected layout: one subdir per song with `Inspelningar/`, `Noter/`, `Dans/`, and root-level lyrics files. |
 | `transcode-existing-videos.js` | One-time migration: transcode pre-existing videos in unsupported formats (wmv, avi, mkv, mov, flv, m4v) to H.264 MP4 and update DB paths. |
 | `backfill-durations.js` | One-time migration: probe duration via ffprobe for all audio/video files in the DB that have `duration = 0`. Skips non-media files (PDFs, images, etc). |
+| `faststart-existing-videos.js` | One-time migration: apply `-movflags +faststart` to all existing MP4 files so browsers can start playback immediately. Uses `-c copy` (no re-encode). |
