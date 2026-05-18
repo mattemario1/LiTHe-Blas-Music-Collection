@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ImageModal from './ImageModal';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,6 +11,8 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
   const [description, setDescription] = useState(album.description || '');
   const [songOrder, setSongOrder] = useState(album.songs.map(s => s.song_id));
   const [imageModalUrl, setImageModalUrl] = useState(null);
+  const dragIndex = useRef(null);
+  const dragOverIndex = useRef(null);
 
   useEffect(() => {
     setYear(album.year || '');
@@ -47,12 +49,25 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
     onRefresh();
   };
 
-  const moveSong = (index, direction) => {
-    const newOrder = [...songOrder];
-    const swapIndex = index + direction;
-    if (swapIndex < 0 || swapIndex >= newOrder.length) return;
-    [newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]];
-    setSongOrder(newOrder);
+  const handleDragStart = (index) => {
+    dragIndex.current = index;
+  };
+
+  const handleDragEnter = (index) => {
+    dragOverIndex.current = index;
+  };
+
+  const handleDragEnd = () => {
+    const from = dragIndex.current;
+    const to = dragOverIndex.current;
+    if (from !== null && to !== null && from !== to) {
+      const newOrder = [...songOrder];
+      const [moved] = newOrder.splice(from, 1);
+      newOrder.splice(to, 0, moved);
+      setSongOrder(newOrder);
+    }
+    dragIndex.current = null;
+    dragOverIndex.current = null;
   };
 
   // Build an ordered list of song objects based on songOrder
@@ -139,26 +154,19 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
         {orderedSongs.map((albumSong, index) => {
           const fullSong = allSongs.find(s => s.id === albumSong.song_id);
           return (
-            <div key={albumSong.song_id} className="album-song-item">
+            <div
+              key={albumSong.song_id}
+              className="album-song-item"
+              draggable={editing}
+              onDragStart={editing ? () => handleDragStart(index) : undefined}
+              onDragEnter={editing ? () => handleDragEnter(index) : undefined}
+              onDragEnd={editing ? handleDragEnd : undefined}
+              onDragOver={editing ? (e) => e.preventDefault() : undefined}
+            >
               {editing && (
-                <div className="album-song-order-btns">
-                  <button
-                    className="album-order-btn"
-                    onClick={() => moveSong(index, -1)}
-                    disabled={index === 0}
-                    title="Flytta upp"
-                  >
-                    <i className="fas fa-chevron-up"></i>
-                  </button>
-                  <button
-                    className="album-order-btn"
-                    onClick={() => moveSong(index, 1)}
-                    disabled={index === orderedSongs.length - 1}
-                    title="Flytta ner"
-                  >
-                    <i className="fas fa-chevron-down"></i>
-                  </button>
-                </div>
+                <span className="album-drag-handle" title="Dra för att ändra ordning">
+                  <i className="fas fa-grip-vertical"></i>
+                </span>
               )}
               <span
                 className="album-song-name"
