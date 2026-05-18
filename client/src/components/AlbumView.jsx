@@ -139,7 +139,7 @@ function AlbumDetail({ album, allSongs, onBack, setSelectedSong, onPlayAudio, on
           ) : (
             <>
               {album.year && <div className="album-meta-year">{album.year}</div>}
-              {album.description && <div className="album-meta-desc">{album.description}</div>}
+              {album.description && <div className="album-meta-desc" style={{ whiteSpace: 'pre-wrap' }}>{album.description}</div>}
               {isAdmin && (
                 <button className="album-edit-btn" onClick={() => setEditing(true)}>
                   <i className="fas fa-pen"></i> Redigera
