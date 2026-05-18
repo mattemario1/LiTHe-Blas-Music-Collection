@@ -2,6 +2,30 @@ import { useState } from 'react';
 import './SongList.css';
 import AlbumView from './AlbumView';
 
+const TYPE_COLORS = {
+  'Orkesterlåt': '#ffeb4f',
+  'Balettlåt':   '#1c4386',
+  'Marschlåt':   '#5bb85b',
+  'Skitsnack':   '#e0943a',
+  'Övrigt':      '#aaa',
+};
+
+const ASSET_ICONS = [
+  { key: 'recordings',  emoji: '🎧', title: 'Inspelningar' },
+  { key: 'sheetMusic',  emoji: '🎼', title: 'Noter' },
+  { key: 'lyrics',      emoji: '📝', title: 'Texter' },
+  { key: 'danceFiles',  emoji: '💃', title: 'Dansfiler' },
+  { key: 'otherFiles',  emoji: '📁', title: 'Övrigt' },
+];
+
+function hasAsset(song, key) {
+  const arr = song[key];
+  if (!Array.isArray(arr) || arr.length === 0) return false;
+  return arr.some(item =>
+    Array.isArray(item.parts) ? item.parts.length > 0 : !!item.file_path
+  );
+}
+
 const getRecordingsFromSong = (song) => {
   return (song.recordings || []).flatMap(item => {
     if (Array.isArray(item.parts)) {
@@ -59,15 +83,33 @@ function SongList({ songs, allSongs, setSelectedSong, selectedSongId, onPlayAudi
 
       {view === 'songs' ? (
         <div className="song-boxes">
-          {songs.map(song => (
-            <div
-              key={song.id}
-              className={`song-box ${selectedSongId === song.id ? 'selected' : ''}`}
-              onClick={() => setSelectedSong(song)}
-            >
-              {song.name}
-            </div>
-          ))}
+          {songs.map(song => {
+            const typeColor = TYPE_COLORS[song.type] || '#ccc';
+            const presentAssets = ASSET_ICONS.filter(a => hasAsset(song, a.key));
+            return (
+              <div
+                key={song.id}
+                className={`song-box ${selectedSongId === song.id ? 'selected' : ''}`}
+                style={{ borderLeft: `4px solid ${typeColor}` }}
+                onClick={() => setSelectedSong(song)}
+              >
+                <div className="song-box-main">
+                  <span className="song-box-name">{song.name}</span>
+                  <span
+                    className={`song-status-dot ${song.is_active ? 'active' : 'inactive'}`}
+                    title={song.is_active ? 'Aktiv' : 'Inaktiv'}
+                  />
+                </div>
+                {presentAssets.length > 0 && (
+                  <div className="song-asset-icons">
+                    {presentAssets.map(a => (
+                      <span key={a.key} title={a.title}>{a.emoji}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <AlbumView
