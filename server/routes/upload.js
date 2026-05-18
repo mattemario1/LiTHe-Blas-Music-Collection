@@ -10,6 +10,9 @@ const { constructFileName, getSongAssetDir, toRelativePath, resolveUniqueFilePat
 // Formats that need transcoding to MP4 before storing
 const TRANSCODE_EXTS = new Set(['.wmv', '.avi', '.mkv', '.mov', '.flv', '.m4v']);
 
+// Formats that are already browser-compatible but need faststart (moov atom first)
+const FASTSTART_EXTS = new Set(['.mp4']);
+
 // Extensions that carry audio/video duration we can probe
 const PROBEABLE_EXTS = new Set(['.mp3', '.mp4', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma', '.wmv', '.avi', '.mkv', '.mov', '.flv', '.m4v']);
 
@@ -29,6 +32,19 @@ const upload = multer({
     filename: (req, file, cb) => cb(null, `upload_${Date.now()}_${path.basename(file.originalname)}`),
   }),
 });
+
+function applyFaststart(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .videoCodec('copy')
+      .audioCodec('copy')
+      .outputOptions('-movflags +faststart')
+      .output(outputPath)
+      .on('end', resolve)
+      .on('error', reject)
+      .run();
+  });
+}
 
 function transcodeToMp4(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
@@ -77,10 +93,14 @@ router.post('/', upload.single('file'), async (req, res) => {
         return res.json({ filePath: toRelativePath(mp4TargetPath), duration });
       }
 
-      // Non-video or already-compatible format: move to final location
+      // Non-transcoded format: move to final location
       const fileName = constructFileName(songName || 'Song', metadata, assetType, ext, metadata.collectionName);
       const targetPath = resolveUniqueFilePath(path.join(dir, fileName));
-      fs.copyFileSync(tempUploadPath, targetPath);
+      if (FASTSTART_EXTS.has(ext)) {
+        await applyFaststart(tempUploadPath, targetPath);
+      } else {
+        fs.copyFileSync(tempUploadPath, targetPath);
+      }
       const duration = PROBEABLE_EXTS.has(ext) ? await probeDuration(targetPath) : 0;
       res.json({ filePath: toRelativePath(targetPath), duration });
     } finally {
