@@ -119,15 +119,6 @@ function SongEditor({ song, onSave, onCancel, songs }) {
       />
 
       <SongAssetEditor
-        title="🎼 Noter"
-        files={editedSong.sheetMusic || []}
-        onChange={(files) => handleChange('sheetMusic', files)}
-        type="sheet"
-        songs={songs}
-        songName={editedSong.name}
-      />
-
-      <SongAssetEditor
         title="📝 Text"
         files={editedSong.lyrics || []}
         onChange={(files) => handleChange('lyrics', files)}
@@ -135,12 +126,21 @@ function SongEditor({ song, onSave, onCancel, songs }) {
         songs={songs}
         songName={editedSong.name}
       />
-      
+
       <SongAssetEditor
         title="💃 Dans"
         files={editedSong.danceFiles || []}
         onChange={(files) => handleChange('danceFiles', files)}
         type="dance"
+        songs={songs}
+        songName={editedSong.name}
+      />
+
+      <SongAssetEditor
+        title="🎼 Noter"
+        files={editedSong.sheetMusic || []}
+        onChange={(files) => handleChange('sheetMusic', files)}
+        type="sheet"
         songs={songs}
         songName={editedSong.name}
       />

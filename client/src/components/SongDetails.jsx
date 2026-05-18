@@ -394,18 +394,6 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
-        title="🎼 Noter"
-        items={song.sheetMusic}
-        labelKey="instrument"
-        dateKey="date"
-        onPlayAudio={handlePlayAudio}
-        onShowPdf={handleShowPdf}
-        onShowLyrics={handleShowLyrics}
-        onShowImage={handleShowImage}
-        onShowVideo={handleShowVideo}
-      />
-
-      <ExpandableBoxList
         title="📝 Text"
         items={song.lyrics}
         labelKey="name"
@@ -421,6 +409,18 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
         title="💃 Dans"
         items={song.danceFiles || []}
         labelKey="name"
+        dateKey="date"
+        onPlayAudio={handlePlayAudio}
+        onShowPdf={handleShowPdf}
+        onShowLyrics={handleShowLyrics}
+        onShowImage={handleShowImage}
+        onShowVideo={handleShowVideo}
+      />
+
+      <ExpandableBoxList
+        title="🎼 Noter"
+        items={song.sheetMusic}
+        labelKey="instrument"
         dateKey="date"
         onPlayAudio={handlePlayAudio}
         onShowPdf={handleShowPdf}
