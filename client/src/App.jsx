@@ -192,16 +192,15 @@ function AppInner() {
         </button>
       )}
 
-        <SearchAndFilter
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedFilters={selectedFilters}
-          setSelectedFilters={setSelectedFilters}
-          songs={songs}
-        />
-
         {/* NEW WRAPPER STARTS HERE */}
         <div className="app-body-wrapper">
+          <SearchAndFilter
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedFilters={selectedFilters}
+            setSelectedFilters={setSelectedFilters}
+            songs={songs}
+          />
           <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
             <SongList
               songs={filteredSongs}
