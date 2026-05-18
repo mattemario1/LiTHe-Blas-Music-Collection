@@ -200,6 +200,7 @@ function AppInner() {
             selectedFilters={selectedFilters}
             setSelectedFilters={setSelectedFilters}
             songs={songs}
+            setSelectedSong={setSelectedSong}
           />
           <div className={`main-content ${audioInfo.url ? 'with-player' : ''}`}>
             <SongList

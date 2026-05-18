@@ -16,7 +16,7 @@ const PROP_FILTERS = [
   { key: 'has_a5',             label: 'A5-format' },
 ];
 
-function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs }) {
+function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSelectedFilters, songs, setSelectedSong }) {
   const [focused, setFocused] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [showLockModal, setShowLockModal] = useState(false);
@@ -113,7 +113,11 @@ function SearchAndFilter({ searchQuery, setSearchQuery, selectedFilters, setSele
                 <div
                   key={index}
                   className="autocomplete-item"
-                  onClick={() => setSearchQuery(name)}
+                  onClick={() => {
+                    const song = songs.find(s => s.name === name);
+                    if (song && setSelectedSong) setSelectedSong(song);
+                    setSearchQuery('');
+                  }}
                 >
                   {name}
                 </div>
