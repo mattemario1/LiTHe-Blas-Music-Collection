@@ -313,14 +313,14 @@ function PdfModal({ pdfUrl, onClose }) {
 
             <div className="pdf-controls">
               <div className="zoom-controls-group">
-                <button onClick={zoomToPageWidth}>Sidbredd</button>
-                <button onClick={zoomToPageFit}>Hela sidan</button>
+                <button onClick={zoomToPageWidth} title="Anpassa till sidbredd"><i className="fas fa-arrows-alt-h"></i></button>
+                <button onClick={zoomToPageFit} title="Hela sidan"><i className="fas fa-expand"></i></button>
               </div>
 
               <div className="zoom-controls-group">
-                <button onClick={zoomOut} aria-label="Zooma ut">−</button>
+                <button onClick={zoomOut} title="Zooma ut"><i className="fas fa-search-minus"></i></button>
                 <span>{Math.round(scale * 100)}%</span>
-                <button onClick={zoomIn} aria-label="Zooma in">+</button>
+                <button onClick={zoomIn} title="Zooma in"><i className="fas fa-search-plus"></i></button>
               </div>
 
               <div className="page-info">
