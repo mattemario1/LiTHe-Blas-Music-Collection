@@ -56,7 +56,7 @@ In production (Docker), there are two containers: the backend (Express on port 5
 
 The SQLite database has four tables:
 
-- **`songs`** — core song metadata: `name`, `description`, `type`, `status`
+- **`songs`** — core song metadata: `name`, `description`, `type`, `is_active`, `in_marching_binder`, `has_a5`. The `type` field holds one of: `Orkesterlåt`, `Balettlåt`, `Marschlåt`, `Skitsnack`, `Övrigt`, or empty. `is_active`, `in_marching_binder`, and `has_a5` are `INTEGER` booleans (0/1). The legacy `status` (TEXT) and `is_marching` (INTEGER) columns still exist in the DB but are no longer read or written by the app.
 - **`collections`** — named groupings of files within a song (e.g. "Trumpet section"), linked to a `song_id` and `asset_type`
 - **`files`** — individual files, always linked to a `song_id`, optionally to a `collection_id`; fields include `asset_type`, `file_path`, `name`, `description`, `date`, `album`, `instrument`, `duration`
 - **`albums`** — metadata (cover, description, year) keyed by album name; albums themselves are derived by querying distinct `album` values from `files`, not stored as a primary entity
@@ -123,9 +123,17 @@ The React app is a single-page layout with no client-side routing. State lives i
 - `selectedSong` — currently viewed song
 - `audioInfo` — track currently loaded in the audio player
 
-`SearchAndFilter.jsx` handles the search bar and type/status checkboxes at the top. `SongList.jsx` renders the filtered list on the left; clicking a song loads `SongDetails.jsx` on the right. When the user clicks Edit, it swaps to `SongEditor.jsx` which contains `SongFieldsEditor.jsx` (text fields) and `SongAssetEditor.jsx` (file upload/management). `AlbumView.jsx` is an alternate top-level view for browsing recordings by album (loaded via a tab/button in `App.jsx`).
+`SearchAndFilter.jsx` handles the search bar and filter buttons. On desktop the filter panel sits to the right of the search bar; on mobile it stacks below. The filter is **opt-in**: nothing selected = show all songs. Filters:
+- **Collapsed view** (always visible): Aktiv, Orkesterlåt, Balettlåt, Marschlåt — all on one row
+- **Expanded view** ("Fler filter"): adds Status, Typ (all types including Skitsnack and Övrigt), Innehåll (has files in a category), Egenskaper (I marschpärmen, A5-format)
+- AND logic across groups, OR logic within the type group
+- All filtering is client-side — the server always returns all songs
 
-The UI text is in Swedish (e.g. type options `Orkesterlåt`, `Balettlåt`; status options `Aktiv`, `Inaktiv`; the catch-all filter label is `Övrigt`).
+`SongFieldsEditor.jsx` renders the song's editable fields: name, description, type dropdown (Orkesterlåt / Balettlåt / Marschlåt / Skitsnack / Övrigt), and three checkboxes: Aktiv (`is_active`), I marschpärmen (`in_marching_binder`), A5-format (`has_a5`).
+
+`SongList.jsx` renders the filtered list on the left; clicking a song loads `SongDetails.jsx` on the right. When the user clicks Edit, it swaps to `SongEditor.jsx` which contains `SongFieldsEditor.jsx` and `SongAssetEditor.jsx` (file upload/management). `AlbumView.jsx` is an alternate top-level view for browsing recordings by album (loaded via a tab/button in `App.jsx`).
+
+The UI text is in Swedish (e.g. type options `Orkesterlåt`, `Balettlåt`, `Marschlåt`, `Skitsnack`; the catch-all type/filter label is `Övrigt`).
 
 The `PUT /api/songs/:id` endpoint receives the **entire** song structure on every save — it deletes all existing DB rows for that song and re-inserts them, and physically deletes files that are no longer present in the request.
 

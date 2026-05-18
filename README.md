@@ -27,11 +27,11 @@ In production the app runs as two Docker containers:
 │       ├── context/
 │       │   └── AuthContext.jsx # Auth state (password-protected write operations)
 │       └── components/
-│           ├── SearchAndFilter.jsx   # Search bar and type/status filter checkboxes
+│           ├── SearchAndFilter.jsx   # Search bar and opt-in filter buttons (type, status, content, properties)
 │           ├── SongList.jsx          # Left panel: filtered list of songs
 │           ├── SongDetails.jsx       # Right panel: displays a song's files and metadata
 │           ├── SongEditor.jsx        # Edit mode wrapper for a song
-│           ├── SongFieldsEditor.jsx  # Text fields (name, description, type, status)
+│           ├── SongFieldsEditor.jsx  # Song fields: name, description, type dropdown, Aktiv/marschpärmen/A5 checkboxes
 │           ├── SongAssetEditor.jsx   # File upload and management per asset type
 │           ├── AlbumView.jsx         # Alternate view: browse recordings grouped by album
 │           ├── AudioPlayer.jsx       # Persistent audio player bar at the bottom
