@@ -79,7 +79,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'songId and assetType are required' });
     }
 
-    const dir = getSongAssetDir(songName || 'Song', assetType);
+    const dir = getSongAssetDir(songName || 'Song', assetType, songId);
     const ext = path.extname(req.file.originalname).toLowerCase();
 
     const tempUploadPath = req.file.path;

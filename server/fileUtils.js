@@ -81,10 +81,11 @@ const resolveUniqueFilePath = (targetPath) => {
  * Creates the directory if it doesn't exist.
  * songName is sanitized and used as the folder name under songs/.
  */
-const getSongAssetDir = (songName, assetType) => {
+const getSongAssetDir = (songName, assetType, songId) => {
   const folder = ASSET_FOLDERS[assetType] || 'other';
   const safeName = sanitize(songName) || 'Song';
-  const dir = path.join(getUploadsBase(), 'songs', safeName, folder);
+  const dirName = songId ? `${safeName}-${songId}` : safeName;
+  const dir = path.join(getUploadsBase(), 'songs', dirName, folder);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }

@@ -126,7 +126,7 @@ router.put('/:id', (req, res) => {
 
     // 3. Rename the song's top-level directory if the name changed (or migrate from old ID-based dir).
     //    We detect the current dir name from an existing file path (works for both formats).
-    const newDirName = sanitize(name || '') || 'Song';
+    const newDirName = `${sanitize(name || '') || 'Song'}-${songId}`;
     const firstExisting = existingFiles.find(f => f.file_path);
     let workingAssetMap = assetMap;
     let workingExistingPaths = existingDbPaths;
