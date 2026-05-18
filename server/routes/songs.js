@@ -43,6 +43,7 @@ const getSongById = (id) => {
       .map(c => ({
         id: c.id,
         name: c.name,
+        description: c.description || '',
         parts: allFiles.filter(f => f.collection_id === c.id)
       }));
 
@@ -185,8 +186,8 @@ router.put('/:id', (req, res) => {
       for (const item of items) {
         if (Array.isArray(item.parts)) {
           const collResult = db.prepare(
-            'INSERT INTO collections (song_id, asset_type, name) VALUES (?, ?, ?)'
-          ).run(songId, assetType, item.name || '');
+            'INSERT INTO collections (song_id, asset_type, name, description) VALUES (?, ?, ?, ?)'
+          ).run(songId, assetType, item.name || '', item.description || '');
 
           const collectionId = collResult.lastInsertRowid;
 

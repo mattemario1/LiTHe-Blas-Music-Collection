@@ -38,7 +38,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     song_id INTEGER NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
     asset_type TEXT NOT NULL,
-    name TEXT DEFAULT ''
+    name TEXT DEFAULT '',
+    description TEXT DEFAULT ''
   );
 
   CREATE TABLE IF NOT EXISTS files (
@@ -61,6 +62,7 @@ for (const col of [
   'ALTER TABLE songs ADD COLUMN in_marching_binder INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE songs ADD COLUMN has_a5 INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE songs ADD COLUMN is_active INTEGER NOT NULL DEFAULT 0',
+  "ALTER TABLE collections ADD COLUMN description TEXT DEFAULT ''",
 ]) {
   try { db.exec(col); } catch { /* column already exists */ }
 }
