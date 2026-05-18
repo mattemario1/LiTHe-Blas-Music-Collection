@@ -12,8 +12,10 @@ function AppInner() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
-    shownTypes: ['Orkesterlåt', 'Balettlåt', 'Övrigt'],
-    shownStatuses: ['Aktiv', 'Inaktiv', 'Övrigt']
+    shownTypes:    [],
+    shownStatuses: [],
+    requiredAssets: [],
+    requiredProps:  [],
   });
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
@@ -153,20 +155,25 @@ function AppInner() {
     }
   };
 
-  const TYPE_OPTIONS = ['Orkesterlåt', 'Balettlåt'];
-  const STATUS_OPTIONS = ['Aktiv', 'Inaktiv'];
+  const NAMED_TYPES = ['Orkesterlåt', 'Balettlåt', 'Marschlåt', 'Skitsnack'];
 
   const getFilteredSongs = () => {
     return songs
       .filter(song => {
         const matchesSearch = song.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesType = TYPE_OPTIONS.includes(song.type)
-          ? selectedFilters.shownTypes.includes(song.type)
-          : selectedFilters.shownTypes.includes('Övrigt');
-        const matchesStatus = STATUS_OPTIONS.includes(song.status)
-          ? selectedFilters.shownStatuses.includes(song.status)
-          : selectedFilters.shownStatuses.includes('Övrigt');
-        return matchesSearch && matchesType && matchesStatus;
+        const matchesType = selectedFilters.shownTypes.length === 0 ||
+          (NAMED_TYPES.includes(song.type)
+            ? selectedFilters.shownTypes.includes(song.type)
+            : selectedFilters.shownTypes.includes('Övrigt'));
+        const matchesStatus = selectedFilters.shownStatuses.length === 0 ||
+          (selectedFilters.shownStatuses.includes('Aktiv') && !!song.is_active);
+        const matchesAssets = selectedFilters.requiredAssets.every(assetType => {
+          const bucket = song[assetType];
+          if (!bucket || bucket.length === 0) return false;
+          return bucket.some(item => Array.isArray(item.parts) ? item.parts.length > 0 : true);
+        });
+        const matchesProps = selectedFilters.requiredProps.every(prop => !!song[prop]);
+        return matchesSearch && matchesType && matchesStatus && matchesAssets && matchesProps;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   };

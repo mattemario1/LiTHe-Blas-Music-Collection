@@ -22,17 +22,26 @@ function SongFieldsEditor({ song, onChange }) {
         <option value="">Select Type</option>
         <option value="Orkesterlåt">Orkesterlåt</option>
         <option value="Balettlåt">Balettlåt</option>
+        <option value="Marschlåt">Marschlåt</option>
+        <option value="Skitsnack">Skitsnack</option>
         <option value="Övrigt">Övrigt</option>
       </select>
-      <select
-        value={song.status}
-        onChange={(e) => onChange('status', e.target.value)}
-      >
-        <option value="">Select Status</option>
-        <option value="Aktiv">Aktiv</option>
-        <option value="Inaktiv">Inaktiv</option>
-        <option value="Övrigt">Övrigt</option>
-      </select>
+      <div className="song-properties">
+        {[
+          { field: 'is_active',          label: 'Aktiv' },
+          { field: 'in_marching_binder', label: 'I marschpärmen' },
+          { field: 'has_a5',             label: 'A5-format' },
+        ].map(({ field, label }) => (
+          <label key={field} className="property-checkbox">
+            <input
+              type="checkbox"
+              checked={!!song[field]}
+              onChange={(e) => onChange(field, e.target.checked ? 1 : 0)}
+            />
+            {label}
+          </label>
+        ))}
+      </div>
     </>
   );
 }

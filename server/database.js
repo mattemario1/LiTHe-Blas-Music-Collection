@@ -56,4 +56,21 @@ db.exec(`
   );
 `);
 
+for (const col of [
+  'ALTER TABLE songs ADD COLUMN is_marching INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE songs ADD COLUMN in_marching_binder INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE songs ADD COLUMN has_a5 INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE songs ADD COLUMN is_active INTEGER NOT NULL DEFAULT 0',
+]) {
+  try { db.exec(col); } catch { /* column already exists */ }
+}
+
+// One-time: migrate text status → boolean is_active
+db.prepare("UPDATE songs SET is_active = 1 WHERE status = 'Aktiv' AND is_active = 0").run();
+
+// One-time: copy in_marching_folder → in_marching_binder (column rename)
+try {
+  db.prepare('UPDATE songs SET in_marching_binder = in_marching_folder WHERE in_marching_folder = 1 AND in_marching_binder = 0').run();
+} catch { /* in_marching_folder column may not exist on fresh installs */ }
+
 module.exports = db;

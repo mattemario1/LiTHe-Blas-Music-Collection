@@ -83,10 +83,11 @@ router.get('/:id', (req, res) => {
 // POST create a new empty song
 router.post('/', (req, res) => {
   try {
-    const { name = '', description = '', type = '', status = '' } = req.body;
+    const { name = '', description = '', type = '',
+            is_active = 0, in_marching_binder = 0, has_a5 = 0 } = req.body;
     const result = db.prepare(
-      'INSERT INTO songs (name, description, type, status) VALUES (?, ?, ?, ?)'
-    ).run(name, description, type, status);
+      'INSERT INTO songs (name, description, type, is_active, in_marching_binder, has_a5) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(name, description, type, is_active ? 1 : 0, in_marching_binder ? 1 : 0, has_a5 ? 1 : 0);
 
     const newSong = getSongById(result.lastInsertRowid);
     res.status(201).json(newSong);
@@ -100,7 +101,8 @@ router.post('/', (req, res) => {
 // Renames files on disk if metadata changed, deletes removed files, then replaces all DB rows
 router.put('/:id', (req, res) => {
   const songId = parseInt(req.params.id, 10);
-  const { name, description, type, status, recordings, sheetMusic, lyrics, otherFiles, danceFiles } = req.body;
+  const { name, description, type, is_active, in_marching_binder, has_a5,
+          recordings, sheetMusic, lyrics, otherFiles, danceFiles } = req.body;
 
   const assetMap = {
     recordings: recordings || [],
@@ -117,8 +119,9 @@ router.put('/:id', (req, res) => {
 
     // 2. Update basic song fields
     db.prepare(
-      'UPDATE songs SET name = ?, description = ?, type = ?, status = ? WHERE id = ?'
-    ).run(name || '', description || '', type || '', status || '', songId);
+      'UPDATE songs SET name = ?, description = ?, type = ?, is_active = ?, in_marching_binder = ?, has_a5 = ? WHERE id = ?'
+    ).run(name || '', description || '', type || '',
+          is_active ? 1 : 0, in_marching_binder ? 1 : 0, has_a5 ? 1 : 0, songId);
 
     // 3. Rename the song's top-level directory if the name changed (or migrate from old ID-based dir).
     //    We detect the current dir name from an existing file path (works for both formats).
