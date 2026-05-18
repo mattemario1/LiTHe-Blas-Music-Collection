@@ -13,6 +13,16 @@ function SongEditor({ song, onSave, onCancel, songs }) {
   };
 
   const handleSave = async () => {
+    const trimmedName = (editedSong.name || '').trim();
+    const duplicate = (songs || []).find(
+      s => s.name.trim().toLowerCase() === trimmedName.toLowerCase() && s.id !== editedSong.id
+    );
+    if (duplicate) {
+      setProgressMessage(`Error: En låt med namnet "${trimmedName}" finns redan.`);
+      setTimeout(() => setProgressMessage(''), 4000);
+      return;
+    }
+
     setProgressMessage('Uploading files...');
 
     try {
