@@ -28,6 +28,22 @@ const formatDuration = (seconds) => {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
+const TYPE_COLORS = {
+  'Orkesterlåt': '#fff5a4',
+  'Balettlåt':   '#1c4386',
+  'Marschlåt':   '#5bb85b',
+  'Skitsnack':   '#e0943a',
+  'Övrigt':      '#aaa',
+};
+
+const TYPE_TEXT_COLORS = {
+  'Orkesterlåt': '#333',
+  'Balettlåt':   '#fff',
+  'Marschlåt':   '#fff',
+  'Skitsnack':   '#fff',
+  'Övrigt':      '#fff',
+};
+
 const AUDIO_EXTS = new Set(['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus']);
 const VIDEO_EXTS = new Set(['mp4', 'webm', 'ogv', 'mov', 'mkv', 'avi', 'wmv', 'flv', 'm4v']);
 const PDF_EXTS = new Set(['pdf']);
@@ -266,13 +282,22 @@ function ExpandableBoxList({
     )
   }));
 
-  const [isSectionOpen, setIsSectionOpen] = useState(true);
+  const hasContent = items.some(item =>
+    Array.isArray(item.parts) ? item.parts.length > 0 : !!item.file_path
+  );
+
+  const [isSectionOpen, setIsSectionOpen] = useState(hasContent);
 
   return (
-    <div className={`section${isSectionOpen ? '' : ' section-collapsed'}`}>
-      <h3 className="section-header" onClick={() => setIsSectionOpen(prev => !prev)}>
+    <div className={`section${!hasContent || !isSectionOpen ? ' section-collapsed' : ''}${!hasContent ? ' section-empty' : ''}`}>
+      <h3
+        className="section-header"
+        onClick={hasContent ? () => setIsSectionOpen(prev => !prev) : undefined}
+        style={hasContent ? undefined : { cursor: 'default' }}
+      >
         {title}
-        <span className="section-toggle">{isSectionOpen ? '▲' : '▼'}</span>
+        {!hasContent && <span className="section-empty-label">Inga filer</span>}
+        {hasContent && <span className="section-toggle">{isSectionOpen ? '▲' : '▼'}</span>}
       </h3>
       {isSectionOpen && (
         <div className="section-content">
@@ -315,6 +340,11 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   const [videoUrl, setVideoUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const { isAdmin } = useAuth();
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (containerRef.current) containerRef.current.scrollTop = 0;
+  }, [song.id]);
 
   const handlePlayAudio = async (item) => {
     try {
@@ -371,17 +401,36 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
   }
 
   return (
-    <div className="song-details">
+    <div className="song-details" ref={containerRef}>
 
       <h2>{song.name}</h2>
       <p className="description">{linkify(song.description)}</p>
       <div className="meta">
-        <span><strong>Typ:</strong> {song.type}</span>
-        <span><strong>Status:</strong> {song.status}</span>
+        {song.type && (
+          <span
+            className="song-type-badge"
+            style={{
+              backgroundColor: TYPE_COLORS[song.type] ?? '#ccc',
+              color: TYPE_TEXT_COLORS[song.type] ?? '#333',
+            }}
+          >
+            {song.type}
+          </span>
+        )}
+        <span className={`song-property-tag${song.is_active ? ' active' : ' inactive'}`}>
+          {song.is_active ? '✓' : '✗'} Aktiv
+        </span>
+        <span className={`song-property-tag${song.in_marching_binder ? ' active' : ' inactive'}`}>
+          {song.in_marching_binder ? '✓' : '✗'} I marschpärmen
+        </span>
+        <span className={`song-property-tag${song.has_a5 ? ' active' : ' inactive'}`}>
+          {song.has_a5 ? '✓' : '✗'} A5-format
+        </span>
       </div>
       {isAdmin && <button onClick={() => setIsEditing(true)}>Edit</button>}
 
       <ExpandableBoxList
+        key={`${song.id}-recordings`}
         title="🎧 Inspelningar"
         items={song.recordings}
         labelKey="album"
@@ -394,6 +443,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
+        key={`${song.id}-lyrics`}
         title="📝 Text"
         items={song.lyrics}
         labelKey="name"
@@ -406,6 +456,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
+        key={`${song.id}-dance`}
         title="💃 Dans"
         items={song.danceFiles || []}
         labelKey="name"
@@ -418,6 +469,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
+        key={`${song.id}-sheetmusic`}
         title="🎼 Noter"
         items={song.sheetMusic}
         labelKey="instrument"
@@ -430,6 +482,7 @@ function SongDetails({ song, onPlayAudio, onUpdateSong, songs, setSongs, onBack 
       />
 
       <ExpandableBoxList
+        key={`${song.id}-otherfiles`}
         title="📁 Andra Filer"
         items={song.otherFiles || []}
         labelKey="name"
